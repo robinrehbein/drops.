@@ -32,3 +32,6 @@ yarn-error.log*
 
 # macOS
 .DS_Store
+
+# Project-local agent/plugin tooling (Pi)
+.pi/
