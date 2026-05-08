@@ -2,8 +2,16 @@ import { getDb } from '@/db/client';
 import { makeBeansRepo, type BeansRepo } from '@/features/beans/repo';
 import { makeBrewRepo, type BrewRepo } from '@/features/brew/repo';
 import { makeDashboardRepo, type DashboardRepo } from '@/features/dashboard/repo';
+import { makeInsightsRepo, type InsightsRepo } from '@/features/insights/repo';
+import { makePreferencesRepo, type PreferencesRepo } from '@/features/preferences/repo';
 
-export type Repos = { beans: BeansRepo; brew: BrewRepo; dashboard: DashboardRepo };
+export type Repos = {
+  beans: BeansRepo;
+  brew: BrewRepo;
+  dashboard: DashboardRepo;
+  preferences: PreferencesRepo;
+  insights: InsightsRepo;
+};
 
 let _repos: Repos | null = null;
 
@@ -14,6 +22,8 @@ export function getRepos(): Repos {
     beans: makeBeansRepo(db),
     brew: makeBrewRepo(db),
     dashboard: makeDashboardRepo(db),
+    preferences: makePreferencesRepo(db),
+    insights: makeInsightsRepo(db),
   };
   return _repos;
 }

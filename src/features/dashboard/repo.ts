@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNotNull, isNull, lte } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, isNull, lte } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
@@ -13,6 +13,7 @@ export type TodaySummary = {
   shotsToday: number;
   estimatedCaffeineMg: number;
   lastBrew: { rating: number | null; beanName: string; ratio: number | null } | null;
+  bestShot: { beanName: string; rating: number; ratio: number; durationS: number } | null;
 };
 
 export type DashboardRepo = {
@@ -47,7 +48,7 @@ export function makeDashboardRepo(db: Db): DashboardRepo {
 
       // Per-bean roast-level lookup for caffeine
       const beanIds = Array.from(new Set(todaysSessions.map((s) => s.beanId)));
-      const beanRows = beanIds.length ? await db.select().from(beans) : [];
+      const beanRows = beanIds.length ? await db.select().from(beans).where(inArray(beans.id, beanIds)) : [];
       const roastByBean = new Map(beanRows.map((b) => [b.id, b.roastLevel]));
 
       let totalCaffeine = 0;
@@ -73,10 +74,24 @@ export function makeDashboardRepo(db: Db): DashboardRepo {
         };
       }
 
+      let bestShot: TodaySummary['bestShot'] = null;
+      const rated = todaysSessions.filter((s) => s.rating != null);
+      if (rated.length > 0) {
+        const best = rated.reduce((a, b) => (a.rating ?? 0) > (b.rating ?? 0) ? a : b);
+        const bestBean = beanRows.find((b) => b.id === best.beanId);
+        bestShot = {
+          beanName: bestBean?.name ?? '—',
+          rating: best.rating!,
+          ratio: best.yieldG && best.doseG ? best.yieldG / best.doseG : 0,
+          durationS: best.durationS ?? 0,
+        };
+      }
+
       return {
         shotsToday: todaysSessions.length,
         estimatedCaffeineMg: totalCaffeine,
         lastBrew,
+        bestShot,
       };
     },
     async recentShots(n) {
