@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Brewlog",
+    "slug": "brewlog",
+    "scheme": "brewlog",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": { "bundleIdentifier": "com.brewlog.app", "supportsTablet": false },
+    "android": { "package": "com.brewlog.app" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": true }
+  }
+}

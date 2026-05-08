@@ -35,3 +35,17 @@ yarn-error.log*
 
 # Project-local agent/plugin tooling (Pi)
 .pi/
+
+# Expo (additional from create-expo-app template)
+expo-env.d.ts
+.metro-health-check*
+*.tsbuildinfo
+
+# Native (additional)
+.kotlin/
+*.orig.*
+*.pem
+
+# Generated native folders
+/ios
+/android
