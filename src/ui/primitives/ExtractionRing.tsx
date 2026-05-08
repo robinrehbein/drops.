@@ -1,8 +1,9 @@
 import { Canvas, Circle, Path, Skia, Group } from '@shopify/react-native-skia';
-
-import { useTheme } from '@/ui/theme/useTheme';
-import { Text } from './Text';
 import { View } from 'react-native';
+
+import { type QualityBand, qualityBand } from '@/domain/extraction';
+import { Text } from './Text';
+import { useTheme } from '@/ui/theme/useTheme';
 
 export type ExtractionRingProps = {
   size?: number;
@@ -12,10 +13,24 @@ export type ExtractionRingProps = {
   centerLabel: string;
   /** Tiny under-label, e.g. "EXTRACTION". */
   caption: string;
+  /** Override quality band for ring color. Computed from progress if omitted. */
+  band?: QualityBand;
 };
 
-export function ExtractionRing({ size = 200, progress, centerLabel, caption }: ExtractionRingProps) {
+function bandColor(band: QualityBand, colors: ReturnType<typeof useTheme>['colors']): string {
+  switch (band) {
+    case 'under': return colors.amber;
+    case 'balanced': return colors.forest;
+    case 'over': return colors.danger;
+    case 'unknown': return colors.paperEdge;
+  }
+}
+
+export function ExtractionRing({ size = 200, progress, centerLabel, caption, band }: ExtractionRingProps) {
   const t = useTheme();
+  const resolvedBand = band ?? qualityBand(progress);
+  const ringColor = bandColor(resolvedBand, t.colors);
+
   const stroke = 6;
   const cx = size / 2;
   const cy = size / 2;
@@ -33,7 +48,7 @@ export function ExtractionRing({ size = 200, progress, centerLabel, caption }: E
         <Group transform={[{ rotate: -Math.PI / 2 }]} origin={{ x: cx, y: cy }}>
           <Path
             path={arc}
-            color={t.colors.forest}
+            color={ringColor}
             style="stroke"
             strokeWidth={stroke}
             strokeCap="round"

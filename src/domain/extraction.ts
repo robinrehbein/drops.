@@ -12,3 +12,13 @@ export function extractionPercent(
   if (raw > 1) return 1;
   return raw;
 }
+
+export type QualityBand = 'under' | 'balanced' | 'over' | 'unknown';
+
+/** Classify extraction yield into quality bands. Input is a 0–1 fraction. */
+export function qualityBand(eyPercent: number | null): QualityBand {
+  if (eyPercent === null) return 'unknown';
+  if (eyPercent < 0.18) return 'under';
+  if (eyPercent > 0.22) return 'over';
+  return 'balanced';
+}
