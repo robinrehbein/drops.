@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "e2e:ios": "maestro test .maestro/flows --device 'iPhone 15'",
+    "e2e:android": "maestro test .maestro/flows"
   },
   "dependencies": {
     "@sentry/react-native": "~7.2.0",
