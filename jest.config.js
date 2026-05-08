@@ -12,7 +12,7 @@ module.exports = {
     '^@tests/(.*)$': '<rootDir>/tests/$1',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|expo-modules-core|@shopify/react-native-skia|drizzle-orm))',
+    'node_modules/(?!((jest-)?react-native|@react-native|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|expo-modules-core|@shopify/react-native-skia|drizzle-orm|uuid))',
     // Mirror jest-expo's preset: prevents "Reentrant plugin detected" errors
     // once react-native-reanimated is installed (Task 31).
     '/node_modules/react-native-reanimated/plugin/',
