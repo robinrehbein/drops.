@@ -25,5 +25,11 @@ export type BeanIssue = { path: (string | number)[]; message: string };
 export function validateBean(input: unknown): Result<BeanInput, BeanIssue[]> {
   const parsed = beanInputSchema.safeParse(input);
   if (parsed.success) return ok(parsed.data);
-  return err(parsed.error.issues.map((i) => ({ path: [...i.path], message: i.message })));
+  // Zod 4's path is PropertyKey[] (includes symbol); filter to (string|number)[] for the public API.
+  return err(
+    parsed.error.issues.map((i) => ({
+      path: i.path.filter((p): p is string | number => typeof p !== 'symbol'),
+      message: i.message,
+    })),
+  );
 }

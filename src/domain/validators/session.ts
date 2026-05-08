@@ -25,5 +25,11 @@ export type SessionIssue = { path: (string | number)[]; message: string };
 export function validateSession(input: unknown): Result<SessionInput, SessionIssue[]> {
   const parsed = sessionInputSchema.safeParse(input);
   if (parsed.success) return ok(parsed.data);
-  return err(parsed.error.issues.map((i) => ({ path: [...i.path], message: i.message })));
+  // Zod 4's path is PropertyKey[] (includes symbol); filter to (string|number)[] for the public API.
+  return err(
+    parsed.error.issues.map((i) => ({
+      path: i.path.filter((p): p is string | number => typeof p !== 'symbol'),
+      message: i.message,
+    })),
+  );
 }
