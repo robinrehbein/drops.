@@ -8,7 +8,8 @@
     "paths": {
       "@/*": ["src/*"],
       "@app/*": ["app/*"],
-      "@tests/*": ["tests/*"]
+      "@tests/*": ["tests/*"],
+      "expo-file-system/legacy": ["types/expo-file-system-legacy.d.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
