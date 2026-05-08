@@ -4,6 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { useBeans } from '@/features/beans/hooks';
 import { useStartSession, useEndSession, useAddMilestone } from '@/features/brew/hooks';
+import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
 import { extractionPercent } from '@/domain/extraction';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
@@ -66,6 +67,7 @@ export default function LabIndex() {
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title="Brew Lab" rightLabel="History" onRightPress={() => router.push('/lab/history' as never)} />
+      <RecoveryBanner />
       <View style={{ padding: t.space.lg, flex: 1 }}>
         <Pressable onPress={() => router.push('/(modals)/pick-bean' as never)}>
           <View style={{
