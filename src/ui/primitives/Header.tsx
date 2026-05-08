@@ -1,4 +1,5 @@
 import { View, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/ui/theme/useTheme';
 import { Text } from './Text';
@@ -12,6 +13,7 @@ export type HeaderProps = {
 
 export function Header({ title, onBack, rightLabel, onRightPress }: HeaderProps) {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <View
       style={{
@@ -19,7 +21,8 @@ export function Header({ title, onBack, rightLabel, onRightPress }: HeaderProps)
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: t.space.lg,
-        paddingVertical: t.space.md,
+        paddingTop: insets.top + t.space.md,
+        paddingBottom: t.space.md,
         backgroundColor: t.colors.paper,
       }}
     >
