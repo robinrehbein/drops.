@@ -1,0 +1,15 @@
+appId: com.brewlog.app
+name: Delete a bean and undo
+---
+- launchApp:
+    clearState: true
+- tapOn: "Library"
+- tapOn: "Add a bean"
+- inputText: "Undo Bean"
+- tapOn: "Save bean"
+- tapOn: "Undo Bean"
+- tapOn: "Delete bean"
+- assertVisible: "Bean deleted"
+- tapOn: "Undo"
+- tapOn: "Library"
+- assertVisible: "Undo Bean"
