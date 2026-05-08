@@ -18,7 +18,8 @@
       "expo-router",
       "@sentry/react-native",
       "expo-localization",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
