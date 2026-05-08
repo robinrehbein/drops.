@@ -270,8 +270,10 @@ The behaviorally complex part of v1. Five UX states with the DB writes that fire
 |---|---|---|---|
 | **IdleSetup** | — | Pick bean · adjust dose/yield · adjust grind · tap Start | Lab home — three steppers, bean chip, Start Shot button |
 | **Pulling** | `INSERT brew_sessions` with `started_at = now`, dose, bean, method, grind | Tap milestone · tap Stop · navigate elsewhere (timer keeps running) | Live timer (wall-clock-driven), extraction ring, milestone pill, Stop Pull button |
-| **Capturing** | `UPDATE brew_sessions SET ended_at, duration_s` | Enter yield · 1–5 rating · sensory sliders · flavor tags · comment · Save · Discard | Modal sheet over Lab |
-| **Saved → IdleSetup** | `INSERT tasting_notes` (if filled) · `UPDATE beans.remaining_weight_g -= dose_g` | — | Snackbar: "Shot logged · 1:1.58 · 27.4s · 4★" |
+| **Capturing** | `UPDATE brew_sessions SET ended_at, duration_s` | Enter yield · 1–5 rating · sensory sliders · flavor tags · comment · **Save** · **Save & log another** · **Discard** | Modal sheet over Lab. Sheet is non-dismissable; only the three explicit actions exit the state. |
+| **Saved (via Save) → Lab History** | `INSERT tasting_notes` (if filled) · `UPDATE beans.remaining_weight_g -= dose_g` | — | Lands on Lab → History segment with the new session at the top; brief snackbar: "Shot logged · 1:1.58 · 27.4s · 4★" |
+| **Saved (via Save & log another) → IdleSetup** | Same DB writes as above | — | Returns to Lab IdleSetup, same bean and grind preserved; snackbar identical |
+| **Discarded (via Discard) → IdleSetup** | `UPDATE brew_sessions SET deleted_at = now`. Bean weight is **not** decremented. | — | Confirm dialog ("Discard this shot?") then return to IdleSetup |
 | **Recovering** | — (session row already in DB from prior **Pulling**) | Resume → Pulling, recompute elapsed · Discard → soft-delete | Banner on Lab open: "You have an in-progress shot from 47s ago." |
 
 ### Key shape decisions
