@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSnackbarStore } from '@/state/snackbar';
 import { useTheme } from '@/ui/theme/useTheme';
@@ -7,6 +8,7 @@ import { Text } from './Text';
 
 export function Snackbar() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { message, action, dismiss } = useSnackbarStore();
   useEffect(() => {
     if (!message) return;
@@ -17,7 +19,12 @@ export function Snackbar() {
   return (
     <View
       style={{
-        position: 'absolute', left: t.space.lg, right: t.space.lg, bottom: t.space.xxl,
+        position: 'absolute',
+        left: t.space.lg,
+        right: t.space.lg,
+        // Float above the home indicator / gesture bar; fall back to
+        // a comfortable spacing if no inset is reported.
+        bottom: insets.bottom + t.space.lg,
         backgroundColor: t.colors.forestDeep,
         borderRadius: t.radii.md,
         padding: t.space.md,

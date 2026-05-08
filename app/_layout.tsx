@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
@@ -50,6 +51,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <QueryProvider>
           <RepoProvider>
+            {/* Earthy Forest is a light theme — force dark glyphs on the
+                status bar so clock/battery stay legible against `paper`. */}
+            <StatusBar style="dark" />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
