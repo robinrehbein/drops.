@@ -1,0 +1,29 @@
+appId: com.brewlog.app
+name: Add a bean and brew an espresso
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- assertVisible: "Daily"
+- tapOn: "Library"
+- assertVisible: "No beans yet"
+- tapOn: "Add a bean"
+- inputText: "Maestro Test Bean"
+- tapOn: "3"
+- tapOn: "Save bean"
+- assertVisible: "Maestro Test Bean"
+
+- tapOn: "Lab"
+- tapOn: "Pick a bean ▾"
+- tapOn: "Maestro Test Bean"
+- tapOn: "Start Shot"
+- assertVisible: "Stop Pull"
+- waitForAnimationToEnd
+- tapOn: "First drop"
+- tapOn: "Stop Pull"
+
+- assertVisible: "Log this shot"
+- tapOn: "4"
+- tapOn: "Save"
+- assertVisible: "History"
+- assertVisible: "Maestro Test Bean"
