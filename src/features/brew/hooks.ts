@@ -8,6 +8,9 @@ const KEYS = {
   one: (id: string) => ['brewSession', id] as const,
   inProgress: ['brewSession', 'inProgress'] as const,
   milestones: (sessionId: string) => ['brewMilestones', sessionId] as const,
+  forBean: (beanId: string, limit?: number) => ['brewSessions', 'forBean', beanId, limit] as const,
+  lastForBean: (beanId: string) => ['brewSessions', 'lastForBean', beanId] as const,
+  tastingNotes: (sessionId: string) => ['tastingNotes', sessionId] as const,
 };
 
 export function useSessions(beanId?: string) {
@@ -91,5 +94,32 @@ export function useDiscardSession() {
       void qc.invalidateQueries({ queryKey: ['brewSessions'] });
       void qc.invalidateQueries({ queryKey: KEYS.inProgress });
     },
+  });
+}
+
+export function useShotsForBean(beanId: string | null, limit = 10) {
+  const { brew } = useRepos();
+  return useQuery({
+    queryKey: KEYS.forBean(beanId ?? '', limit),
+    queryFn: () => brew.shotsForBean(beanId!, limit),
+    enabled: !!beanId,
+  });
+}
+
+export function useLastShotForBean(beanId: string | null) {
+  const { brew } = useRepos();
+  return useQuery({
+    queryKey: KEYS.lastForBean(beanId ?? ''),
+    queryFn: () => brew.lastShotForBean(beanId!),
+    enabled: !!beanId,
+  });
+}
+
+export function useTastingNotes(sessionId: string) {
+  const { brew } = useRepos();
+  return useQuery({
+    queryKey: KEYS.tastingNotes(sessionId),
+    queryFn: () => brew.tastingNotesForSession(sessionId),
+    enabled: !!sessionId,
   });
 }

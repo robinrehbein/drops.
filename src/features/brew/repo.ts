@@ -5,7 +5,7 @@ import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { beans, brewMilestones, brewSessions, tastingNotes } from '@/db/schema';
 import * as schema from '@/db/schema';
 import { uuid } from '@/domain/ids';
-import type { MilestoneRow, SessionRow } from './types';
+import type { MilestoneRow, SessionRow, TastingNoteRow } from './types';
 
 type Db = BetterSQLite3Database<typeof schema> | ExpoSQLiteDatabase<typeof schema>;
 
@@ -41,6 +41,9 @@ export type BrewRepo = {
   getSession: (sessionId: string) => Promise<SessionRow | null>;
   listSessions: (filter?: { beanId?: string }) => Promise<SessionRow[]>;
   findInProgress: () => Promise<SessionRow | null>;
+  shotsForBean: (beanId: string, limit?: number) => Promise<SessionRow[]>;
+  lastShotForBean: (beanId: string) => Promise<SessionRow | null>;
+  tastingNotesForSession: (sessionId: string) => Promise<TastingNoteRow | null>;
 };
 
 export function makeBrewRepo(db: Db): BrewRepo {
@@ -162,6 +165,43 @@ export function makeBrewRepo(db: Db): BrewRepo {
         .from(brewSessions)
         .where(and(isNull(brewSessions.deletedAt), isNull(brewSessions.endedAt)))
         .orderBy(desc(brewSessions.startedAt))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+    async shotsForBean(beanId, limit = 10) {
+      return db
+        .select()
+        .from(brewSessions)
+        .where(
+          and(
+            eq(brewSessions.beanId, beanId),
+            isNull(brewSessions.deletedAt),
+            isNotNull(brewSessions.endedAt),
+          ),
+        )
+        .orderBy(desc(brewSessions.startedAt))
+        .limit(limit);
+    },
+    async lastShotForBean(beanId) {
+      const rows = await db
+        .select()
+        .from(brewSessions)
+        .where(
+          and(
+            eq(brewSessions.beanId, beanId),
+            isNull(brewSessions.deletedAt),
+            isNotNull(brewSessions.endedAt),
+          ),
+        )
+        .orderBy(desc(brewSessions.startedAt))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+    async tastingNotesForSession(sessionId) {
+      const rows = await db
+        .select()
+        .from(tastingNotes)
+        .where(eq(tastingNotes.sessionId, sessionId))
         .limit(1);
       return rows[0] ?? null;
     },
