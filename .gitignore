@@ -1,0 +1,34 @@
+# Superpowers brainstorming artifacts (mockups + state)
+.superpowers/
+
+# IDE
+.idea/
+.vscode/
+
+# Node / Expo (anticipated for the app)
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native
+*.orig
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Env
+.env*.local
+.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store
