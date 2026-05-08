@@ -55,17 +55,53 @@ Type scale:
 - **Spacing:** 4-pt grid (4 / 8 / 12 / 16 / 24 / 32 / 48). Bias toward generous whitespace.
 - **Borders preferred over shadows.** Single 1px hairline in `paperEdge`. Only the tasting-note sheet has a soft drop shadow.
 
+## Visual storytelling — REQUIRED
+
+This app is **about the ritual of coffee**, so screens should feel like a curated journal, not a generic app skeleton. Every screen needs at least one piece of **real, illustrative content** — never a flat placeholder block, never a single emoji glyph standing in for art.
+
+**Use these imagery directions throughout:**
+
+- **Bean cards in the Library** — each thumbnail is a hand-drawn coffee bag illustration with subtle textile texture, the roaster's wordmark visible, and a small branch-and-cherry detail in the corner. Vary the bag color subtly per bean (deep brown for dark roast, terracotta for medium, light kraft for light roast). Never a flat colored square with an emoji.
+- **Daily Brew "Last brew" card** — small editorial photograph or illustration of a porcelain espresso cup with crema visible at top-right of the card. Soft shadow, warm light.
+- **Bean detail screen** — hero illustration at top showing the bean's region (a stylized topographic map sliver of the country, with a coffee cherry branch overlaid).
+- **Brew Lab — IdleSetup** — a faint, almost watermark-style branch-and-cherry illustration behind the steppers, at ~8% opacity in `forestPale` so it doesn't compete with the controls.
+- **Tasting Note modal** — flavor tag chips have tiny custom glyphs next to each word (a citrus slice next to "citrus", a chocolate square next to "chocolate", a flower next to "jasmine", etc.). Glyphs are simple line-art, single color (`forest` or `inkSoft`).
+- **Empty states** — always include a small custom line-art illustration appropriate to the context (e.g., empty Library shows an empty mason jar with a single bean inside; empty History shows a closed pocket-watch).
+
+**Imagery style cohesion:**
+- All illustrations are hand-drawn, single-line or two-tone, in `forest` / `inkSoft` / `paperDeep` palette
+- Never use stock 3D coffee cups, photorealistic latte art clichés, or generic emoji
+- Never use "☕" or "📚" or "⚗️" emoji as primary content — they're acceptable ONLY in the bottom tab bar at small size, and even there custom line-art icons are preferred
+
+**Visual tells the brewing story:**
+- The extraction ring on Brew Lab Pulling should have a subtle radial gradient inside (very faint cream-to-paperDeep) suggesting crema forming
+- Progress bars on bean cards should taper visually (lighter at empty end) like a coffee bag emptying
+- Recovery banner on Lab should have a soft pulsing glow (suggested via amber → cream gradient) implying urgency without being aggressive
+
+## Token discipline — REQUIRED
+
+The design system tokens listed above (`paper #f1ece0`, etc.) are **the source of truth**. Do not generate a derived Material color palette that drifts:
+
+- App background MUST be exactly `paper #f1ece0` (warm cream), not a minty `#ebfeef` or any auto-derived "surface" token.
+- Accent green MUST be exactly `forest #3a5a3e`, not a slightly different "primary container" derivative.
+- Typography MUST use Fraunces + Inter, not falling back to the design system's "title-md" / "body-lg" if those are slightly different sizes.
+- Tile radii MUST be 14px exactly. Pill buttons MUST be 999px (full pill).
+- Tab bar background MUST be `paper #f1ece0`, not a light tint of green.
+
+Stitch should treat the tokens as **strict constraints** rather than suggestions. If a Stitch-generated Material palette would change `surface` to anything other than `#f1ece0`, override it back to the brief's value.
+
 ## Information architecture
 
-Three tabs, two modal flows. Bottom tab bar with line-style icons and labels.
+**Four** tabs, four modal flows. Bottom tab bar with line-style icons + labels (no emoji).
 
 ```
-☕ Daily          📚 Library          ⚗️ Lab
-  (passive          (curated            (active brewing
-   summary)          beans)              workflow)
+☕ Daily          📚 Library          ⚗️ Lab            🔧 Care
+  (machine          (lifetime           (active brewing    (machine
+   readiness +       bean archive       workflow +          maintenance)
+   cups widget)      with recipes)       state machine)
 ```
 
-Plus three modals reachable from the tabs: **Pick Bean**, **Tasting Note**, **Settings**.
+Modals reachable from the tabs: **Pick Bean**, **Tasting Note**, **Settings**, **Save Recipe Confirm**, **Log Maintenance Task**.
 
 ## Screen 1 — Daily Brew (☕ Daily tab)
 

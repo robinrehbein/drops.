@@ -1,0 +1,95 @@
+{
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "http://127.0.0.1:3845/mcp"
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["chrome-devtools-mcp@latest"]
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "context-mode": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["-y", "context-mode"]
+    },
+    "z-ai-vision": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["-y", "@z_ai/mcp-server"],
+      "env": {
+        "Z_AI_API_KEY": "9a5544abd1bd4ca982e6fe922e714dd1.ANxLk9NvT4tYG8Bo",
+        "Z_AI_MODE": "ZAI"
+      }
+    },
+    "z-ai-web-search": {
+      "type": "http",
+      "url": "https://api.z.ai/api/mcp/web_search_prime/mcp",
+      "headers": {
+        "Authorization": "Bearer 9a5544abd1bd4ca982e6fe922e714dd1.ANxLk9NvT4tYG8Bo"
+      }
+    },
+    "z-ai-web-reader": {
+      "type": "http",
+      "url": "https://api.z.ai/api/mcp/web_reader/mcp",
+      "headers": {
+        "Authorization": "Bearer 9a5544abd1bd4ca982e6fe922e714dd1.ANxLk9NvT4tYG8Bo"
+      }
+    },
+    "z-ai-zread": {
+      "type": "http",
+      "url": "https://api.z.ai/api/mcp/zread/mcp",
+      "headers": {
+        "Authorization": "Bearer 9a5544abd1bd4ca982e6fe922e714dd1.ANxLk9NvT4tYG8Bo"
+      }
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://noah:noah123@localhost:5432/noah"
+      ]
+    },
+    "firecrawl-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "fc-4e759433486240e9a88e9e4f378ba815"
+      }
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ctx7sk-6779e259-4a32-4676-a43e-9d58519f6370"
+      }
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/robin.rehbein/Code/noah"]
+    },
+    "morph-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/robin.rehbein/Code/noah"],
+      "env": {
+        "MORPH_API_KEY": "sk-QI2WvhHjAUGCCjERCbjXPH5psUVzDFugo0D-Af8ABPMXBJOk"
+      }
+    }
+  }
+}
