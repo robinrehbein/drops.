@@ -1,12 +1,13 @@
+import { useEffect, useRef } from 'react';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { useBeans } from '@/features/beans/hooks';
-import { useStartSession, useEndSession, useAddMilestone } from '@/features/brew/hooks';
+import { useStartSession, useEndSession, useAddMilestone, useLastShotForBean } from '@/features/brew/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
-import { extractionPercent } from '@/domain/extraction';
+import { extractionPercent, qualityBand } from '@/domain/extraction';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
@@ -29,6 +30,23 @@ export default function LabIndex() {
   const startSession = useStartSession();
   const addMilestone = useAddMilestone();
   const endSession = useEndSession();
+
+  // A4: Recipe recall — auto-fill draft from last shot with this bean
+  const { data: lastShot } = useLastShotForBean(draft.beanId);
+  const prevBeanId = useRef(draft.beanId);
+  useEffect(() => {
+    if (draft.beanId && draft.beanId !== prevBeanId.current && lastShot) {
+      send({
+        type: 'configure',
+        doseG: lastShot.doseG,
+        targetYieldG: lastShot.yieldG ?? draft.targetYieldG,
+        grindSetting: lastShot.grindSetting,
+        grinderLabel: lastShot.grinderLabel,
+        waterTempC: lastShot.waterTempC,
+      });
+    }
+    prevBeanId.current = draft.beanId;
+  }, [draft.beanId]);
 
   // Keep screen awake while pulling
   if (status === 'Pulling') useKeepAwake('brewlog-pulling');
