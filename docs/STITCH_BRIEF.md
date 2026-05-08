@@ -105,50 +105,96 @@ Modals reachable from the tabs: **Pick Bean**, **Tasting Note**, **Settings**, *
 
 ## Screen 1 — Daily Brew (☕ Daily tab)
 
-**Purpose:** A morning glance. *"How am I caffeinated and what did I last brew?"*
+**Purpose:** A morning glance. *"Is the machine ready, how many cups have I had toward today's goal, and what should I brew next?"*
 
 Layout, top to bottom:
 
-- **Header bar**: large serif title `Daily` centered. `Settings` text link top-right (forest green).
-- **"Today, at a glance"** section heading.
-- **Two big stats side by side**: large serif numbers for `shots today` and `est. caffeine (mg)`, with small caption labels below.
-- **Last brew card** (only if there's been at least one brew): cream-deep surface, small uppercase `LAST BREW` label, then bold heading with the bean name, then caption with ratio (e.g., `1:1.58 · ★★★★`).
-- **Big primary pill button**: `Start an Espresso Shot` — full-width, forest green, white-cream text. Tapping it routes to the Lab tab.
-- **"Recent" section**: heading "Recent" + last 3 shot cards stacked. Each card is a row of three mini metric tiles: BEAN / RATIO / RATING.
+- **Header bar** — large serif `Daily` centered. `Settings` text link top-right in `forest`.
 
-Empty state for a brand-new user: only the title and the "Start an Espresso Shot" button are visible — everything else hides cleanly.
+- **Match daily cups (PRIMARY)** — the most prominent widget on the screen, just below the header. A horizontal row of espresso-cup line-art glyphs: as many cups as the user's daily-cups goal (default 4, configurable). Each cup is a small ceramic-cup outline (~32×32 px) drawn in `inkSoft` line. As shots are pulled today, cups fill with crema-brown (a `secondary #a36a3a` tone blended with `forest`). Cups past the goal appear in `amber`. Below the row: single-line caption `2 of 4 · est. 360 mg`. When the goal is met exactly, a small `✓ daily cups` tick appears in `forest`. **Visual cue:** cups should feel hand-drawn, slightly imperfect, like sketched in the corner of a notebook. Each filled cup gets a tiny crema swirl at the rim.
 
-## Screen 2 — Library (📚 Library tab)
+- **Machine readiness** — three rows below the cups widget. Each row: small uppercase label on the left (`FILTER`, `BACKFLUSH`, `BURR CLEAN`), value on the right in caption type. Row colour reflects status:
+  - `forest` text → ok ("18 days left")
+  - `amber` → due soon ("Due in 2 days")
+  - `danger` bold + tiny `!` → overdue ("Overdue 3 days")
+  - The whole row is a Pressable that routes to the Care tab.
+  - If no machine is configured: instead show one dashed-border tile "Add a machine in Care to track readiness" with a `forestPale` wrench glyph.
 
-**Purpose:** Curated archive of beans the user owns / has tasted.
+- **Big primary pill button** — full-width `forest` green, `paper` text: `Start an Espresso Shot`. If the recently-used bean has a saved recipe, append a small subline below the button: `Yirgacheffe Konga · recipe ready`.
 
-- **Header bar**: `Library` serif title. `+ Add` link top-right.
-- **Bean list**: each bean is a horizontal card, ~80px tall:
-  - Square coffee-bag thumbnail on the left (dark forest brown, white "☕" placeholder for now)
-  - Name in serif heading
-  - Subtitle in sans caption: `Origin · Process · Variety` (e.g., "Ethiopia · washed · medium-light")
-  - Slim progress bar showing remaining bag weight (forest green fill on cream track)
-  - Right-side circular badge showing days-since-roast (e.g., "3d") in `forestPale`
-- **Empty state**: dashed-border cream card centered with a coffee cup icon, "No beans yet" heading, friendly body text, and a `+ Add a bean` pill.
+- **Recent shots** — heading `Recent` + last 3 shot cards stacked. Each card on `paperDeep`, hairline border, 14px radius. Inside: bean name (Fraunces heading); below, a row of inline metrics: time-of-day · ratio · star rating.
+
+**Empty state** (brand-new user): only the header, an empty cup row of 4 outlined cups, the dashed Care CTA, and the `Start an Espresso Shot` button. Recent section omitted.
+
+**Caffeine is a fact, not a goal.** It appears only as a subtle suffix in the cup-row caption ("· est. 360 mg") — never as a standalone hero stat.
+
+## Screen 2 — Library (📚 Library tab) — *lifetime archive*
+
+**Purpose:** A lifetime archive of every coffee the user has ever tasted — currently brewing, finished, would-buy-again, archived. Not a current-inventory view. Inventory tracking (weight + price) is opt-in for fun-fact stats.
+
+- **Header bar** — `Library` serif title. `+ Add` link top-right in `forest`.
+
+- **Status filter chips** — a row of segmented chips just below the header: `Active` (default, selected) · `Finished` · `Would buy again` · `All`. Selected chip is filled `forest`; others are ghost. As the user taps, the list filters live.
+
+- **Bean list** — each bean is a horizontal card, 14px radius, `paperDeep` background, hairline border, ~88px tall.
+
+  Inside (left to right):
+  1. **Thumbnail (56×56 px, 8px radius)** — a hand-drawn coffee bag illustration with subtle textile texture, the roaster's wordmark visible, a tiny branch-and-cherry detail in the corner. Vary the bag colour subtly per bean (deep brown for dark, terracotta for medium, light kraft for light). **Never a flat colour with an emoji glyph.**
+  2. **Info column** — bean name in Fraunces heading (`ink`); subtitle in caption sans (`inkSoft`): "Origin · Process · Roast level"; a 4px-tall progress bar showing remaining bag weight if `start_weight_g` is tracked (otherwise hidden, no awkward empty bar).
+  3. **Right-side context** — depends on the active filter:
+     - *Active filter:* a small pill badge with days-since-roast ("3d") in `forestPale` background, `forest` text.
+     - *Finished filter:* a small "finished N days ago" caption + a tiny would-buy-again thumb (`forest` thumbs-up if `true`, `inkFaint` thumbs-down if `false`, omitted if `null`).
+     - *Would-buy-again filter:* same as Finished but only those flagged `true`.
+     - *All:* show whichever icon is most relevant for that bean.
+
+- **Empty state** — dashed-border cream card centered with a hand-drawn empty mason jar (single bean inside) illustration, "No beans yet" heading in serif, body text "Add your first bag to start logging brews", and a `+ Add a bean` pill below.
 
 ### Add Bean form (push from `+ Add`)
 
-- Header with `← Back` and `New bean`
+- Header with `← Back` and `New bean`.
+- **Required**: only `name` (with red asterisk).
+- All other fields are explicitly labelled "*optional*" in caption text below their label.
 - Form fields, each with small uppercase label above:
-  - **Name** (required)
-  - **Roaster**
-  - **Origin**
-  - **Roast level (1–5)** — five small pill buttons in a row, selected one = primary forest, others = ghost
-  - **Bag size (g)** — numeric input
-- Inline error caption in `danger` color if validation fails
-- Big `Save bean` pill at the bottom, full-width
+  - **Name** *required* — text input
+  - **Roaster** *optional* — text input
+  - **Origin** *optional* — text input
+  - **Process** *optional* — small chip row (washed / natural / honey / anaerobic / other)
+  - **Roast level** *optional* — five small pill buttons (1–5)
+  - **Bag size (g)** *optional* — numeric input. Caption hint below: "If you fill this in, we'll show cost-per-shot stats."
+  - **Price** *optional* — numeric + currency picker. Same caption hint.
+  - **Roasted on** *optional* — date picker
+  - **Notes** *optional* — multiline text
+- Inline error caption in `danger` if validation fails (e.g., empty name).
+- Big `Save bean` pill at the bottom, full-width.
 
-### Bean detail (push from any list card)
+### Bean detail (push from any list card) — the deepest screen in the app
 
-- Header with `← Back` and bean's name
-- The same BeanCard at the top
-- Section heading: `History with this bean` + caption count ("4 shots")
-- Big `Delete bean` pill in `danger` variant at bottom
+- **Header** with `← Back` and bean's name.
+
+- **Hero section** — large bean illustration (a stylized topographic sliver of the country with a coffee cherry branch overlaid, single colour `forest` on `paperDeep`). Bean name in big serif title. Subtitle in caption: "Origin · Process · Roast level". Days-since-roast badge. Remaining-weight bar (only if tracked). A **"Would buy again"** toggle row (👍 / 👎 / "not yet decided") with `forest` selected state.
+
+- **Recipe section** — a `paperDeep` card with hairline border, 14px radius. If a recipe is locked in, show:
+  ```
+  ╭─────────────────────────────────────╮
+  │ RECIPE                              │
+  │                                     │
+  │ Dose 18.0 g · Yield 36.0 g · 27.0 s │
+  │ Grind 3.2 · 93 °C                   │
+  │                                     │
+  │ saved from shot on Oct 3, 4★        │
+  │                                     │
+  │   [Edit]                  [Clear]   │
+  ╰─────────────────────────────────────╯
+  ```
+  If no recipe is locked, show a dashed-border tile in its place: "No recipe yet. Pull a great shot, then mark it as the recipe from its session detail." with a faint pencil-and-cup illustration.
+
+- **Sensory radar** — a five-axis radar chart showing the bean's average tasting fingerprint across all shots. Five spokes labelled `mouthfeel` / `acidity` / `sweetness` / `bitterness` / `balance`. Pentagonal background grid in `paperEdge`. Fingerprint polygon filled `forestPale` with `forest` border. Below the chart, a wrap of the most-frequent flavor-tag chips for this bean (with line-art glyphs — citrus slice, chocolate square, flower for jasmine, etc.).
+
+- **History** — heading `History with this bean` + caption "*N* shots · avg ★*X*". Below: a list of every shot, time-of-day + ratio + star rating, tappable to session detail.
+
+- **Fun facts** (only if `start_weight_g` AND `price_paid_minor` are tracked) — three small `paperDeep` tiles in a row: `COST/SHOT` · `TOTAL SPENT` · `DAYS TO EMPTY` (estimated from current usage rate).
+
+- **Lifecycle** — a status segmented control (Active / Finished / Archived). If status is `finished`, show `Finished on <date>` caption below. Below the status row, the `Delete bean` pill in `danger` variant (with undo snackbar after tapping).
 
 ## Screen 3 — Brew Lab (⚗️ Lab tab) — the v1 hero
 
@@ -188,6 +234,67 @@ The most important screen. It's a state machine with three visible modes.
 - Two rows of metric tiles: `DOSE / YIELD / RATIO`, then `DURATION / RATING`.
 - **Milestones surface** (cream-deep card): heading `Milestones` + each milestone as a row with kind + timestamp.
 - **Notes surface** (cream-deep card) with the user's free-text comment, if any.
+- **Save as recipe** action at the bottom:
+  - If the bean has no recipe yet → primary `forest` pill: `Save as recipe for {bean name}`
+  - If the bean already has a recipe → ghost `forest` pill: `Replace bean's recipe with this shot`
+  Both trigger the **Save Recipe Confirm** modal (below).
+
+## Screen 4 — Care (🔧 Care tab) — *machine maintenance*
+
+**Purpose:** Replaces the paper notebook's machine-care pages. Tracks water filter freshness and cleaning schedules so you don't lose track of what's clean and what's overdue.
+
+### Care — home (machine list)
+
+- Header `Care` serif title (no `+` button — adds happen via cards).
+- Vertical stack of **machine cards**, one per active machine. Each card on `paperDeep`, hairline border, 14px radius:
+  - Machine name in Fraunces heading (e.g., "Lelit Bianca V3"), tiny `forestPale` chip next to it with the kind ("espresso machine").
+  - Optional subtitle: vendor + model.
+  - Below the name, a list of up to **3 most-imminent tasks** with computed status:
+    - `FILTER` — `18 days left` (in `forest`)
+    - `BACKFLUSH` — `Due in 2 days` (in `amber`)
+    - `BURR CLEAN` — `Overdue 3 days` (in `danger` bold + small `!`)
+  - Tapping the card → machine detail.
+- After the cards, an **add-machine tile** — dashed-border, `forestPale` wrench glyph, "Add a machine" body text, tap to push the Add Machine form.
+- **Empty state** (no machines yet): a hand-drawn illustration of a small lever-style espresso machine with a wrench resting against it, big heading "Track your machine's care", body text "Add your espresso machine to start logging cleaning, filter changes, and backflushes.", `+ Add machine` pill.
+
+### Machine detail (push from a card)
+
+- Header `← Back` and machine name. `Edit` link top-right.
+- Hero: machine name in big serif title. Subtitle with kind + vendor + model.
+- **Tasks list** — each task on a `paperDeep` row, 14px radius. Layout:
+  ```
+  ╭─────────────────────────────────────────────╮
+  │ Backflush group head                        │
+  │ Every 7 days · last done 5 days ago         │
+  │ DUE IN 2 DAYS                  [Mark done]  │
+  ╰─────────────────────────────────────────────╯
+  ```
+  The status line ("DUE IN 2 DAYS") uses status colour. The `Mark done` pill is small, `forest`, opens the **Log Maintenance Task** modal.
+- After the task list, an **add-task tile** — dashed-border, "Add a task" body text.
+- Below tasks: a small `Notes` section (free-text edit) for machine-specific notes.
+
+### Add Machine form
+
+- Header with `← Back` and `Add machine`.
+- Fields:
+  - **Name** *required* — text input
+  - **Kind** *required* — segmented (`Espresso machine` · `Grinder` · `Kettle` · `Other`)
+  - **Vendor** *optional*
+  - **Model** *optional*
+  - **Acquired on** *optional* — date picker
+  - **Set as primary machine** — toggle; on by default if it's the first machine
+  - **Notes** *optional* — multiline
+- Big `Save machine` pill at bottom.
+
+### Add Task form
+
+- Header `← Back` and `Add task`.
+- Fields:
+  - **Kind** *required* — picker with curated options: Backflush · Gasket replace · Burr clean · Filter replace · Descale · Group screen clean · Custom
+  - **Label** *required* — text input (auto-fills based on kind, editable)
+  - **Cadence** *required* — segmented (`Every N days` · `Every N shots` · `Every N liters`) + numeric input
+  - **Notes** *optional* — multiline
+- Big `Save task` pill at bottom.
 
 ## Modal 1 — Pick Bean (slides up from bottom)
 
@@ -213,11 +320,43 @@ The most important screen. It's a state machine with three visible modes.
 - Bottom sheet with `Settings` title.
 - Vertical list of rows. Each row: label on the left (`body`), value/glyph on the right (`caption`), hairline divider below:
   - `Weight unit` → `g`
-  - `Theme` → `Earthy Forest`
   - `Default ratio` → `1:2.0`
+  - `Daily cups goal` → `4`  *(controls the cup-row widget on Daily)*
+  - `Caffeine target (optional)` → `not set` *(if set, Daily caption gets a "/ Y mg goal" suffix)*
+  - `Theme` → `Earthy Forest`
   - `Send diagnostic report` → `↗` (tappable)
   - `About` → `Brewlog v0.1.0`
 - `Done` text button at the bottom centered (forest green).
+
+## Modal 4 — Save Recipe Confirm (slides up from session detail)
+
+A confirm sheet that previews the values about to be locked in as the bean's canonical recipe. Triggered by the "Save as recipe" / "Replace bean's recipe" pill on session detail.
+
+- Bottom sheet, ~50% screen height.
+- Title: serif `Save as recipe?` (or `Replace recipe?` for replace flow).
+- Below the title, the bean name in caption.
+- A `paperDeep` card showing the values about to be saved:
+  ```
+  Dose 18.0 g · Yield 36.0 g · 27.0 s
+  Grind 3.2 · 93 °C
+  ```
+- A `Notes` text area (multiline, optional) — placeholder: "Any tips for next time? e.g. 'purge 4 turns coarser, then back'."
+- For the replace flow, a small `inkSoft` caption above the card: "This will replace the recipe saved on Sept 14, 2026."
+- Two buttons at the bottom: `Cancel` (ghost) and `Save recipe` / `Replace recipe` (primary `forest`).
+
+## Modal 5 — Log Maintenance Task (slides up from machine detail)
+
+A small confirm sheet for marking a task complete.
+
+- Bottom sheet, ~40% screen height.
+- Title: `Mark done · Backflush group head` in serif.
+- Caption below: `Cadence: every 7 days · last done 5 days ago`.
+- Small fact line(s) showing the snapshot being logged (auto-filled, read-only):
+  - For shot-cadence tasks: `At shot count: 412`
+  - For litre-cadence tasks: `At water processed: 47.2 L`
+  - For day-cadence tasks: `At date: today, 14:22`
+- A `Notes` text area (optional) — placeholder: "Any observations? e.g. 'gasket starting to crack'."
+- Two buttons: `Cancel` (ghost) and `Mark done` (primary `forest`). On confirm, fires a snackbar: "Backflush logged · next due in 7 days".
 
 ## Cross-cutting interactions
 
