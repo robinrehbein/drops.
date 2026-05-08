@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
 
 import { useBrewStore } from '@/features/brew/store';
@@ -30,7 +30,15 @@ export default function TastingNote() {
   const [bitterness, setBitterness] = useState(3);
   const [balance, setBalance] = useState(3);
   const [comment, setComment] = useState('');
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
+
+  // Auto-reset discard confirmation after 3 seconds
+  useEffect(() => {
+    if (!confirmDiscard) return;
+    const id = setTimeout(() => setConfirmDiscard(false), 3000);
+    return () => clearTimeout(id);
+  }, [confirmDiscard]);
 
   if (!session) {
     router.dismissAll();
@@ -128,7 +136,15 @@ export default function TastingNote() {
         <Pill label="Save" onPress={() => save('keep')} size="lg" style={{ flex: 1 }} />
         <Pill label="Save & log another" variant="ghost" onPress={() => save('another')} size="lg" style={{ flex: 1 }} />
       </View>
-      <Pill label="Discard shot" variant="ghost" onPress={onDiscard} style={{ marginTop: t.space.md }} />
+      <Pill
+        label={confirmDiscard ? 'Tap again to confirm discard' : 'Discard shot'}
+        variant={confirmDiscard ? 'danger' : 'ghost'}
+        onPress={() => {
+          if (confirmDiscard) onDiscard();
+          else setConfirmDiscard(true);
+        }}
+        style={{ marginTop: t.space.md }}
+      />
     </Sheet>
   );
 }
