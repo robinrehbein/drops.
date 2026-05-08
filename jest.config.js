@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'jest-expo',
-  setupFilesAfterEach: ['@testing-library/jest-native/extend-expect'],
+  // RNTL ≥12.4 auto-extends jest's expect with native matchers on first import.
   setupFiles: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
