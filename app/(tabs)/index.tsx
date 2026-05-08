@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import { useRecentShots, useTodaySummary } from '@/features/dashboard/hooks';
+import { useWeeklyRecap } from '@/features/insights/hooks';
 import { useBeans } from '@/features/beans/hooks';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { Header } from '@/ui/primitives/Header';
@@ -10,12 +11,14 @@ import { Pill } from '@/ui/primitives/Pill';
 import { Stat } from '@/ui/primitives/Stat';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
+import { WeeklyRecapCard } from '@/ui/primitives/WeeklyRecapCard';
 import { useTheme } from '@/ui/theme/useTheme';
 
 export default function Daily() {
   const t = useTheme();
   const router = useRouter();
   const { data: today } = useTodaySummary();
+  const { data: recap } = useWeeklyRecap();
   const { data: recent } = useRecentShots(3);
   const { data: beans } = useBeans();
 
@@ -43,7 +46,25 @@ export default function Daily() {
           </Surface>
         ) : null}
 
+        {today?.bestShot ? (
+          <Surface bg="paperDeep" padding="md" radius="md" bordered>
+            <Text variant="label">BEST SHOT TODAY</Text>
+            <Text variant="heading" style={{ marginTop: t.space.xs }}>
+              {today.bestShot.beanName}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.xs }}>
+              <Text variant="numeral">{'★'.repeat(today.bestShot.rating)}</Text>
+              <Text variant="numeral">{formatRatio(today.bestShot.ratio)}</Text>
+              <Text variant="numeral">{today.bestShot.durationS.toFixed(1)}s</Text>
+            </View>
+          </Surface>
+        ) : null}
+
         <Pill label="Start an Espresso Shot" size="lg" onPress={() => router.push('/lab' as never)} />
+
+        {recap && recap.totalShots > 0 ? (
+          <WeeklyRecapCard recap={recap} />
+        ) : null}
 
         {recent && recent.length > 0 ? (
           <View>

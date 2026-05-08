@@ -9,13 +9,18 @@ import { QueryProvider } from '@/features/_provider/QueryProvider';
 import { RepoProvider } from '@/features/_provider/RepoProvider';
 import { ErrorBoundary } from '@/lib/error-boundary';
 import { initSentry } from '@/lib/sentry';
+import { useOnboardingStore } from '@/state/onboarding';
 import { Snackbar } from '@/ui/primitives/Snackbar';
+import { OnboardingScreen } from '@/ui/screens/OnboardingScreen';
 import { Text } from '@/ui/primitives/Text';
 import { ThemeProvider } from '@/ui/theme/ThemeProvider';
 
 export default function RootLayout() {
   const [migrated, setMigrated] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // E1: Onboarding gate — must be called before any early returns (Rules of Hooks)
+  const onboardingCompleted = useOnboardingStore((s) => s.completed);
 
   useEffect(() => {
     initSentry();
@@ -51,13 +56,15 @@ export default function RootLayout() {
       <ThemeProvider>
         <QueryProvider>
           <RepoProvider>
-            {/* Earthy Forest is a light theme — force dark glyphs on the
-                status bar so clock/battery stay legible against `paper`. */}
             <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-            </Stack>
+            {onboardingCompleted ? (
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+              </Stack>
+            ) : (
+              <OnboardingScreen />
+            )}
             <Snackbar />
           </RepoProvider>
         </QueryProvider>
