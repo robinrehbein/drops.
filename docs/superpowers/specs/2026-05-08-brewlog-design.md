@@ -8,32 +8,40 @@
 
 ## 1. Overview
 
-Brewlog is a high-fidelity coffee tracking and brewing companion for specialty coffee enthusiasts. It treats brewing as a daily ritual: a tactile, sensory practice supported by precise data. The v1 launch focuses on two of four conceptual pillars; the remaining two ship in subsequent versions.
+Brewlog is the digital version of a serious home barista's paper notebook — a lifetime archive of every bean ever tasted, with the dialed-in recipe locked in beside it, and the daily reality of the machine that brews them all. It treats brewing as a daily ritual: a tactile, sensory practice supported by precise data. v1 covers all four conceptual pillars in service of the paper-notebook test (*if it's not on the page in front of a barista dialing in a shot, it doesn't belong in v1*).
 
-### Conceptual pillars (full vision)
+### Conceptual pillars (all in v1)
 
-1. **Daily Brew** — the morning-ritual command center: caffeine balance, water-filter health, quick-start triggers.
-2. **Bean Library** — a curated archive of roasts: origin, roast level, flavor profiles.
-3. **Brew Lab** — a precision extraction interface: timer, parameters, tasting notes.
-4. **Holistic Maintenance** — equipment health: cleaning cycles, filter replacement, component-specific care.
+1. **Daily Brew** — the morning-ritual glance: machine readiness (water filter, cleaning), today's shots, and a "match daily cups" visual. Caffeine total is a fun-fact secondary.
+2. **Bean Library** — a *lifetime* archive of every coffee ever tasted, with optional inventory tracking (weight + price for fun facts), per-bean status (active / finished / would-buy-again), and the locked-in canonical recipe.
+3. **Brew Lab** — the active brewing workflow: state-machine-driven timer, milestones, sensory capture. If the selected bean has a saved recipe, IdleSetup pre-fills from it.
+4. **Maintenance** — equipment health: water filter freshness, cleaning schedule (group-head backflushing, gasket, burr), machine + grinder + filter inventory.
+
+### Vision in one sentence
+
+> Brewlog is the leather notebook by the espresso machine — the place where you remember the great shots, dial in the new beans, and never let the filter go stale.
+
+### Audience
+
+Specialty coffee enthusiasts running real machines + grinders. v1 targets the **builder** first (used daily by the developer) and a **small specialty-coffee community** thereafter (handful of friends + r/espresso-style enthusiasts who find it). Not a marketplace, not a leaderboard, not a Reddit. Sharing a recipe with a friend matters; public feeds don't.
 
 ### Design philosophy
 
-**Tactile Organicism** — soft geometry, earthy palette, high information density with calm clarity. The interface evokes a barista's notebook more than a clinical dashboard.
+**Tactile Organicism** — soft geometry, earthy palette, high information density with calm clarity. The interface evokes a barista's notebook more than a clinical dashboard. Every screen earns at least one piece of real illustrative content (hand-drawn coffee bag art, branch-and-cherry watermarks, line-art flavor glyphs). No flat placeholder blocks, no emoji-as-content.
 
 ### Locked decisions
 
 | Decision | Choice |
 |---|---|
 | Product name | **Brewlog** |
-| Target | Real product — App Store and Play Store |
+| Target | Real product — App Store and Play Store, after personal use validates v1 |
 | Stack | Expo + React Native + TypeScript |
-| v1 scope | **Brew Lab + Bean Library** with a thin Daily Brew summary; Maintenance ships in v1.1 |
+| v1 scope | **All four pillars** — Brew Lab + Bean Library (lifetime archive + recipes) + Daily Brew + Maintenance |
 | v1 brew methods | **Espresso only** |
 | Brew Lab input | Manual + timer + milestones (Bluetooth scales deferred to v1.2) |
 | Data | Local-first; optional cloud sync added in v1.4 |
 | Monetization | Free in v1; pricing decided after launch |
-| Visual direction | Earthy Forest — cream paper, deep forest green, serif headers |
+| Visual direction | Earthy Forest — cream paper, deep forest green, Fraunces serif + Inter sans, hand-drawn illustrations |
 
 ---
 
@@ -115,17 +123,30 @@ expo-sqlite (storage primitive)
 
 ## 3. Data model
 
-Four tables for v1, on `expo-sqlite` via Drizzle ORM. All mutable rows include `id` (UUID), `created_at`, `updated_at`, `deleted_at` (soft delete) so v1.4 cloud sync can replicate without schema changes.
+Seven tables for v1, on `expo-sqlite` via Drizzle ORM. All mutable rows include `id` (UUID), `created_at`, `updated_at`, `deleted_at` (soft delete) so v1.4 cloud sync can replicate without schema changes.
 
 ### Tables
 
 ```ts
-beans                     // The library — what you've bought / tasted
-─ id, name, roaster, origin, country_code, process,
+beans                     // Lifetime archive — every bean ever tasted
+─ id, name (required), roaster, origin, country_code, process,
   variety, roast_level (1–5), roasted_on, altitude_masl,
-  start_weight_g, remaining_weight_g,
-  price_paid_minor, price_paid_currency,
+  start_weight_g, remaining_weight_g,           -- optional inventory
+  price_paid_minor, price_paid_currency,        -- optional cost tracking
   flavor_tags (json string[]),  notes,
+  status ('active' | 'finished' | 'archived'),  -- default 'active'
+  would_buy_again (boolean, nullable),          -- null = not yet decided
+  finished_at (timestamp, nullable),            -- set when status flips to 'finished'
+  recipe_id (FK → recipes, nullable),           -- the canonical "winning" recipe
+  created_at, updated_at, deleted_at
+
+recipes                   // Locked-in canonical recipe per bean (1:1 typically)
+─ id, bean_id (FK → beans, UNIQUE in v1),
+  source_session_id (FK → brew_sessions),       -- the shot this recipe was distilled from
+  dose_g, target_yield_g, duration_target_s,
+  grinder_label, grind_setting, water_temp_c, ratio_target,
+  notes,                                        -- e.g. "purge 4 turns coarser, then back"
+  saved_at,
   created_at, updated_at, deleted_at
 
 brew_sessions             // One espresso shot (the v1 method)
@@ -135,6 +156,7 @@ brew_sessions             // One espresso shot (the v1 method)
   pre_infusion_s, first_drop_s,
   grinder_label, grind_setting, water_temp_c,
   rating (1–5), comment,
+  machine_id (FK → machines, nullable),         -- which machine pulled it
   created_at, updated_at, deleted_at
 
 brew_milestones           // Timer events captured during a pull
@@ -147,28 +169,67 @@ tasting_notes             // Post-extraction sensory log (1:1 with session)
   mouthfeel, acidity, sweetness, bitterness, balance (each 1–5),
   flavor_tags (json string[]), comment,
   created_at, updated_at
+
+machines                  // Espresso machines, grinders, kettles, etc.
+─ id, name (required, e.g. "Lelit Bianca V3"),
+  kind ('espresso_machine' | 'grinder' | 'kettle' | 'other'),
+  model, vendor,
+  acquired_on, notes,
+  is_primary (boolean),                         -- default machine for new shots
+  created_at, updated_at, deleted_at
+
+maintenance_tasks         // Definition of a recurring care task
+─ id, machine_id (FK → machines),
+  kind ('backflush' | 'gasket_replace' | 'burr_clean' | 'filter_replace'
+        | 'descale' | 'group_screen_clean' | 'custom'),
+  label,                                        -- human-readable, e.g. "Backflush group head"
+  cadence_kind ('every_n_days' | 'every_n_shots' | 'every_n_liters'),
+  cadence_value,                                -- e.g. 7 (days), 200 (shots), 60 (liters)
+  notes,
+  active (boolean, default true),
+  created_at, updated_at, deleted_at
+
+maintenance_logs          // Each completion of a maintenance task
+─ id, task_id (FK → maintenance_tasks),
+  done_at,
+  shots_at_time (snapshot of total shot count when logged, nullable),
+  liters_at_time (nullable, for filter tasks),
+  notes,
+  created_at, deleted_at
 ```
 
-A separate one-row **`preferences`** table holds user units (g vs oz), default ratio, and theme. No `user_id` columns in v1; they will be added (nullable, defaulting to a single local user) when sync ships in v1.4.
+A separate one-row **`preferences`** table holds user units (g vs oz), default ratio, theme, **daily-cups goal** (default 4, used by the Daily "match daily cups" widget), and **caffeine-target-mg** (optional, default null = caffeine displayed as fact, not tracked toward a goal). No `user_id` columns in v1; they will be added (nullable, defaulting to a single local user) when sync ships in v1.4.
 
 ### Indexes
 
-- `beans (deleted_at, name)` — list reads
+- `beans (deleted_at, status, name)` — Library tab live list (filter by status)
+- `beans (deleted_at, would_buy_again)` — "would buy again" filter
+- `recipes (bean_id)` — UNIQUE; one canonical recipe per bean in v1
 - `brew_sessions (bean_id, started_at DESC)` — bean detail "history with this bean"
 - `brew_sessions (deleted_at, started_at DESC)` — history list
 - `brew_milestones (session_id, t_seconds)` — session detail render
 - `tasting_notes (session_id)` — unique already enforces this
+- `machines (deleted_at, is_primary)` — find primary machine for a new shot
+- `maintenance_tasks (machine_id, active)` — list per-machine tasks
+- `maintenance_logs (task_id, done_at DESC)` — most recent completion (drives "next due" computation)
 
 ### Design decisions
 
 | Decision | Rationale |
 |---|---|
 | **UUIDs everywhere** | Sync-safe. Two devices can create rows offline without ID collisions in v1.4. |
+| **All bean fields except `name` are optional** | "I just had a great coffee" should never get blocked by a required-fields wall. Inventory + price are explicitly opt-in for fun-fact tracking. |
+| **`status` enum** + auto-managed flips | `active` by default. Auto-flips to `finished` when `remaining_weight_g` hits 0 (if tracked); manual flip available from bean detail. `archived` is a hide-from-library state for cleanup. |
+| **`would_buy_again` is nullable** | `null` = not yet decided. `true` / `false` are conscious choices the user makes (usually after a bean is finished). |
+| **Recipe is 1:1 with bean in v1** | Defer "morning shot vs weekend lungo" multi-recipe to v1.x. Most beans get one recipe, period. The unique constraint enforces this; if multi-recipe arrives, drop the constraint and add a `name` column. |
+| **`recipe_id` denormalized on bean** | Single read on bean detail. Update when recipe is saved/changed. |
 | **`flavor_tags` as JSON column** | v1 needs no tag analytics. If later required, add an FTS5 virtual table or migrate. |
-| **`remaining_weight_g` denormalized**, decremented per shot | Fast list reads. Single update site: the brew-session-saved hook. |
+| **`remaining_weight_g` denormalized**, decremented per shot when `start_weight_g` is set | Fast list reads. Single update site: the brew-session-saved hook. |
 | **Money in minor units + currency** | Standard correct-money pattern; no floats. |
 | **Soft delete (`deleted_at`)** | Preserves history for trends; supports race-free sync deletes. List queries always filter `deleted_at IS NULL`. |
-| **No `machine` / `maintenance` tables yet** | v1.1. `grinder_label` is free text now; in v1.1 it becomes optional FK to `machines`. Additive migration. |
+| **Maintenance is task + log, not a single denormalized state** | Tasks define the cadence; logs record completions. "Next due" is computed (last log + cadence). Adding a new task type is a single insert; the cadence engine doesn't care. |
+| **`maintenance_tasks.cadence_kind` covers three rhythms** | Time (descaling every 60 days), shots (group screen every 200 shots), liters (filter every 60 L). Cleaning rhythm depends on usage, not just the calendar. |
+| **`machine_id` on `brew_sessions` is nullable** | Existing v1.0 sessions migrate forward without backfilling. New shots default to `is_primary` machine, if any. |
 | **`method` as string** despite v1 espresso-only | Adding V60 in v1.3 needs no new column. |
 | **Drizzle migrations**, versioned and committed | Applied on app launch; failures route to schema-mismatch recovery (§7). |
 
@@ -180,61 +241,97 @@ Pure functions tested with vanilla Jest, never touching SQLite:
 - `extractionPercent(dose, yield, tdsAssumed)` — stand-in until refractometer support (v1.6)
 - `validateBean(input) → Result<Bean, Issue[]>` (zod)
 - `validateSession(input) → Result<Session, Issue[]>` (zod)
-- `caffeineForShot(doseG, beanRoastLevel) → mg` — rough estimator for the dashboard
+- `validateRecipe(input) → Result<Recipe, Issue[]>` (zod)
+- `validateMachine(input) → Result<Machine, Issue[]>` (zod)
+- `validateMaintenanceTask(input)` (zod)
+- `caffeineForShot(doseG, beanRoastLevel) → mg` — rough estimator
+- `nextDueAt(task, lastLog, currentShots, currentLiters) → { dueAt, daysOrShotsRemaining }` — computes when a task is next due (handles all three cadence kinds)
+- `tastingRadar(sessions) → { mouthfeel, acidity, sweetness, bitterness, balance }` — averages per-shot tasting notes for a bean (used on bean detail radar chart)
+- `cupsTowardGoal(shotsToday, goal) → { filled, total, overshoot }` — drives the Daily "match daily cups" widget
+- `costPerShot(bean) → minorUnits | null` — `(price_paid_minor ÷ (start_weight_g ÷ avg_dose_g))` if both are tracked; null otherwise
 
 ---
 
 ## 4. Screen map and navigation
 
-Three bottom tabs in v1. Maintenance is the eventual fourth (v1.1).
+Four bottom tabs in v1.
 
 ```
 Tab bar
 ├── ☕ Daily          → /(tabs)/index
 ├── 📚 Library        → /(tabs)/library
-└── ⚗️ Lab            → /(tabs)/lab
+├── ⚗️ Lab            → /(tabs)/lab
+└── 🔧 Care           → /(tabs)/care        (Maintenance)
 ```
 
-### Tab 1 — Daily Brew (thin)
+### Tab 1 — Daily Brew
 
-A single scrollable column with three blocks:
+A single scrollable column. Machine readiness comes first; cups come second; recent comes third. Caffeine is a fact, not a goal.
 
-1. **Today, at a glance** — count of shots logged today, estimated caffeine (mg), last brew rating with bean name.
-2. **Quick Start** — one prominent "Start an Espresso Shot" button → opens Lab with last-used bean pre-selected.
-3. **Recent shots** — last three sessions as mini-cards (rating, ratio, bean, time-ago).
+1. **Match daily cups** — a row of espresso-cup illustrations (line-art, single colour). The user's daily-cups goal (default 4, configurable in Settings) defines how many cups are drawn. As shots are pulled today, cups fill in with crema-brown. Past the goal, additional cups appear in `amber`. Caption below: "*N* of *M* · est. *X* mg" (caffeine quietly attached as fact). When *N* = *M* exactly, a tiny "✓ daily cups" tick appears in `forest`.
+2. **Machine readiness** — a 1-line status per active maintenance task on the primary machine. Layout: small uppercase label ("Filter", "Backflush"), value ("18 days", "Due in 2 days", or "Overdue 3 days" in `amber`/`danger`). Tap-through goes to the Care tab. If no machine is configured, this section shows a small CTA: "Add a machine in Care to track readiness."
+3. **Quick Start** — one prominent "Start an Espresso Shot" button → opens Lab with the last-used bean pre-selected. If that bean has a saved recipe, IdleSetup pre-fills from it.
+4. **Recent shots** — last three sessions as mini-cards (rating, ratio, bean, time-ago).
 
-No charts, streaks, or goals in v1. Filter health and caffeine balance arrive with Maintenance (v1.1) and dashboard expansion (v2).
+No streaks, no analytics charts on v1. Tasting-evolution charts arrive in v2.
 
 ### Tab 2 — Library
 
-- **List** — scrollable grid of bean cards (image placeholder, name, roaster, days-since-roast badge, remaining-weight bar).
-- **Empty state** — friendly "Add your first bean" with a tactile illustration.
-- **Add / Edit** — full screen, not a modal. The bean form is data-rich and earns the real estate. Required: `name`. All other fields optional. Inline zod validation.
-- **Detail** — full bean card plus "history with this bean" (count of shots, average rating, last brewed). Edit pencil toggles into edit mode. Delete is a soft delete with an undo snackbar.
+The lifetime archive. Default filter is "active" (currently brewing); a segmented control in the header switches between **Active** / **Finished** / **Would buy again** / **All**.
+
+- **List** — scrollable bean cards.
+  - Active beans: name (Fraunces heading), subtitle (origin · process · roast), days-since-roast badge, remaining-weight bar (only if `start_weight_g` is set).
+  - Finished beans (Finished filter): name, subtitle, "finished *N* days ago", and a tiny `would_buy_again` thumb (forest = yes, paperFaint = no, omitted if null).
+- **Empty state** — friendly "Add your first bean" CTA with hand-drawn empty mason jar illustration.
+- **Add / Edit** — full screen, not a modal. **Required: `name` only**. Everything else (roaster, origin, weight, price, roast level, etc.) is optional and explicitly labelled "optional" in the form. Inline zod validation.
+- **Bean detail** — the deepest screen in the app. Sections, top to bottom:
+  1. **Hero** — bean name in serif title; subtitle with origin/process/roast; days-since-roast badge; remaining-weight bar (if tracked); a "would buy again" toggle (thumb-up / thumb-down / not-decided).
+  2. **Recipe** — if a canonical recipe is locked in, show the values on a `paperDeep` card: "Dose 18.0 g · Yield 36.0 g · 27.0 s · Grind 3.2 · 93 °C". Caption: "saved from shot on Oct 3, 4★". Edit / clear actions. If no recipe is locked, show a dashed-border tile: "No recipe yet. Pull a great shot, then mark it as the recipe from its session detail."
+  3. **Sensory radar** — five-axis radar chart (mouthfeel / acidity / sweetness / bitterness / balance) with values averaged across all this bean's shots. Drawn in `forest`/`forestPale`. Below: a wrap of the most-frequent flavor-tag chips for this bean.
+  4. **History** — count of shots + average rating. List of every shot with this bean (most recent first), tap to session detail.
+  5. **Fun facts** (only if `start_weight_g` and `price_paid_minor` are tracked) — cost-per-shot, total spent, days-to-empty estimate.
+  6. **Lifecycle** — status (Active / Finished / Archived) with manual override; if status is `finished`, show "finished on *date*". Below: soft-delete with undo snackbar.
 
 ### Tab 3 — Lab (the v1 hero)
 
 A segmented control in the header switches between **Brew** and **History**.
 
-- **Brew (idle)** — target dose / target yield steppers, last-used grinder setting carried forward, big "Start Shot" button. A small chip at top: "Brewing with: [Ethiopia · Yirgacheffe ▾]" — tap to swap via the bean-picker modal.
-- **Brew (running)** — timer + extraction ring. Two action affordances during the pull: a **milestone pill** (pre-infusion end, first drop) and a single **Stop Pull** button.
-- **Brew (post-stop)** — tasting-note sheet slides up. Rating (1–5), sensory sliders, free-text comment, optional flavor-tag chips. **Save** returns to history; **Save & log another** returns to Brew (idle).
-- **History** — list grouped by day, filterable by bean. Tap → session detail with milestones rendered on a static timeline.
+- **Brew (idle)** — bean chip at top ("Brewing with: [bean ▾]"). If selected bean has a saved recipe, two big steppers (Dose, Target yield) and the grinder/temp values pre-fill from it; a small `forest` "Recipe locked" indicator sits under the chip. If no recipe, defaults to 18 → 36 g, 27 s. Big "Start Shot" button.
+- **Brew (running)** — timer + extraction ring. Milestone pill (pre-infusion end, first drop) + Stop Pull. Subtle inner radial gradient inside the ring suggests crema forming.
+- **Brew (post-stop)** — tasting-note sheet slides up. Yield, rating, sensory sliders, flavor-tag chips with line-art glyphs (citrus slice next to "citrus", flower next to "jasmine", etc.), free-text notes. Save / Save & log another / Discard.
+- **History** — list grouped by day, filterable by bean. Tap → session detail.
+- **Session detail** — adds a "Save as the recipe for *bean*" affordance. Tapping it inserts a `recipes` row from this session's values and updates the bean's `recipe_id`. If the bean already has a recipe, the action becomes "Replace recipe" and shows a confirm.
+
+### Tab 4 — Care (Maintenance)
+
+The replacement for the paper notebook's machine-care pages.
+
+- **Home** — a list of active machines (cards on `paperDeep`). Each machine card shows:
+  - Machine name + kind (Lelit Bianca · espresso machine)
+  - Up to 3 most-imminent tasks with status: "Filter — 18 days left", "Backflush — due in 2 days", "Burr clean — overdue 3 days" (overdue in `danger`)
+  - "+ Add machine" tile at the bottom of the list.
+- **Machine detail** — drilling into a machine shows:
+  - Header with machine name + kind + "Edit"
+  - Full task list, each row: label, cadence, last done, next due, "Mark done now" pill button. When tapped, inserts a `maintenance_logs` row stamped with current time + shot count + liter estimate (if applicable). Optional notes prompt before logging.
+  - "+ Add task" tile.
+- **Add machine** — name (required), kind (espresso machine / grinder / kettle / other), model, vendor, acquired date, `is_primary` toggle, notes.
+- **Add task** — pick task kind from a curated list (backflush, gasket replace, burr clean, filter replace, descale, group screen clean, custom), label, cadence (every N days / shots / liters), notes.
 
 ### Modals
 
-- **Pick Bean** — searchable list (FTS via plain `LIKE` for v1). Empty-state CTA: "Add a new bean →" routes to the same form as Library/new.
-- **Tasting Note** — described above; sheet presentation.
-- **Settings** — units, theme reservation (single theme in v1), about, "Send Diagnostic Report."
+- **Pick Bean** — searchable list with status filter chips. Empty-state CTA: "Add a new bean →".
+- **Tasting Note** — sheet, described above.
+- **Settings** — units (g / oz), default ratio, **daily-cups goal**, optional caffeine target, theme (single in v1), about, "Send Diagnostic Report."
+- **Recipe save confirm** — when saving from a shot, shows the values about to be locked in plus a free-text "notes" field (e.g. "purge 4 turns coarser, then back").
 
 ### First-launch UX
 
-No wizard, no auth wall. App opens to Daily Brew with empty states across all three tabs. Library's empty state has the most prominent CTA — you can't brew before you have a bean.
+No wizard, no auth wall. App opens to Daily Brew with empty states across all four tabs. Library's empty state has the most prominent CTA — you can't brew before you have a bean. Care's empty state suggests "Add your espresso machine to start tracking maintenance" but is non-blocking; the rest of the app works without a configured machine.
 
 ### Header and tab bar styling
 
 - **Header** — serif title in `forest` accent, no shadow, large back tap target on left, settings gear on Daily.
-- **Tab bar** — `paper` background, `forest` active label with thin underline, line icons (no filled glyphs).
+- **Tab bar** — `paper` background, `forest` active label with thin underline, line icons (no filled glyphs). Four tabs require slightly tighter labels at common screen widths; truncate to "Care" rather than "Maintenance".
 
 ---
 
@@ -381,11 +478,11 @@ shadow-opacity: 1; elevation: 4 (Android)
 
 | Layer | Tool | Scope | Cadence |
 |---|---|---|---|
-| **Unit** | Jest | `src/domain/`: ratios, extraction %, validators, formatters, caffeine estimator. **100% coverage of `domain/`.** | Per-commit (lint-staged) + per-PR |
-| **DB** | Jest + Drizzle's `better-sqlite3` driver | Migrations, CRUD, soft-delete, cascade, denormalized counters | Per-PR |
-| **State machine** | Jest | Every Brew Lab transition; recovery math; edge cases (Stop while not Pulling = noop). **Highest-risk surface; exhaustive.** | Per-PR |
-| **Component** | React Native Testing Library | Empty / loading / error / data states for each screen. Key interactions wired up. | Per-PR |
-| **End-to-end** | Maestro | Three smoke flows: (1) first-launch → add bean → start shot → save with notes; (2) kill mid-pull → relaunch → resume; (3) edit + soft-delete a bean with undo. | Nightly + on `main` merge |
+| **Unit** | Jest | `src/domain/`: ratios, extraction %, validators, formatters, caffeine estimator, `nextDueAt`, `tastingRadar`, `cupsTowardGoal`, `costPerShot`. **100% coverage of `domain/`.** | Per-commit (lint-staged) + per-PR |
+| **DB** | Jest + Drizzle's `better-sqlite3` driver | Migrations, CRUD across all 7 tables, soft-delete, cascade, denormalized counters, recipe insert + bean.recipe_id update, maintenance log → next-due recompute | Per-PR |
+| **State machine** | Jest | Every Brew Lab transition; recovery math; edge cases (Stop while not Pulling = noop). Recipe-pre-fill behaviour from saved bean recipe. **Highest-risk surface; exhaustive.** | Per-PR |
+| **Component** | React Native Testing Library | Empty / loading / error / data states for each screen. Key interactions wired up. New surfaces: bean detail recipe section, sensory radar, daily cups widget, machine readiness rows, maintenance log button. | Per-PR |
+| **End-to-end** | Maestro | Five smoke flows: (1) first-launch → add bean → start shot → save with notes; (2) kill mid-pull → relaunch → resume; (3) edit + soft-delete a bean with undo; (4) save a shot as the recipe → start a new shot with that bean → assert recipe pre-filled; (5) add a machine + filter task → mark task done → assert "Filter — N days left" appears on Daily. | Nightly + on `main` merge |
 
 Maestro chosen over Detox: an order of magnitude less code, first-try Expo compatibility, no device farm.
 
@@ -421,17 +518,19 @@ Maestro chosen over Detox: an order of magnitude less code, first-try Expo compa
 
 ## 11. v1.x roadmap (deferred from v1)
 
+Maintenance has been promoted into v1; cup-goal visualisation has been promoted into v1; per-bean sensory radar has been promoted into v1.
+
 | Version | Theme |
 |---|---|
-| **v1.1** | **Maintenance pillar** — `machines` table, cleaning schedules, filter replacement based on water processed, gasket and burr cleaning. Adds the fourth tab. |
+| **v1.1** | **Multi-recipe per bean** — drop the `recipes` UNIQUE constraint, add `name` + `is_default` to recipes (e.g. "morning shot" vs "weekend lungo"). |
 | **v1.2** | **Bluetooth scales** — Acaia / Felicita / Timemore. Real flow curves; live extraction visualization. |
 | **v1.3** | **V60 / pour-over** — multi-stage timer (bloom → pulses → drawdown), pour scheduler. |
-| **v1.4** | **Cloud sync + Pro tier** — Supabase + Sign in with Apple/Google. RevenueCat for IAP; sync becomes a Pro hook. |
+| **v1.4** | **Cloud sync + small-community sharing** — Supabase + Sign in with Apple/Google. Share a single recipe with a friend via deep link / QR code. Optional Pro tier (RevenueCat) for sync; community sharing is free. |
 | **v1.5** | French Press, AeroPress, Moka Pot. |
 | **v1.6** | Refractometer integration (TDS log) → real extraction yield %. |
 | **v2** | Daily Brew dashboard expansion: caffeine graphs, streaks, weekly insights, taste evolution. |
 
-This sequence is non-binding but shaped v1 data choices: `method` as string (v1.3+), `flavor_tags` as JSON (analytics deferred to v2), `grinder_label` as free text (becomes FK in v1.1).
+This sequence is non-binding but shaped v1 data choices: `method` as string (v1.3+), `flavor_tags` as JSON (analytics deferred to v2), `recipes` UNIQUE on `bean_id` (multi-recipe deferred to v1.1).
 
 ---
 
@@ -447,13 +546,16 @@ This sequence is non-binding but shaped v1 data choices: `method` as string (v1.
 
 ## 13. Definition of done for v1
 
-- All three tabs ship with empty / loading / error / data states.
-- Bean Library: add, edit, soft-delete with undo, list with search.
-- Brew Lab: full state machine including Recovery; tasting note sheet; History tab.
-- Daily Brew: today summary, Quick Start, recent shots.
-- Settings: units, "Send Diagnostic Report," about.
+- All four tabs ship with empty / loading / error / data states.
+- **Bean Library**: add (name-only path), edit, soft-delete with undo, status filter (Active / Finished / Would buy again / All), would-buy-again toggle, finished-on date.
+- **Bean detail**: hero, recipe section (locked / dashed-empty), sensory radar, history list, optional cost-per-shot fun facts, lifecycle controls.
+- **Recipes**: save-as-recipe action from session detail; replace-recipe confirm; bean detail surface and Brew Lab pre-fill.
+- **Brew Lab**: full state machine including Recovery; tasting note sheet; History tab; recipe pre-fill in IdleSetup when bean has a saved recipe.
+- **Daily Brew**: match-daily-cups widget, machine readiness rows (or empty-CTA), Quick Start, recent shots.
+- **Care (Maintenance)**: machine list, add machine, machine detail with task list, add task, mark task done. Computed "next due" status (days / shots / liters) drives the row colour (`forest` ok / `amber` due-soon / `danger` overdue).
+- **Settings**: units, default ratio, daily-cups goal, optional caffeine target, "Send Diagnostic Report," about.
 - Sentry wired; error boundary in place.
-- 100% unit coverage of `src/domain/`; state-machine tests exhaustive; three Maestro E2E flows green.
-- App Store and Play Store listings drafted; screenshots captured.
+- 100% unit coverage of `src/domain/` including new functions (`nextDueAt`, `tastingRadar`, `cupsTowardGoal`, `costPerShot`); state-machine tests exhaustive; **five** Maestro E2E flows green (added: recipe pre-fill, machine readiness).
+- App Store and Play Store listings drafted; screenshots captured for all four tabs.
 - Accessibility walkthroughs (VoiceOver + TalkBack) signed off.
 - Cold start < 1.5 s on iPhone 13; Pulling frame budget ≤ 16 ms verified.
