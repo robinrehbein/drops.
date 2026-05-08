@@ -9,7 +9,10 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "expo": "~54.0.33",
@@ -23,6 +26,9 @@
     "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
@@ -33,7 +39,10 @@
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.5",
+    "jest": "^30.4.1",
+    "jest-expo": "^55.0.17",
     "prettier": "^3.8.3",
+    "ts-jest": "^29.4.9",
     "typescript": "~5.9.2"
   },
   "private": true
