@@ -4,14 +4,20 @@ import { ScrollView, TextInput, View } from 'react-native';
 import { differenceInDays, format } from 'date-fns';
 
 import type { BeanInput } from '@/domain/validators/bean';
-import { useBean, useRestoreBean, useSoftDeleteBean, useUpdateBean } from '@/features/beans/hooks';
-import { useSessions } from '@/features/brew/hooks';
+import { useBean, useRestoreBean, useSetBeanStatus, useSetWouldBuyAgain, useSoftDeleteBean, useUpdateBean } from '@/features/beans/hooks';
+import { useSessions, useTastingNotesForBean } from '@/features/brew/hooks';
+import { useRecipeForBean, useClearRecipe } from '@/features/recipes/hooks';
 import { brewRatio, formatRatio } from '@/domain/ratio';
+import { tastingRadar } from '@/domain/tasting';
+import { costPerShot } from '@/domain/cost';
 import { useSnackbarStore } from '@/state/snackbar';
 import { BeanCard } from '@/ui/primitives/BeanCard';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
+import { RecipeCard } from '@/ui/primitives/RecipeCard';
+import { SensoryRadar } from '@/ui/primitives/SensoryRadar';
+import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
 
@@ -21,9 +27,14 @@ export default function BeanDetail() {
   const t = useTheme();
   const { data: bean } = useBean(id ?? '');
   const { data: sessions } = useSessions(id);
+  const { data: recipe } = useRecipeForBean(id ?? null);
+  const { data: tastingNoteRows } = useTastingNotesForBean(id ?? null);
   const softDelete = useSoftDeleteBean();
   const restore = useRestoreBean();
   const updateBean = useUpdateBean();
+  const setStatus = useSetBeanStatus();
+  const setWouldBuy = useSetWouldBuyAgain();
+  const clearRecipe = useClearRecipe();
   const show = useSnackbarStore((s) => s.show);
 
   const [editing, setEditing] = useState(false);
@@ -74,7 +85,7 @@ export default function BeanDetail() {
     show('Bean updated');
   };
 
-  // B6: Quick stats from sessions
+  // Quick stats from sessions
   const stats = useMemo(() => {
     if (!sessions || sessions.length === 0) return null;
     const rated = sessions.filter((s) => s.rating != null);
@@ -84,11 +95,29 @@ export default function BeanDetail() {
     const ratios = sessions.map((s) => brewRatio(s.doseG, s.yieldG ?? 0)).filter((r): r is number => r !== null);
     const avgRatio = ratios.length > 0 ? ratios.reduce((a, b) => a + b, 0) / ratios.length : null;
     const avgDuration = sessions.reduce((sum, s) => sum + (s.durationS ?? 0), 0) / sessions.length;
+    const avgDose = sessions.reduce((sum, s) => sum + s.doseG, 0) / sessions.length;
     const bestShot = rated.length > 0
       ? rated.reduce((best, s) => (s.rating ?? 0) > (best.rating ?? 0) ? s : best, rated[0]!)
       : null;
-    return { avgRating, avgRatio, avgDuration, bestShot, total: sessions.length };
+    return { avgRating, avgRatio, avgDuration, avgDose, bestShot, total: sessions.length };
   }, [sessions]);
+
+  const radarAxes = useMemo(() => {
+    if (!tastingNoteRows || tastingNoteRows.length === 0) return null;
+    return tastingRadar(tastingNoteRows.map((n) => {
+      const note: Partial<import('@/domain/tasting').TastingAxes> = {};
+      if (n.mouthfeel != null) note.mouthfeel = n.mouthfeel;
+      if (n.acidity != null) note.acidity = n.acidity;
+      if (n.sweetness != null) note.sweetness = n.sweetness;
+      if (n.bitterness != null) note.bitterness = n.bitterness;
+      if (n.balance != null) note.balance = n.balance;
+      return note;
+    }));
+  }, [tastingNoteRows]);
+
+  const cost = bean && stats
+    ? costPerShot({ pricePaidMinor: bean.pricePaidMinor ?? null, startWeightG: bean.startWeightG ?? null, avgDoseG: stats.avgDose })
+    : null;
 
   const inputStyle = {
     borderWidth: 1,
@@ -144,6 +173,51 @@ export default function BeanDetail() {
           </View>
         ) : (
           <>
+            {/* Recipe section */}
+            <View>
+              <Text variant="heading">Recipe</Text>
+              <View style={{ marginTop: t.space.sm }}>
+                <RecipeCard
+                  recipe={recipe ?? null}
+                  {...(recipe?.savedAt ? { savedFromCaption: `saved ${recipe.savedAt.toLocaleDateString()}` } : {})}
+                  onEdit={() => router.push({ pathname: '/(modals)/recipe-save', params: { beanId: id, sessionId: recipe?.sourceSessionId ?? '' } } as never)}
+                  {...(recipe ? { onClear: () => { clearRecipe.mutate(id ?? ''); show('Recipe cleared'); } } : {})}
+                />
+              </View>
+            </View>
+
+            {/* Would buy again */}
+            <View>
+              <Text variant="heading">Would buy again?</Text>
+              <View style={{ flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm }}>
+                <Pill
+                  label="👍 Yes"
+                  variant={bean.wouldBuyAgain === true ? 'primary' : 'ghost'}
+                  onPress={() => setWouldBuy.mutate({ id: bean.id, value: true })}
+                />
+                <Pill
+                  label="👎 No"
+                  variant={bean.wouldBuyAgain === false ? 'danger' : 'ghost'}
+                  onPress={() => setWouldBuy.mutate({ id: bean.id, value: false })}
+                />
+                <Pill
+                  label="Undecided"
+                  variant={bean.wouldBuyAgain === null ? 'ghost' : 'ghost'}
+                  onPress={() => setWouldBuy.mutate({ id: bean.id, value: null })}
+                />
+              </View>
+            </View>
+
+            {/* Sensory radar */}
+            {radarAxes ? (
+              <View>
+                <Text variant="heading">Sensory profile</Text>
+                <View style={{ marginTop: t.space.sm }}>
+                  <SensoryRadar axes={radarAxes} />
+                </View>
+              </View>
+            ) : null}
+
             {bean.notes ? (
               <View>
                 <Text variant="label">NOTES</Text>
@@ -195,6 +269,36 @@ export default function BeanDetail() {
                 />
               </View>
             ) : null}
+
+            {/* Fun facts */}
+            {cost != null && bean.pricePaidCurrency ? (
+              <Surface bg="paperDeep" padding="md" radius="md" bordered>
+                <Text variant="heading">Fun facts</Text>
+                <Text variant="body" style={{ marginTop: t.space.xs }}>
+                  Cost per shot: {(cost / 100).toFixed(2)} {bean.pricePaidCurrency}
+                </Text>
+              </Surface>
+            ) : null}
+
+            {/* Lifecycle */}
+            <Surface bg="paperDeep" padding="md" radius="md" bordered>
+              <Text variant="heading">Status</Text>
+              <View style={{ flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm }}>
+                {(['active', 'finished', 'archived'] as const).map((s) => (
+                  <Pill
+                    key={s}
+                    label={s.charAt(0).toUpperCase() + s.slice(1)}
+                    variant={bean.status === s ? 'primary' : 'ghost'}
+                    onPress={() => setStatus.mutate({ id: bean.id, status: s })}
+                  />
+                ))}
+              </View>
+              {bean.status === 'finished' && bean.finishedAt ? (
+                <Text variant="caption" color={t.colors.inkSoft} style={{ marginTop: t.space.xs }}>
+                  Finished {bean.finishedAt.toLocaleDateString()}
+                </Text>
+              ) : null}
+            </Surface>
 
             <Pill label="Delete bean" variant="danger" onPress={onDelete} />
           </>

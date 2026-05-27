@@ -189,6 +189,16 @@ export default function Settings() {
         />
         </Surface>
 
+        <Text variant="label" style={{ marginTop: t.space.md }}>DAILY GOALS</Text>
+        <Stepper
+          label="Daily cups goal"
+          min={1}
+          max={12}
+          step={1}
+          value={prefs?.dailyCupsGoal ?? 4}
+          onChange={(dailyCupsGoal) => updatePrefs.mutate({ dailyCupsGoal })}
+        />
+
         <Text variant="label" style={{ marginTop: t.space.md }}>APP</Text>
         <Row label="Weight unit" value={prefs?.weightUnit ?? 'g'} onPress={cycleWeightUnit} />
         <Row label="Default ratio" value={`1:${(prefs?.defaultRatio ?? 2).toFixed(1)}`} onPress={cycleDefaultRatio} />

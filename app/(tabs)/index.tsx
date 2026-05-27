@@ -4,14 +4,19 @@ import { ScrollView, View } from 'react-native';
 import { useRecentShots, useTodaySummary } from '@/features/dashboard/hooks';
 import { useWeeklyRecap } from '@/features/insights/hooks';
 import { useBeans } from '@/features/beans/hooks';
+import { usePrimaryMachine } from '@/features/machines/hooks';
+import { useTasksWithStatus } from '@/features/maintenance/hooks';
 import { usePreferences } from '@/features/preferences/hooks';
 import { useAddWaterRefill, useWaterSummary } from '@/features/water/hooks';
+import { cupsTowardGoal } from '@/domain/cups';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { formatVolume } from '@/domain/water';
+import { CupsRow } from '@/ui/primitives/CupsRow';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
 import { ProgressBar } from '@/ui/primitives/ProgressBar';
+import { ReadinessRow } from '@/ui/primitives/ReadinessRow';
 import { Stat } from '@/ui/primitives/Stat';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
@@ -27,6 +32,8 @@ export default function Daily() {
   const { data: beans } = useBeans();
   const { data: prefs } = usePreferences();
   const { data: water } = useWaterSummary();
+  const { data: primaryMachine } = usePrimaryMachine();
+  const { data: machineTasks = [] } = useTasksWithStatus(primaryMachine?.id ?? null);
   const addRefill = useAddWaterRefill();
 
   const beanName = (id: string) => beans?.find((b) => b.id === id)?.name ?? '—';
@@ -35,10 +42,42 @@ export default function Daily() {
   const tankTopOffMl = Math.max(0, tankCapacityMl - (water?.tankBalanceMl ?? 0));
   const filterProgress = (water?.consumedSinceFilterMl ?? 0) / filterThresholdMl;
 
+  const dailyGoal = prefs?.dailyCupsGoal ?? 4;
+  const cupsProgress = cupsTowardGoal(today?.shotsToday ?? 0, dailyGoal);
+  const topTasks = machineTasks.slice(0, 3);
+
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title="Daily" rightLabel="Settings" onRightPress={() => router.push('/(modals)/settings' as never)} />
       <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.lg }}>
+
+        {/* Match daily cups */}
+        <Surface bg="paperDeep" padding="md" radius="md" bordered>
+          <CupsRow progress={cupsProgress} />
+        </Surface>
+
+        {/* Machine readiness */}
+        {primaryMachine ? (
+          <Surface bg="paperDeep" padding="md" radius="md" bordered>
+            <Text variant="heading">{primaryMachine.name}</Text>
+            {topTasks.length > 0 ? (
+              topTasks.map((task) => (
+                <ReadinessRow key={task.id} label={task.label} status={task.nextDue} />
+              ))
+            ) : (
+              <Text variant="caption" color={t.colors.inkFaint} style={{ marginTop: t.space.xs }}>
+                All tasks up to date
+              </Text>
+            )}
+          </Surface>
+        ) : (
+          <Surface bg="paperDeep" padding="sm" radius="md" bordered>
+            <Text variant="caption" color={t.colors.inkSoft}>
+              Add a machine in Care to track readiness.
+            </Text>
+          </Surface>
+        )}
+
         <Text variant="heading">Today, at a glance</Text>
         <View style={{ flexDirection: 'row', gap: t.space.md }}>
           <Stat value={String(today?.shotsToday ?? 0)} label="shots today" />

@@ -123,3 +123,12 @@ export function useTastingNotes(sessionId: string) {
     enabled: !!sessionId,
   });
 }
+
+export function useTastingNotesForBean(beanId: string | null) {
+  const { brew } = useRepos();
+  return useQuery({
+    queryKey: ['tastingNotesForBean', beanId],
+    queryFn: () => brew.tastingNotesForBean(beanId!),
+    enabled: !!beanId,
+  });
+}

@@ -46,6 +46,7 @@ export type BrewRepo = {
   shotsForBean: (beanId: string, limit?: number) => Promise<SessionRow[]>;
   lastShotForBean: (beanId: string) => Promise<SessionRow | null>;
   tastingNotesForSession: (sessionId: string) => Promise<TastingNoteRow | null>;
+  tastingNotesForBean: (beanId: string) => Promise<TastingNoteRow[]>;
 };
 
 export function makeBrewRepo(db: Db): BrewRepo {
@@ -229,6 +230,17 @@ export function makeBrewRepo(db: Db): BrewRepo {
         .where(eq(tastingNotes.sessionId, sessionId))
         .limit(1);
       return rows[0] ?? null;
+    },
+    async tastingNotesForBean(beanId) {
+      // Join via sessions to get tasting notes for all sessions of a bean
+      const sessions = await db
+        .select()
+        .from(brewSessions)
+        .where(and(eq(brewSessions.beanId, beanId), isNull(brewSessions.deletedAt), isNotNull(brewSessions.endedAt)));
+      if (sessions.length === 0) return [];
+      const sessionIds = sessions.map((s) => s.id);
+      const notes = await db.select().from(tastingNotes);
+      return notes.filter((n) => sessionIds.includes(n.sessionId));
     },
   };
 }

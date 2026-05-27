@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 
 import { useBeans } from '@/features/beans/hooks';
 import { useStartSession, useEndSession, useAddMilestone, useLastShotForBean } from '@/features/brew/hooks';
+import { useRecipeForBean } from '@/features/recipes/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
 import { extractionPercent, qualityBand } from '@/domain/extraction';
@@ -31,22 +32,34 @@ export default function LabIndex() {
   const addMilestone = useAddMilestone();
   const endSession = useEndSession();
 
-  // A4: Recipe recall — auto-fill draft from last shot with this bean
+  // Recipe pre-fill: prefer saved recipe, fall back to last shot recall
+  const { data: recipe } = useRecipeForBean(draft.beanId ?? null);
   const { data: lastShot } = useLastShotForBean(draft.beanId);
   const prevBeanId = useRef(draft.beanId);
   useEffect(() => {
-    if (draft.beanId && draft.beanId !== prevBeanId.current && lastShot) {
-      send({
-        type: 'configure',
-        doseG: lastShot.doseG,
-        targetYieldG: lastShot.yieldG ?? draft.targetYieldG,
-        grindSetting: lastShot.grindSetting,
-        grinderLabel: lastShot.grinderLabel,
-        waterTempC: lastShot.waterTempC,
-      });
+    if (draft.beanId && draft.beanId !== prevBeanId.current) {
+      if (recipe) {
+        send({
+          type: 'configure',
+          doseG: recipe.doseG ?? draft.doseG,
+          targetYieldG: recipe.targetYieldG ?? draft.targetYieldG,
+          grindSetting: recipe.grindSetting,
+          grinderLabel: recipe.grinderLabel,
+          waterTempC: recipe.waterTempC,
+        });
+      } else if (lastShot) {
+        send({
+          type: 'configure',
+          doseG: lastShot.doseG,
+          targetYieldG: lastShot.yieldG ?? draft.targetYieldG,
+          grindSetting: lastShot.grindSetting,
+          grinderLabel: lastShot.grinderLabel,
+          waterTempC: lastShot.waterTempC,
+        });
+      }
     }
     prevBeanId.current = draft.beanId;
-  }, [draft.beanId]);
+  }, [draft.beanId, recipe]);
 
   // Keep screen awake while pulling
   if (status === 'Pulling') useKeepAwake('brewlog-pulling');
@@ -97,6 +110,11 @@ export default function LabIndex() {
             </Text>
           </View>
         </Pressable>
+        {recipe && selectedBean ? (
+          <Text variant="caption" color={t.colors.forest} style={{ marginTop: t.space.xs }}>
+            ★ Recipe locked
+          </Text>
+        ) : null}
 
         {status === 'IdleSetup' ? (
           <View style={{ marginTop: t.space.xl, gap: t.space.lg }}>
