@@ -68,6 +68,7 @@ export function makeBrewRepo(db: Db): BrewRepo {
         waterTempC: args.waterTempC ?? null,
         rating: null,
         comment: null,
+        machineId: null,
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
