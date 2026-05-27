@@ -3,6 +3,13 @@ import { getDb } from './client';
 
 type Migration = { tag: string; sql: string };
 
+export function migrationStatements(sql: string): string[] {
+  return sql
+    .split('--> statement-breakpoint')
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+}
+
 export async function runMigrations(): Promise<void> {
   const db = getDb();
   // SQLite-side journal table (Drizzle-compatible name).
@@ -21,7 +28,9 @@ export async function runMigrations(): Promise<void> {
     if (exists) continue;
     raw.execSync('BEGIN;');
     try {
-      raw.execSync(m.sql);
+      for (const statement of migrationStatements(m.sql)) {
+        raw.execSync(statement);
+      }
       raw.execSync(
         `INSERT INTO __drizzle_migrations (tag, applied_at) VALUES ('${m.tag}', ${Date.now()});`,
       );

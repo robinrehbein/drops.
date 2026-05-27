@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import '@/i18n';
 import { runMigrations } from '@/db/migrate';
@@ -30,13 +30,28 @@ export default function RootLayout() {
   }, []);
 
   if (error) {
+    const isWebSQLiteSyncError =
+      Platform.OS === 'web' &&
+      /SharedArrayBuffer|Sync operation timeout/i.test(error.message);
+
     return (
       <ThemeProvider>
         <View style={{ flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' }}>
-          <Text variant="title" align="center">Brewlog needs to rebuild its data.</Text>
-          <Text variant="caption" align="center" style={{ marginTop: 12 }}>
-            Restore from device backup or start fresh from Settings → Reset.
+          <Text variant="title" align="center">
+            {isWebSQLiteSyncError
+              ? 'Brewlog cannot open its local database in this browser.'
+              : 'Brewlog needs to rebuild its data.'}
           </Text>
+          <Text variant="caption" align="center" style={{ marginTop: 12 }}>
+            {isWebSQLiteSyncError
+              ? 'Open Brewlog in Expo Go or a browser with SharedArrayBuffer support enabled.'
+              : 'Restore from device backup or start fresh from Settings → Reset.'}
+          </Text>
+          {__DEV__ ? (
+            <Text variant="caption" align="center" style={{ marginTop: 12 }}>
+              {error.message}
+            </Text>
+          ) : null}
         </View>
       </ThemeProvider>
     );

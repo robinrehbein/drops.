@@ -101,6 +101,24 @@ export const tastingNotes = sqliteTable(
   }),
 );
 
+/* Water and machine maintenance ledger */
+export const waterEvents = sqliteTable(
+  'water_events',
+  {
+    id: text('id').primaryKey(),
+    kind: text('kind').notNull(), // 'refill' | 'filter_change' | 'shot_estimate' | 'flush' | 'manual_adjustment'
+    sessionId: text('session_id').references(() => brewSessions.id, { onDelete: 'set null' }),
+    volumeMl: real('volume_ml').notNull().default(0),
+    note: text('note'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  },
+  (t) => ({
+    byCreated: index('water_events_created').on(t.deletedAt, t.createdAt),
+    bySession: index('water_events_session').on(t.sessionId),
+  }),
+);
+
 /* Single-row preferences */
 export const preferences = sqliteTable('preferences', {
   id: integer('id').primaryKey(), // always 1
@@ -108,5 +126,9 @@ export const preferences = sqliteTable('preferences', {
   defaultRatio: real('default_ratio').notNull().default(2),
   themeId: text('theme_id').notNull().default('earthy-forest'),
   tdsAssumed: real('tds_assumed').notNull().default(0.09),
+  waterTankCapacityMl: real('water_tank_capacity_ml').notNull().default(1800),
+  filterChangeThresholdMl: real('filter_change_threshold_ml').notNull().default(50000),
+  puckAbsorptionMlPerDoseG: real('puck_absorption_ml_per_dose_g').notNull().default(2),
+  shotFlushMl: real('shot_flush_ml').notNull().default(20),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

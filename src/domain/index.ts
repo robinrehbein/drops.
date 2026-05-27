@@ -5,5 +5,6 @@ export * from './extraction';
 export * from './caffeine';
 export * from './time';
 export * from './format';
+export * from './water';
 export * from './validators/bean';
 export * from './validators/session';

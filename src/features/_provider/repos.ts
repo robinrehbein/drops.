@@ -4,6 +4,7 @@ import { makeBrewRepo, type BrewRepo } from '@/features/brew/repo';
 import { makeDashboardRepo, type DashboardRepo } from '@/features/dashboard/repo';
 import { makeInsightsRepo, type InsightsRepo } from '@/features/insights/repo';
 import { makePreferencesRepo, type PreferencesRepo } from '@/features/preferences/repo';
+import { makeWaterRepo, type WaterRepo } from '@/features/water/repo';
 
 export type Repos = {
   beans: BeansRepo;
@@ -11,6 +12,7 @@ export type Repos = {
   dashboard: DashboardRepo;
   preferences: PreferencesRepo;
   insights: InsightsRepo;
+  water: WaterRepo;
 };
 
 let _repos: Repos | null = null;
@@ -24,6 +26,7 @@ export function getRepos(): Repos {
     dashboard: makeDashboardRepo(db),
     preferences: makePreferencesRepo(db),
     insights: makeInsightsRepo(db),
+    water: makeWaterRepo(db),
   };
   return _repos;
 }

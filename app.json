@@ -15,7 +15,15 @@
       "package": "com.brewlog.app"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "headers": {
+            "Cross-Origin-Embedder-Policy": "credentialless",
+            "Cross-Origin-Opener-Policy": "same-origin"
+          }
+        }
+      ],
       "@sentry/react-native",
       "expo-localization",
       "expo-sqlite",

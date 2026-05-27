@@ -1,5 +1,7 @@
+import { waterEvents } from '@/db/schema';
 import { makeBrewRepo } from '@/features/brew/repo';
 import { makeBeansRepo } from '@/features/beans/repo';
+import { makePreferencesRepo } from '@/features/preferences/repo';
 import { makeTestDb } from '@tests/helpers/test-db';
 
 describe('brew repo', () => {
@@ -47,7 +49,25 @@ describe('brew repo', () => {
     await repo.endSession(session.id, { endedAt: new Date(), yieldG: 36, durationS: 27 });
     await repo.finalizeWithNotes(session.id, { rating: 4, mouthfeel: 4, acidity: 3, sweetness: 4, bitterness: 2, balance: 4, flavorTags: ['bergamot'] });
     const updatedBean = await beans.getBean(bean.id);
+    const water = await db.select().from(waterEvents);
     expect(updatedBean?.remainingWeightG).toBe(232); // 250 - 18
+    expect(water[0]?.kind).toBe('shot_estimate');
+    expect(water[0]?.volumeMl).toBe(92);
+  });
+
+  it('finalizeWithNotes uses configured water estimate defaults', async () => {
+    const db = makeTestDb();
+    const beans = makeBeansRepo(db);
+    const prefs = makePreferencesRepo(db);
+    const repo = makeBrewRepo(db);
+    await prefs.get();
+    await prefs.update({ puckAbsorptionMlPerDoseG: 1.5, shotFlushMl: 10 });
+    const bean = await beans.addBean({ name: 'X', startWeightG: 250 });
+    const session = await repo.startSession({ beanId: bean.id, doseG: 18 });
+    await repo.endSession(session.id, { endedAt: new Date(), yieldG: 36, durationS: 27 });
+    await repo.finalizeWithNotes(session.id, { yieldG: 40 });
+    const water = await db.select().from(waterEvents);
+    expect(water[0]?.volumeMl).toBe(77);
   });
 
   it('discardSession soft-deletes the session and does not change bean weight', async () => {

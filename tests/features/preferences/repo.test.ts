@@ -10,6 +10,10 @@ describe('preferences repo', () => {
     expect(prefs.defaultRatio).toBe(2);
     expect(prefs.themeId).toBe('earthy-forest');
     expect(prefs.tdsAssumed).toBe(0.09);
+    expect(prefs.waterTankCapacityMl).toBe(1800);
+    expect(prefs.filterChangeThresholdMl).toBe(50000);
+    expect(prefs.puckAbsorptionMlPerDoseG).toBe(2);
+    expect(prefs.shotFlushMl).toBe(20);
   });
 
   it('get returns existing row on subsequent calls', async () => {

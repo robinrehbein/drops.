@@ -2,9 +2,10 @@ import { and, asc, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
-import { beans, brewMilestones, brewSessions, tastingNotes } from '@/db/schema';
+import { beans, brewMilestones, brewSessions, tastingNotes, waterEvents, preferences } from '@/db/schema';
 import * as schema from '@/db/schema';
 import { uuid } from '@/domain/ids';
+import { estimateShotWaterMl } from '@/domain/water';
 import type { MilestoneRow, SessionRow, TastingNoteRow } from './types';
 
 type Db = BetterSQLite3Database<typeof schema> | ExpoSQLiteDatabase<typeof schema>;
@@ -20,6 +21,7 @@ export type StartArgs = {
 export type EndArgs = { endedAt: Date; yieldG: number; durationS: number; preInfusionS?: number; firstDropS?: number };
 
 export type FinalizeArgs = {
+  yieldG?: number;
   rating?: number;
   comment?: string;
   mouthfeel?: number;
@@ -106,6 +108,7 @@ export function makeBrewRepo(db: Db): BrewRepo {
     async finalizeWithNotes(sessionId, args) {
       const session = await this.getSession(sessionId);
       if (!session) throw new Error('session not found');
+      const finalYieldG = args.yieldG ?? session.yieldG;
 
       // 1. Insert tasting note (1:1)
       await db.insert(tastingNotes).values({
@@ -125,7 +128,12 @@ export function makeBrewRepo(db: Db): BrewRepo {
       // 2. Patch rating + comment on the session itself if provided
       await db
         .update(brewSessions)
-        .set({ rating: args.rating ?? null, comment: args.comment ?? null, updatedAt: new Date() })
+        .set({
+          ...(finalYieldG != null ? { yieldG: finalYieldG } : {}),
+          rating: args.rating ?? null,
+          comment: args.comment ?? null,
+          updatedAt: new Date(),
+        })
         .where(eq(brewSessions.id, sessionId));
 
       // 3. Decrement bean weight
@@ -136,6 +144,22 @@ export function makeBrewRepo(db: Db): BrewRepo {
           updatedAt: new Date(),
         })
         .where(eq(beans.id, session.beanId));
+
+      if (finalYieldG != null) {
+        const prefs = await db.select().from(preferences).where(eq(preferences.id, 1)).limit(1);
+        await db.insert(waterEvents).values({
+          id: uuid(),
+          kind: 'shot_estimate',
+          sessionId,
+          volumeMl: estimateShotWaterMl(session.doseG, finalYieldG, {
+            puckAbsorptionMlPerDoseG: prefs[0]?.puckAbsorptionMlPerDoseG,
+            flushMl: prefs[0]?.shotFlushMl,
+          }),
+          note: null,
+          createdAt: new Date(),
+          deletedAt: null,
+        });
+      }
     },
     async discardSession(sessionId) {
       await db

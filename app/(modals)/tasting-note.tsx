@@ -4,6 +4,8 @@ import { TextInput, View } from 'react-native';
 
 import { useBrewStore } from '@/features/brew/store';
 import { useDiscardSession, useFinalizeSession } from '@/features/brew/hooks';
+import { usePreferences } from '@/features/preferences/hooks';
+import { useAddFlush } from '@/features/water/hooks';
 import { useSnackbarStore } from '@/state/snackbar';
 import { Pill } from '@/ui/primitives/Pill';
 import { Sheet } from '@/ui/primitives/Sheet';
@@ -20,6 +22,8 @@ export default function TastingNote() {
   const send = useBrewStore((s) => s.send);
   const finalize = useFinalizeSession();
   const discard = useDiscardSession();
+  const addFlush = useAddFlush();
+  const { data: prefs } = usePreferences();
   const showSnack = useSnackbarStore((s) => s.show);
 
   const [yieldG, setYieldG] = useState(session?.yieldG ?? 36);
@@ -49,6 +53,7 @@ export default function TastingNote() {
     await finalize.mutateAsync({
       id: session.id,
       args: {
+        yieldG,
         ...(rating ? { rating } : {}),
         ...(comment ? { comment } : {}),
         mouthfeel, acidity, sweetness, bitterness, balance,
@@ -62,7 +67,11 @@ export default function TastingNote() {
       ...(rating ? { rating } : {}),
       ...(comment ? { comment } : {}),
     });
-    showSnack(`Shot logged · ${(yieldG / session.doseG).toFixed(2)}:1 · ${session.durationS?.toFixed(1)}s${rating ? ` · ${rating}★` : ''}`);
+    const flushMl = prefs?.shotFlushMl ?? 20;
+    showSnack(
+      `Shot logged · ${(yieldG / session.doseG).toFixed(2)}:1 · ${session.durationS?.toFixed(1)}s${rating ? ` · ${rating}★` : ''}`,
+      { label: 'Add flush', onPress: () => addFlush.mutate(flushMl) },
+    );
     if (mode === 'another') send({ type: 'reset', preserveDraft: true });
     if (mode === 'keep') router.replace('/lab/history' as never);
     else router.dismissAll();

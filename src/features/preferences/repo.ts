@@ -14,6 +14,10 @@ export type PreferencesUpdate = {
   defaultRatio?: number;
   themeId?: string;
   tdsAssumed?: number;
+  waterTankCapacityMl?: number;
+  filterChangeThresholdMl?: number;
+  puckAbsorptionMlPerDoseG?: number;
+  shotFlushMl?: number;
 };
 
 export type PreferencesRepo = {
@@ -33,6 +37,10 @@ export function makePreferencesRepo(db: Db): PreferencesRepo {
           defaultRatio: 2,
           themeId: 'earthy-forest',
           tdsAssumed: 0.09,
+          waterTankCapacityMl: 1800,
+          filterChangeThresholdMl: 50000,
+          puckAbsorptionMlPerDoseG: 2,
+          shotFlushMl: 20,
           updatedAt: now,
         });
         rows = await db.select().from(preferences).where(eq(preferences.id, 1)).limit(1);

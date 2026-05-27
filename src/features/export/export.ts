@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import { getDb } from '@/db/client';
-import { beans, brewMilestones, brewSessions, preferences, tastingNotes } from '@/db/schema';
+import { beans, brewMilestones, brewSessions, preferences, tastingNotes, waterEvents } from '@/db/schema';
 import { isNull } from 'drizzle-orm';
 
 export async function exportAllData(): Promise<void> {
@@ -12,6 +12,7 @@ export async function exportAllData(): Promise<void> {
   const allSessions = await db.select().from(brewSessions).where(isNull(brewSessions.deletedAt));
   const allMilestones = await db.select().from(brewMilestones);
   const allTastingNotes = await db.select().from(tastingNotes);
+  const allWaterEvents = await db.select().from(waterEvents).where(isNull(waterEvents.deletedAt));
   const prefs = await db.select().from(preferences).limit(1);
 
   const payload = {
@@ -21,6 +22,7 @@ export async function exportAllData(): Promise<void> {
     sessions: allSessions,
     milestones: allMilestones,
     tastingNotes: allTastingNotes,
+    waterEvents: allWaterEvents,
     preferences: prefs[0] ?? null,
   };
 
