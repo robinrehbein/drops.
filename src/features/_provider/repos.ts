@@ -3,7 +3,10 @@ import { makeBeansRepo, type BeansRepo } from '@/features/beans/repo';
 import { makeBrewRepo, type BrewRepo } from '@/features/brew/repo';
 import { makeDashboardRepo, type DashboardRepo } from '@/features/dashboard/repo';
 import { makeInsightsRepo, type InsightsRepo } from '@/features/insights/repo';
+import { makeMachinesRepo, type MachinesRepo } from '@/features/machines/repo';
+import { makeMaintenanceRepo, type MaintenanceRepo } from '@/features/maintenance/repo';
 import { makePreferencesRepo, type PreferencesRepo } from '@/features/preferences/repo';
+import { makeRecipesRepo, type RecipesRepo } from '@/features/recipes/repo';
 import { makeWaterRepo, type WaterRepo } from '@/features/water/repo';
 
 export type Repos = {
@@ -13,6 +16,9 @@ export type Repos = {
   preferences: PreferencesRepo;
   insights: InsightsRepo;
   water: WaterRepo;
+  recipes: RecipesRepo;
+  machines: MachinesRepo;
+  maintenance: MaintenanceRepo;
 };
 
 let _repos: Repos | null = null;
@@ -27,6 +33,9 @@ export function getRepos(): Repos {
     preferences: makePreferencesRepo(db),
     insights: makeInsightsRepo(db),
     water: makeWaterRepo(db),
+    recipes: makeRecipesRepo(db),
+    machines: makeMachinesRepo(db),
+    maintenance: makeMaintenanceRepo(db),
   };
   return _repos;
 }

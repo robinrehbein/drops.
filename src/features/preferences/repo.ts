@@ -18,6 +18,8 @@ export type PreferencesUpdate = {
   filterChangeThresholdMl?: number;
   puckAbsorptionMlPerDoseG?: number;
   shotFlushMl?: number;
+  dailyCupsGoal?: number;
+  caffeineTargetMg?: number | null;
 };
 
 export type PreferencesRepo = {
@@ -41,6 +43,8 @@ export function makePreferencesRepo(db: Db): PreferencesRepo {
           filterChangeThresholdMl: 50000,
           puckAbsorptionMlPerDoseG: 2,
           shotFlushMl: 20,
+          dailyCupsGoal: 4,
+          caffeineTargetMg: null,
           updatedAt: now,
         });
         rows = await db.select().from(preferences).where(eq(preferences.id, 1)).limit(1);

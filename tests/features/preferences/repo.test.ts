@@ -41,4 +41,23 @@ describe('preferences repo', () => {
     expect(updated.weightUnit).toBe('oz');
     expect(updated.defaultRatio).toBe(2); // unchanged
   });
+
+  it('defaults dailyCupsGoal to 4 and caffeineTargetMg to null', async () => {
+    const db = makeTestDb();
+    const repo = makePreferencesRepo(db);
+    const prefs = await repo.get();
+    expect(prefs.dailyCupsGoal).toBe(4);
+    expect(prefs.caffeineTargetMg).toBeNull();
+  });
+
+  it('updates dailyCupsGoal and caffeineTargetMg', async () => {
+    const db = makeTestDb();
+    const repo = makePreferencesRepo(db);
+    await repo.get();
+    const updated = await repo.update({ dailyCupsGoal: 2, caffeineTargetMg: 300 });
+    expect(updated.dailyCupsGoal).toBe(2);
+    expect(updated.caffeineTargetMg).toBe(300);
+    const cleared = await repo.update({ caffeineTargetMg: null });
+    expect(cleared.caffeineTargetMg).toBeNull();
+  });
 });

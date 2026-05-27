@@ -10,13 +10,17 @@ import type { BeanRow } from './types';
 
 type Db = BetterSQLite3Database<typeof schema> | ExpoSQLiteDatabase<typeof schema>;
 
+export type BeanFilter = 'active' | 'finished' | 'archived' | 'would_buy' | 'all';
+
 export type BeansRepo = {
   addBean: (input: BeanInput) => Promise<BeanRow>;
-  listBeans: () => Promise<BeanRow[]>;
+  listBeans: (filter?: BeanFilter) => Promise<BeanRow[]>;
   getBean: (id: string) => Promise<BeanRow | null>;
   updateBean: (id: string, patch: Partial<BeanInput>) => Promise<BeanRow>;
   softDeleteBean: (id: string) => Promise<void>;
   restoreBean: (id: string) => Promise<void>;
+  setStatus: (id: string, status: 'active' | 'finished' | 'archived') => Promise<BeanRow>;
+  setWouldBuyAgain: (id: string, value: boolean | null) => Promise<BeanRow>;
 };
 
 export function makeBeansRepo(db: Db): BeansRepo {
@@ -55,8 +59,15 @@ export function makeBeansRepo(db: Db): BeansRepo {
       await db.insert(beans).values(row);
       return row;
     },
-    async listBeans() {
-      return db.select().from(beans).where(isNull(beans.deletedAt)).orderBy(asc(beans.name));
+    async listBeans(filter = 'active') {
+      const base = isNull(beans.deletedAt);
+      let where;
+      if (filter === 'active') where = and(base, eq(beans.status, 'active'));
+      else if (filter === 'finished') where = and(base, eq(beans.status, 'finished'));
+      else if (filter === 'archived') where = and(base, eq(beans.status, 'archived'));
+      else if (filter === 'would_buy') where = and(base, eq(beans.wouldBuyAgain, true));
+      else where = base; // 'all'
+      return db.select().from(beans).where(where).orderBy(asc(beans.name));
     },
     async getBean(id) {
       const rows = await db
@@ -98,6 +109,27 @@ export function makeBeansRepo(db: Db): BeansRepo {
         .update(beans)
         .set({ deletedAt: null, updatedAt: new Date() })
         .where(eq(beans.id, id));
+    },
+
+    async setStatus(id, status) {
+      const now = new Date();
+      const patch: Partial<BeanRow> = { status, updatedAt: now };
+      if (status === 'finished') patch.finishedAt = now;
+      else patch.finishedAt = null;
+      await db.update(beans).set(patch).where(eq(beans.id, id));
+      const updated = await this.getBean(id);
+      if (!updated) throw new Error('bean not found');
+      return updated;
+    },
+
+    async setWouldBuyAgain(id, value) {
+      await db
+        .update(beans)
+        .set({ wouldBuyAgain: value, updatedAt: new Date() })
+        .where(eq(beans.id, id));
+      const updated = await this.getBean(id);
+      if (!updated) throw new Error('bean not found');
+      return updated;
     },
   };
 }
