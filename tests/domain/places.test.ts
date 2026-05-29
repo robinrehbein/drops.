@@ -59,7 +59,7 @@ describe('groupByCity', () => {
   it('groups, sorts cities and places, defaults null city to Unknown', () => {
     const res = groupByCity([P({ name: 'B', city: 'Wien' }), P({ name: 'A', city: 'Wien' }), P({ name: 'C', city: null })]);
     expect(res.map((g) => g.city)).toEqual(['Unknown', 'Wien']);
-    expect(res[1].places.map((p) => p.name)).toEqual(['A', 'B']);
+    expect(res[1]!.places.map((p) => p.name)).toEqual(['A', 'B']);
   });
 });
 
