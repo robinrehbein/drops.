@@ -52,6 +52,7 @@ export function makeBeansRepo(db: Db): BeansRepo {
         wouldBuyAgain: null,
         finishedAt: null,
         recipeId: null,
+        sourcePlaceId: null,
         createdAt: now,
         updatedAt: now,
         deletedAt: null,

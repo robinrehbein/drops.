@@ -259,6 +259,8 @@ export const places = sqliteTable(
   },
   (t) => ({
     byCity: index('places_city_name').on(t.city, t.name),
+    // NULL-safe: SQLite treats each NULL as distinct, so user-added rows (externalId NULL)
+    // coexist freely while seed rows stay unique by osmId.
     byExternal: uniqueIndex('places_external_id').on(t.externalId),
     byCurated: index('places_curated').on(t.curated, t.city),
   }),

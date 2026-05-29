@@ -194,15 +194,22 @@ Expected: creates `src/db/migrations/0004_*.sql`, updates `meta/`, and prints `W
 Run: `grep -l "place_user_data" src/db/migrations/0004_*.sql && grep "source_place_id" src/db/migrations/0004_*.sql`
 Expected: the 0004 file path prints and the `source_place_id` line is found.
 
-- [ ] **Step 5: Verify schema test + harness still pass**
+- [ ] **Step 5: Fix the `beans` row literal for the new column**
 
-Run: `npx jest tests/db -v`
-Expected: PASS (the in-memory harness applies bundle.json including 0004).
+Adding the nullable `source_place_id` column makes `BeanRow` require `sourcePlaceId`. The hand-built row literal in `src/features/beans/repo.ts` `addBean` must include it. After the `recipeId: null,` line add:
+```ts
+        sourcePlaceId: null,
+```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Verify schema test + harness + typecheck + full suite**
+
+Run: `npm run typecheck && npx jest tests/db -v && npm test`
+Expected: no type errors; PASS (the in-memory harness applies bundle.json including 0004); all 208+ tests green.
+
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/db/schema.ts src/db/migrations
+git add src/db/schema.ts src/db/migrations src/features/beans/repo.ts
 git commit -m "feat(schema): places + place_user_data tables, beans.source_place_id (migration 0004)"
 ```
 
