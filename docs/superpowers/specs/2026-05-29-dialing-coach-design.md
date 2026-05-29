@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-29
 **Status:** Approved (brainstorm)
-**Scope:** Espresso only (v1). No new DB columns, no recipe-schema change, no ML.
+**Scope:** Espresso only (v1). Adds two preferences columns (target time window) via a new migration; no recipe-schema change; no ML.
 
 ## 1. Overview
 
@@ -24,7 +24,7 @@ optional grind nudge.
 
 ### Non-goals
 - Espresso only — no pour-over/other methods.
-- No new DB columns; no recipe-schema change.
+- No recipe-schema change.
 - No machine learning — rules only.
 - No automatic detection of grinder click sizing beyond numeric parsing.
 
@@ -45,10 +45,13 @@ type ShotSignal = {
 };
 
 type DialingTarget = {
-  ratioTarget: number;       // default 2.0 (1:2)
-  durationTargetS: number;   // default 27, acceptable window 25–30s
+  ratioTarget: number;       // default from prefs.defaultRatio (2.0)
+  timeMinS: number;          // default from prefs (25)
+  timeMaxS: number;          // default from prefs (30)
 };
-// Recipe overrides defaults when present (ratioTarget, durationTargetS).
+// Resolution order: recipe (per-bean durationTargetS / ratioTarget) overrides
+// preferences, which override hardcoded fallbacks. A recipe durationTargetS maps
+// to a window centered on it using the same ± half-width as the prefs window.
 ```
 
 ### Output
@@ -73,7 +76,7 @@ type DialingAdvice = {
   - `net ≥ +1.5` → sour / under-extracted → **grind finer**.
   - `net ≤ −1.5` → bitter / over-extracted → **grind coarser**.
   - `|net| < 1.5` and `balance ≥ 4` → taste-side dialed-in.
-- **Time:** actual shot time vs window `[25, 30]s` (or recipe target ± window).
+- **Time:** actual shot time vs the resolved window `[timeMinS, timeMaxS]` (prefs default `[25, 30]`, recipe-overridable).
   - `< 25s` → too fast / under → grind finer.
   - `> 30s` → too slow / over → grind coarser.
   - in window → ok.
@@ -95,12 +98,18 @@ type DialingAdvice = {
 - Renders verdict headline + `primary.text` + `rationale`.
 - Status color from existing tokens: `forest` (dialed-in / in-range), `amber` (one axis off),
   `danger` (clearly off). Token discipline enforced (no raw colors).
-- States: advice present, low-confidence (muted), none (renders null).
+- States: advice present, low-confidence (muted), **empty (no shot yet) → a general
+  espresso tip** (e.g. "Aim for ~1:2 in 25–30s; taste sour → grind finer, bitter → coarser").
+  The empty tip uses a neutral/`forest` styling and carries no action button.
 
 ### Lab IdleSetup — `app/(tabs)/lab/index.tsx`
 - CoachCard for the selected bean's most recent shot, placed directly above the start button.
 - Includes the **"Repeat last shot"** action (see §4).
-- No selected bean / no prior shot → no card.
+- No selected bean / no prior shot → CoachCard renders the **general espresso tip** empty state.
+
+### Settings — `app/(modals)/settings.tsx`
+- New "Dialing target time" control: two steppers (min / max seconds) bound to the new
+  preferences, default 25 / 30. Validation: `1 ≤ min < max ≤ 120`.
 
 ### Dialing screen — `app/(tabs)/lab/dialing.tsx`
 - Same CoachCard as a headline **above** the existing comparison table.
@@ -128,8 +137,12 @@ type DialingAdvice = {
 |---|---|
 | `src/domain/dialing.ts` | new pure module |
 | `src/domain/index.ts` | export new module |
-| `src/ui/primitives/CoachCard.tsx` | new primitive |
+| `src/db/schema.ts` | add `dialTimeMinS` / `dialTimeMaxS` preference columns |
+| `src/db/migrations/000X_*` | new migration for the two columns |
+| `src/features/preferences/repo.ts` + `hooks.ts` | defaults (25 / 30) + update patch fields |
+| `src/ui/primitives/CoachCard.tsx` | new primitive (advice / low-conf / empty-tip states) |
 | `app/(tabs)/lab/index.tsx` | render CoachCard + Repeat action |
 | `app/(tabs)/lab/dialing.tsx` | render CoachCard above table |
+| `app/(modals)/settings.tsx` | dialing target-time steppers |
 | `src/features/brew/store.ts` | repeat-last-shot prefill + grind nudge (if needed) |
-| tests under `tests/domain/`, `tests/ui/primitives/`, `tests/state/` | new coverage |
+| tests under `tests/domain/`, `tests/ui/primitives/`, `tests/state/`, `tests/features/preferences/` | new coverage |
