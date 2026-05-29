@@ -9,10 +9,15 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.brewlog.app",
-      "supportsTablet": false
+      "supportsTablet": true
     },
     "android": {
-      "package": "com.brewlog.app"
+      "package": "com.brewlog.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_ANDROID_MAPS_API_KEY"
+        }
+      }
     },
     "plugins": [
       [
@@ -28,7 +33,13 @@
       "expo-localization",
       "expo-sqlite",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Brewlog uses your location to find specialty coffee near you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
