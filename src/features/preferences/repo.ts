@@ -20,6 +20,8 @@ export type PreferencesUpdate = {
   shotFlushMl?: number;
   dailyCupsGoal?: number;
   caffeineTargetMg?: number | null;
+  dialTimeMinS?: number;
+  dialTimeMaxS?: number;
 };
 
 export type PreferencesRepo = {
@@ -45,6 +47,8 @@ export function makePreferencesRepo(db: Db): PreferencesRepo {
           shotFlushMl: 20,
           dailyCupsGoal: 4,
           caffeineTargetMg: null,
+          dialTimeMinS: 25,
+          dialTimeMaxS: 30,
           updatedAt: now,
         });
         rows = await db.select().from(preferences).where(eq(preferences.id, 1)).limit(1);
