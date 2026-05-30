@@ -139,6 +139,8 @@ export const preferences = sqliteTable('preferences', {
   shotFlushMl: real('shot_flush_ml').notNull().default(20),
   dailyCupsGoal: integer('daily_cups_goal').notNull().default(4),
   caffeineTargetMg: integer('caffeine_target_mg'),
+  dialTimeMinS: integer('dial_time_min_s').notNull().default(25),
+  dialTimeMaxS: integer('dial_time_max_s').notNull().default(30),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 

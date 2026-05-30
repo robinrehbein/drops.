@@ -4,8 +4,10 @@ import { format } from 'date-fns';
 
 import { useBean } from '@/features/beans/hooks';
 import { useShotsForBean } from '@/features/brew/hooks';
+import { useDialingAdvice } from '@/features/dialing/hooks';
 import type { SessionRow } from '@/features/brew/types';
 import { brewRatio, formatRatio } from '@/domain/ratio';
+import { CoachCard } from '@/ui/primitives/CoachCard';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
@@ -19,6 +21,7 @@ export default function DialingScreen() {
   const t = useTheme();
   const { data: bean } = useBean(beanId ?? '');
   const { data: shots } = useShotsForBean(beanId ?? null, 5);
+  const { advice } = useDialingAdvice(beanId ?? null);
 
   if (!shots || shots.length < 2) {
     return (
@@ -46,6 +49,7 @@ export default function DialingScreen() {
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title={`Dialing: ${bean?.name ?? 'Bean'}`} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+        <CoachCard advice={advice} />
         <Text variant="caption">
           {shots.length} shots · newest on right
         </Text>

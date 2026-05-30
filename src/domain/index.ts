@@ -10,6 +10,7 @@ export * from './maintenance';
 export * from './tasting';
 export * from './cups';
 export * from './cost';
+export * from './dialing';
 export * from './validators/bean';
 export * from './validators/session';
 export * from './validators/recipe';
