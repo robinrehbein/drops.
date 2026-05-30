@@ -1,6 +1,7 @@
 import { Linking, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { useBeansBySourcePlace } from '@/features/beans/hooks';
 import { usePlace, useSetUserData, useToggleWishlist } from '@/features/places/hooks';
 import { RatingStars } from '@/ui/primitives/RatingStars';
 import { Text } from '@/ui/primitives/Text';
@@ -12,6 +13,7 @@ export function PlaceDetailScreen({ id }: { id: string }) {
   const { data: place } = usePlace(id);
   const toggle = useToggleWishlist();
   const setUserData = useSetUserData();
+  const { data: linkedBeans = [] } = useBeansBySourcePlace(id);
   if (!place) return <View style={{ flex: 1, backgroundColor: theme.colors.paper }} />;
 
   const onWishlist = !!place.userData?.wishlisted;
@@ -94,6 +96,21 @@ export function PlaceDetailScreen({ id }: { id: string }) {
           fontFamily: theme.fonts.sans,
         }}
       />
+
+      <Text variant="caption" style={{ color: theme.colors.inkFaint, marginTop: theme.space.sm }}>
+        {t('explore.linkedBeans')}
+      </Text>
+      {linkedBeans.length > 0 ? (
+        linkedBeans.map((b) => (
+          <Text key={b.id} variant="body">
+            • {b.name}
+          </Text>
+        ))
+      ) : (
+        <Text variant="caption" style={{ color: theme.colors.inkFaint }}>
+          {t('explore.noLinkedBeans')}
+        </Text>
+      )}
     </ScrollView>
   );
 }

@@ -1,6 +1,12 @@
 {
   "app": { "name": "Brewlog" },
-  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit", "undo": "Undo" },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "undo": "Undo"
+  },
   "explore": {
     "title": "Explore",
     "searchPlaceholder": "Search cafés…",
@@ -8,6 +14,12 @@
     "list": "List",
     "map": "Map",
     "addPlace": "Add place",
+    "placeName": "Name",
+    "placeCity": "City",
+    "placeAddress": "Address",
+    "placeTags": "Tags (comma-separated)",
+    "linkedBeans": "Beans from here",
+    "noLinkedBeans": "No beans linked yet",
     "wishlistAdd": "Add to wishlist",
     "wishlistOn": "On wishlist",
     "markVisited": "Mark visited",

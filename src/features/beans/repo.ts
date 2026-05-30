@@ -16,6 +16,7 @@ export type BeansRepo = {
   addBean: (input: BeanInput) => Promise<BeanRow>;
   listBeans: (filter?: BeanFilter) => Promise<BeanRow[]>;
   getBean: (id: string) => Promise<BeanRow | null>;
+  listBySourcePlace: (placeId: string) => Promise<BeanRow[]>;
   updateBean: (id: string, patch: Partial<BeanInput>) => Promise<BeanRow>;
   softDeleteBean: (id: string) => Promise<void>;
   restoreBean: (id: string) => Promise<void>;
@@ -76,6 +77,13 @@ export function makeBeansRepo(db: Db): BeansRepo {
         .from(beans)
         .where(and(eq(beans.id, id), isNull(beans.deletedAt)));
       return rows[0] ?? null;
+    },
+    async listBySourcePlace(placeId) {
+      return db
+        .select()
+        .from(beans)
+        .where(and(eq(beans.sourcePlaceId, placeId), isNull(beans.deletedAt)))
+        .orderBy(asc(beans.name));
     },
     async updateBean(id, patch) {
       const existing = await this.getBean(id);
