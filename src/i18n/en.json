@@ -1,4 +1,23 @@
 {
   "app": { "name": "Brewlog" },
-  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit", "undo": "Undo" }
+  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit", "undo": "Undo" },
+  "explore": {
+    "title": "Explore",
+    "searchPlaceholder": "Search cafés…",
+    "curatedOnly": "Curated only",
+    "list": "List",
+    "map": "Map",
+    "addPlace": "Add place",
+    "wishlistAdd": "Add to wishlist",
+    "wishlistOn": "On wishlist",
+    "markVisited": "Mark visited",
+    "visited": "Visited",
+    "yourRating": "Your rating",
+    "notes": "Notes…",
+    "website": "Website",
+    "openInMaps": "Open in maps",
+    "source": "Source",
+    "attribution": "© OpenStreetMap contributors (ODbL)",
+    "statLine": "{{visited}} visited · {{wishlist}} wishlist"
+  }
 }
