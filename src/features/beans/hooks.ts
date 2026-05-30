@@ -19,6 +19,15 @@ export function useBean(id: string) {
   return useQuery({ queryKey: KEYS.one(id), queryFn: () => beans.getBean(id), enabled: !!id });
 }
 
+export function useBeansBySourcePlace(placeId: string) {
+  const { beans } = useRepos();
+  return useQuery({
+    queryKey: ['beans', 'source', placeId],
+    queryFn: () => beans.listBySourcePlace(placeId),
+    enabled: !!placeId,
+  });
+}
+
 export function useSetBeanStatus() {
   const { beans } = useRepos();
   const qc = useQueryClient();

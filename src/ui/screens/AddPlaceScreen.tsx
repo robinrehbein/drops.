@@ -15,6 +15,8 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
   const add = useAddPlace();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
+  const [address, setAddress] = useState('');
+  const [tagsText, setTagsText] = useState('');
   const [kind, setKind] = useState<PlaceInput['kind']>('cafe');
 
   const inputStyle = {
@@ -29,10 +31,16 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
 
   async function save() {
     if (!name.trim()) return;
+    const tags = tagsText
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     await add.mutateAsync({
       name: name.trim(),
       kind,
       ...(city.trim() ? { city: city.trim() } : {}),
+      ...(address.trim() ? { address: address.trim() } : {}),
+      ...(tags.length ? { tags } : {}),
     });
     onDone();
   }
@@ -45,8 +53,30 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
       <Text variant="title" style={{ marginBottom: theme.space.md }}>
         {t('explore.addPlace')}
       </Text>
-      <TextInput placeholder="Name" value={name} onChangeText={setName} style={inputStyle} />
-      <TextInput placeholder="City" value={city} onChangeText={setCity} style={inputStyle} />
+      <TextInput
+        placeholder={t('explore.placeName')}
+        value={name}
+        onChangeText={setName}
+        style={inputStyle}
+      />
+      <TextInput
+        placeholder={t('explore.placeCity')}
+        value={city}
+        onChangeText={setCity}
+        style={inputStyle}
+      />
+      <TextInput
+        placeholder={t('explore.placeAddress')}
+        value={address}
+        onChangeText={setAddress}
+        style={inputStyle}
+      />
+      <TextInput
+        placeholder={t('explore.placeTags')}
+        value={tagsText}
+        onChangeText={setTagsText}
+        style={inputStyle}
+      />
       <View style={{ flexDirection: 'row', gap: theme.space.sm, marginBottom: theme.space.lg }}>
         {KINDS.map((k) => (
           <Pressable

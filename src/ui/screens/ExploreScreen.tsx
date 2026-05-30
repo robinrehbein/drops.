@@ -37,6 +37,7 @@ export function ExploreScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.paper }}
       contentContainerStyle={{ padding: theme.space.lg }}
+      scrollEnabled={mode !== 'map'}
     >
       <View
         style={{
