@@ -19,7 +19,7 @@ export type PlaceInput = z.infer<typeof placeInputSchema>;
 
 export const userDataInputSchema = z.object({
   wishlisted: z.boolean().optional(),
-  visitedAt: z.date().optional(),
+  visitedAt: z.date().nullable().optional(), // null clears a prior visit
   rating: z.number().int().min(1).max(5).optional(),
   notes: z.string().max(2000).optional(),
 });

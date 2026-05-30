@@ -13,6 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "places:seed": "node scripts/build-places-seed.js",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:bundle": "node scripts/build-migrations-bundle.js",

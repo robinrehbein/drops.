@@ -1,0 +1,296 @@
+{
+  "attribution": "© OpenStreetMap contributors (ODbL)",
+  "generatedFor": "brewlog Explore seed",
+  "total": 29,
+  "curatedCount": 8,
+  "places": [
+    {
+      "osmId": "n9445222733",
+      "name": "Cortégas",
+      "kind": "coffee_shop",
+      "address": "Engelboldstraße 111, 70569 Stuttgart",
+      "lat": 48.7418208,
+      "lng": 9.1351858,
+      "website": "https://cortegas.com/",
+      "openingHours": "Th-Fr 09:30-12:30,14:00-18:00; Sa 09:30-18:00; Su 11:00-16:00; Mo-We off",
+      "curated": true,
+      "editorialNote": "Specialty Coffee Shop / Rösterei"
+    },
+    {
+      "osmId": "n3836110956",
+      "name": "Espressoladen",
+      "kind": "coffee_shop",
+      "lat": 48.771342,
+      "lng": 9.1746796,
+      "website": "https://www.espressoladen.de/",
+      "openingHours": "Mo-Fr 09:30-18:30; Sa 09:00-16:00",
+      "curated": true,
+      "editorialNote": "Siebträger-fokussierter Espressoladen"
+    },
+    {
+      "osmId": "n309955189",
+      "name": "Fröhlich Kaffeerösterei",
+      "kind": "coffee_shop",
+      "address": "Gutenbergstraße 120, 70197 Stuttgart",
+      "lat": 48.7704952,
+      "lng": 9.154122,
+      "website": "https://froehlich-kaffee.de/pages/unsere-ladengeschafte-1",
+      "openingHours": "Mo,Tu,Th,Fr 10:00-13:00,15:00-18:00; Sa 10:00-13:30",
+      "curated": true,
+      "editorialNote": "etablierte Rösterei mit mehreren Läden"
+    },
+    {
+      "osmId": "n2441464019",
+      "name": "Harry's Kaffeerösterei",
+      "kind": "coffee_shop",
+      "address": "Eberhardstraße 10, 70173 Stuttgart",
+      "lat": 48.7734446,
+      "lng": 9.1778084,
+      "website": "https://harrys-kaffee.de/",
+      "openingHours": "Mo-Fr 09:30-19:00; Sa 09:30-18:00",
+      "curated": true,
+      "editorialNote": "Yelp #2, in crema-Bestenliste, eigene Röstung"
+    },
+    {
+      "osmId": "n7065823169",
+      "name": "Kaffeerakete Stuttgart",
+      "kind": "coffee_shop",
+      "address": "Silberburgstraße 36, 70176 Stuttgart",
+      "lat": 48.7831164,
+      "lng": 9.1597544,
+      "website": "https://www.kaffeerakete-stuttgart.de/",
+      "openingHours": "Mo-Tu 09:00-17:30; We 09:00-14:30; Th-Fr 09:00-17:30; Sa 09:30-14:00",
+      "curated": true,
+      "editorialNote": "in coffeecircle- & crema-Guide, Filter+Espresso"
+    },
+    {
+      "osmId": "n4345979452",
+      "name": "misch misch",
+      "kind": "cafe",
+      "address": "Tübinger Straße 95, 70178 Stuttgart",
+      "lat": 48.765899,
+      "lng": 9.1693327,
+      "openingHours": "Mo-Th 08:00-18:00; Fr 08:00-18:30; Sa 09:30-18:30",
+      "curated": true,
+      "editorialNote": "in Stuttgart-Guides als Specialty geführt"
+    },
+    {
+      "osmId": "n3328823011",
+      "name": "Mókuska Kaffeerösterei",
+      "kind": "cafe",
+      "address": "Johannesstraße 34, 70176 Stuttgart",
+      "lat": 48.7772663,
+      "lng": 9.1619905,
+      "website": "https://mokuska-caffe.de/",
+      "openingHours": "Mo-Sa 08:00-18:00; Su,PH off",
+      "curated": true,
+      "editorialNote": "Pionier der Stuttgarter Specialty-Szene, Trommelröster im Laden"
+    },
+    {
+      "osmId": "n6556193286",
+      "name": "Schwarzmahler",
+      "kind": "coffee_shop",
+      "lat": 48.786334,
+      "lng": 9.2060812,
+      "website": "https://www.schwarzmahler.de",
+      "openingHours": "Mo 10:00-14:00; We,Fr 10:00-14:00,17:00-20:00; Sa 10:00-16:00",
+      "curated": true,
+      "editorialNote": "Specialty-Röster"
+    },
+    {
+      "osmId": "n11313921069",
+      "name": "2D Cafe",
+      "kind": "cafe",
+      "address": "Hirschstraße 24, 70173",
+      "lat": 48.7745182,
+      "lng": 9.1760724,
+      "openingHours": "Mo-Th 12:00-19:00; Fr-Sa 10:00-20:00"
+    },
+    {
+      "osmId": "n13884264155",
+      "name": "Avanti Espresso",
+      "kind": "cafe",
+      "address": "Sophienstraße 24b, 70178 Stuttgart",
+      "lat": 48.772065,
+      "lng": 9.173856,
+      "openingHours": "Mo-Fr 08:00-19:30; Sa 09:00-19:00; Su 10:00-19:00"
+    },
+    {
+      "osmId": "n762936740",
+      "name": "Cafe am Rathaus",
+      "kind": "cafe",
+      "address": "Marktstraße 57, 70372 Stuttgart",
+      "lat": 48.8053192,
+      "lng": 9.213711,
+      "website": "http://www.cafeamrathaus.com",
+      "openingHours": "Mo-Sa 03:00-20:00; PH,Su 03:00-20:00"
+    },
+    {
+      "osmId": "n7855268579",
+      "name": "Café DA",
+      "kind": "cafe",
+      "address": "Brennerstraße 29, 70182 Stuttgart",
+      "lat": 48.7737271,
+      "lng": 9.1837167,
+      "website": "https://www.cafeda.de/",
+      "openingHours": "We,Th 12:00-18:00; Fr,Sa 10:00-18:00"
+    },
+    {
+      "osmId": "n6298693024",
+      "name": "Café Gustav",
+      "kind": "cafe",
+      "address": "Schwabstraße 47, 70197 Stuttgart",
+      "lat": 48.7711639,
+      "lng": 9.1575122,
+      "website": "https://www.cafegustav.de",
+      "openingHours": "Mo,Fr 08:00-19:00; Tu-Th 08:00-22:00; Sa-Su 09:00-19:00"
+    },
+    {
+      "osmId": "n10909079748",
+      "name": "Cäff Chen",
+      "kind": "coffee_shop",
+      "address": "Senefelderstraße 76, 70176 Stuttgart",
+      "lat": 48.7772826,
+      "lng": 9.1596278,
+      "openingHours": "Tu-Sa 10:00-18:00"
+    },
+    {
+      "osmId": "n9127998554",
+      "name": "Caffè Principe",
+      "kind": "coffee_shop",
+      "address": "Lindenfelsstraße 39a, 70327 Stuttgart",
+      "lat": 48.7850287,
+      "lng": 9.249497,
+      "website": "http://www.caffe-principe.eu/",
+      "openingHours": "Tu 09:30-17:00; We4:00-18:00; Th 09:30-17:00"
+    },
+    {
+      "osmId": "n2520896820",
+      "name": "Coffe Shop",
+      "kind": "cafe",
+      "lat": 48.7363189,
+      "lng": 9.0814505
+    },
+    {
+      "osmId": "n10692501590",
+      "name": "coffreez",
+      "kind": "cafe",
+      "lat": 48.7789799,
+      "lng": 9.1779465,
+      "website": "https://coffreez.de/",
+      "openingHours": "Mo-Sa 10:00-20:00; PH, Su off"
+    },
+    {
+      "osmId": "n2998392048",
+      "name": "Condesa",
+      "kind": "cafe",
+      "address": "Marienplatz 11, 70178 Stuttgart",
+      "lat": 48.7645852,
+      "lng": 9.1689916,
+      "openingHours": "Mo-Th 08:00-23:00; Fr 08:00-01:00; Sa 09:00-01:00; Su 09:00-23:00"
+    },
+    {
+      "osmId": "n10605734306",
+      "name": "Faultiercafé",
+      "kind": "cafe",
+      "address": "Seestraße 63, 70174",
+      "lat": 48.7864681,
+      "lng": 9.1683054,
+      "website": "https://faultiercafe.de",
+      "openingHours": "Su-Mo, We-Th 12:00-18:30; Fr 12:00-19:00; Sa 12:00-20:00"
+    },
+    {
+      "osmId": "n3886467519",
+      "name": "kaffee mitte",
+      "kind": "cafe",
+      "address": "Eltinger Straße 8, 70195 Stuttgart",
+      "lat": 48.7787525,
+      "lng": 9.125076,
+      "openingHours": "Mo,We-Fr 08:00-20:00; Sa 08:00-19:00; Su 10:00-19:00; Tu Off"
+    },
+    {
+      "osmId": "n6473816238",
+      "name": "Lamber",
+      "kind": "cafe",
+      "address": "Eduard-Pfeiffer-Straße 121, 70192 Stuttgart",
+      "lat": 48.7895663,
+      "lng": 9.1704027,
+      "website": "https://lamber-killesberg.business.site/",
+      "openingHours": "Mo-Fr 08:00-18:00; Sa 08:00-17:00; Su 10:00-18:00"
+    },
+    {
+      "osmId": "n13813351801",
+      "name": "Lokmatas",
+      "kind": "cafe",
+      "address": "Mailänder Platz 7",
+      "lat": 48.7906719,
+      "lng": 9.1844492,
+      "website": "https://lokmatas.de/",
+      "openingHours": "Mo-Fr,Sa 10:00-20:00,09:30-20:00"
+    },
+    {
+      "osmId": "n6703100425",
+      "name": "Melva Mode Café",
+      "kind": "cafe",
+      "address": "Reuchlinstraße 22, 70178 Stuttgart",
+      "lat": 48.7709289,
+      "lng": 9.1599745,
+      "website": "https://www.melva-stuttgart.de/",
+      "openingHours": "Mo-Fr 11:00-19:00; Sa 10:30-16:00"
+    },
+    {
+      "osmId": "n3665224527",
+      "name": "Mikel",
+      "kind": "cafe",
+      "address": "Marktstraße 14, 70372 Stuttgart",
+      "lat": 48.8040791,
+      "lng": 9.2156418,
+      "website": "https://mikelcoffee.com/store/stuttgart/"
+    },
+    {
+      "osmId": "w121286831",
+      "name": "Mutterle Café",
+      "kind": "cafe",
+      "address": "Gänsheidestraße 49, 70184 Stuttgart",
+      "lat": 48.7725479,
+      "lng": 9.1951513
+    },
+    {
+      "osmId": "w469959397",
+      "name": "Pförtnerhäuschen",
+      "kind": "cafe",
+      "address": "Quellenstraße 7, 70376 Stuttgart",
+      "lat": 48.8082069,
+      "lng": 9.2011946,
+      "website": "http://pfoertnerhaeuschen.de",
+      "openingHours": "Mo-Fr 09:00-14:00; PH off"
+    },
+    {
+      "osmId": "n13763776646",
+      "name": "suedlager",
+      "kind": "coffee_shop",
+      "lat": 48.7625027,
+      "lng": 9.1619633,
+      "openingHours": "Mo-Fr 08:00-17:00; Sa 10:00-17:00"
+    },
+    {
+      "osmId": "n5579747562",
+      "name": "Taraba Coffee",
+      "kind": "cafe",
+      "address": "Neckarstraße 216, 70190 Stuttgart",
+      "lat": 48.7926208,
+      "lng": 9.2015223,
+      "openingHours": "Mo-Su 10:00-17:00"
+    },
+    {
+      "osmId": "n4423746810",
+      "name": "WerkstattKaffee",
+      "kind": "cafe",
+      "address": "70191",
+      "lat": 48.8062232,
+      "lng": 9.1869367,
+      "website": "https://www.lebenshilfe-stuttgart.de/",
+      "openingHours": "Mo-Fr 08:45-14:30"
+    }
+  ]
+}
