@@ -199,6 +199,26 @@ export default function Settings() {
           onChange={(dailyCupsGoal) => updatePrefs.mutate({ dailyCupsGoal })}
         />
 
+        <Text variant="label" style={{ marginTop: t.space.md }}>DIALING</Text>
+        <Stepper
+          label="Target time (min)"
+          unit="s"
+          min={10}
+          max={(prefs?.dialTimeMaxS ?? 30) - 1}
+          step={1}
+          value={prefs?.dialTimeMinS ?? 25}
+          onChange={(dialTimeMinS) => updatePrefs.mutate({ dialTimeMinS })}
+        />
+        <Stepper
+          label="Target time (max)"
+          unit="s"
+          min={(prefs?.dialTimeMinS ?? 25) + 1}
+          max={120}
+          step={1}
+          value={prefs?.dialTimeMaxS ?? 30}
+          onChange={(dialTimeMaxS) => updatePrefs.mutate({ dialTimeMaxS })}
+        />
+
         <Text variant="label" style={{ marginTop: t.space.md }}>APP</Text>
         <Row label="Weight unit" value={prefs?.weightUnit ?? 'g'} onPress={cycleWeightUnit} />
         <Row label="Default ratio" value={`1:${(prefs?.defaultRatio ?? 2).toFixed(1)}`} onPress={cycleDefaultRatio} />
