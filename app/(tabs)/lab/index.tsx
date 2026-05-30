@@ -6,9 +6,12 @@ import { Pressable, View } from 'react-native';
 import { useBeans } from '@/features/beans/hooks';
 import { useStartSession, useEndSession, useAddMilestone, useLastShotForBean } from '@/features/brew/hooks';
 import { useRecipeForBean } from '@/features/recipes/hooks';
+import { useDialingAdvice } from '@/features/dialing/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
 import { extractionPercent, qualityBand } from '@/domain/extraction';
+import { nudgeGrind } from '@/domain/dialing';
+import { CoachCard } from '@/ui/primitives/CoachCard';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
@@ -66,6 +69,35 @@ export default function LabIndex() {
 
   const selectedBean = beans?.find((b) => b.id === draft.beanId) ?? null;
 
+  const { advice } = useDialingAdvice(draft.beanId);
+
+  const repeatLastShot = () => {
+    if (!lastShot) return;
+    send({
+      type: 'configure',
+      doseG: lastShot.doseG,
+      targetYieldG: lastShot.yieldG ?? draft.targetYieldG,
+      grindSetting: lastShot.grindSetting,
+      grinderLabel: lastShot.grinderLabel,
+      waterTempC: lastShot.waterTempC,
+    });
+  };
+
+  const applyNudge = () => {
+    const next = nudgeGrind(draft.grindSetting, advice);
+    if (next !== draft.grindSetting) send({ type: 'configure', grindSetting: next });
+  };
+
+  const grindIsNumeric =
+    draft.grindSetting != null &&
+    draft.grindSetting.trim() !== '' &&
+    Number.isFinite(Number(draft.grindSetting));
+  const showNudge =
+    grindIsNumeric &&
+    (advice?.primary.lever === 'grind-finer' || advice?.primary.lever === 'grind-coarser');
+  const nudgeDir = advice?.primary.lever === 'grind-finer' ? 'finer' : 'coarser';
+  const nudgeSteps = advice?.primary.magnitude === 'medium' ? 2 : 1;
+
   const onStart = async () => {
     if (!selectedBean) return;
     const persisted = await startSession.mutateAsync({
@@ -118,6 +150,20 @@ export default function LabIndex() {
 
         {status === 'IdleSetup' ? (
           <View style={{ marginTop: t.space.xl, gap: t.space.lg }}>
+            <CoachCard advice={advice}>
+              {lastShot ? (
+                <View style={{ flexDirection: 'row', gap: t.space.sm, flexWrap: 'wrap' }}>
+                  <Pill label="Repeat last shot" variant="ghost" onPress={repeatLastShot} />
+                  {showNudge ? (
+                    <Pill
+                      label={`${nudgeDir} (${advice!.primary.lever === 'grind-finer' ? '−' : '+'}${nudgeSteps})`}
+                      variant="primary"
+                      onPress={applyNudge}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
+            </CoachCard>
             <Stepper
               label="Dose"
               unit="g"
