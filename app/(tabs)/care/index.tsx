@@ -47,6 +47,8 @@ export default function CareScreen() {
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/care/new' as never)}
             style={{ marginTop: t.space.sm }}
+            accessibilityRole="button"
+            accessibilityLabel="Add machine"
           >
             <Surface bg="paperDeep" padding="md" radius="md" bordered>
               <Text variant="bodyStrong" color={t.colors.forest}>+ Add machine</Text>

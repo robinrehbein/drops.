@@ -29,6 +29,15 @@ describe('SensoryRadar', () => {
     expect(screen.getByTestId('radar-label-BALANCE')).toBeTruthy();
   });
 
+  it('exposes an accessibility summary', () => {
+    render(
+      <ThemeProvider>
+        <SensoryRadar axes={axes} />
+      </ThemeProvider>,
+    );
+    expect(screen.getByLabelText(/Sensory radar:/)).toBeTruthy();
+  });
+
   it('renders with all-zero axes without crashing', () => {
     expect(() =>
       render(

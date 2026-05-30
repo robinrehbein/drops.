@@ -1,0 +1,22 @@
+appId: com.brewlog.app
+name: Machine readiness appears on Daily
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- tapOn: "Care"
+- assertVisible: "No machines yet"
+- tapOn: "+ Add machine"
+- inputText: "Maestro Linea"
+- tapOn: "Save machine"
+- assertVisible: "Maestro Linea"
+- tapOn: "Maestro Linea"
+- tapOn: "+ Add task"
+- tapOn: "Backflush"
+- tapOn: "Save task"
+- assertVisible: "Backflush"
+- tapOn: "Mark done now"
+- inputText: "Maestro smoke"
+- tapOn: "Confirm done"
+- tapOn: "Daily"
+- assertVisible: "Backflush"

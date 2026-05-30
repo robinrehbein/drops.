@@ -22,6 +22,18 @@ export function useMachineTasks(machineId: string | null) {
   });
 }
 
+export function useMaintenanceSnapshot(enabled = true) {
+  const { maintenance } = useRepos();
+  return useQuery({
+    queryKey: ['maintenance', 'snapshot'],
+    queryFn: async () => ({
+      shots: await maintenance.currentShots(),
+      liters: await maintenance.currentLiters(),
+    }),
+    enabled,
+  });
+}
+
 export function useAddTask() {
   const { maintenance } = useRepos();
   const qc = useQueryClient();

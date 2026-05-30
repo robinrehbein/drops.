@@ -32,7 +32,13 @@ export function MachineCard({
     .slice(0, 3);
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} testID="machine-card">
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      testID="machine-card"
+      accessibilityRole="button"
+      accessibilityLabel={`${machine.name} maintenance`}
+    >
       <Surface bg="paperDeep" padding="md" radius="md" bordered>
         <Text variant="heading">{machine.name}</Text>
         <Text variant="caption" color={t.colors.inkSoft}>

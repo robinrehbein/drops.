@@ -1,11 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 
-import { useLogTask, useTasksWithStatus } from '@/features/maintenance/hooks';
+import { useTasksWithStatus } from '@/features/maintenance/hooks';
 import { useMachine } from '@/features/machines/hooks';
-import { useAddTask } from '@/features/maintenance/hooks';
-import { useSnackbarStore } from '@/state/snackbar';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Header } from '@/ui/primitives/Header';
 import { Pill } from '@/ui/primitives/Pill';
@@ -16,24 +13,8 @@ import { useTheme } from '@/ui/theme/useTheme';
 import type { TaskWithStatus } from '@/features/maintenance/types';
 
 function TaskRow({ task, machineId }: { task: TaskWithStatus; machineId: string }) {
+  const router = useRouter();
   const t = useTheme();
-  const { mutateAsync: logTask, isPending } = useLogTask();
-  const showSnack = useSnackbarStore((s) => s.show);
-
-  const markDone = () => {
-    Alert.prompt(
-      'Mark done',
-      `Log "${task.label}" as done now? Add a note (optional):`,
-      async (noteText?: string) => {
-        const args: Parameters<typeof logTask>[0] = { taskId: task.id, machineId };
-        if (noteText) args.notes = noteText;
-        await logTask(args);
-        showSnack(`${task.label} logged`);
-      },
-      'plain-text',
-      '',
-    );
-  };
 
   const cadenceText = `Every ${task.cadenceValue} ${task.cadenceKind.replace('every_n_', '')}`;
   const lastText = task.lastDoneAt
@@ -45,7 +26,16 @@ function TaskRow({ task, machineId }: { task: TaskWithStatus; machineId: string 
       <Text variant="bodyStrong">{task.label}</Text>
       <Text variant="caption" color={t.colors.inkSoft}>{cadenceText} · {lastText}</Text>
       <ReadinessRow label="Next" status={task.nextDue} />
-      <Pill label={isPending ? 'Logging…' : 'Mark done now'} variant="ghost" onPress={markDone} disabled={isPending} />
+      <Pill
+        label="Mark done now"
+        variant="ghost"
+        onPress={() =>
+          router.push({
+            pathname: '/(modals)/log-task',
+            params: { taskId: task.id, machineId, label: task.label, cadenceKind: task.cadenceKind },
+          } as never)
+        }
+      />
     </Surface>
   );
 }
@@ -86,6 +76,8 @@ export default function MachineDetailScreen() {
             ))}
             <TouchableOpacity
               onPress={() => router.push({ pathname: '/(tabs)/care/add-task', params: { machineId: id } } as never)}
+              accessibilityRole="button"
+              accessibilityLabel="Add task"
             >
               <Surface bg="paperDeep" padding="md" radius="md" bordered>
                 <Text variant="bodyStrong" color={t.colors.forest}>+ Add task</Text>

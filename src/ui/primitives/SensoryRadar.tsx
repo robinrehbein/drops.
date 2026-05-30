@@ -21,10 +21,10 @@ function polarToXY(angle: number, radius: number, cx: number, cy: number) {
 
 export function SensoryRadar({ axes }: { axes: TastingAxes }) {
   const t = useTheme();
-  const SIZE = 160;
+  const SIZE = 184;
   const cx = SIZE / 2;
   const cy = SIZE / 2;
-  const maxR = SIZE / 2 - 20;
+  const maxR = SIZE / 2 - 32;
   const allZero = Object.values(axes).every((v) => v === 0);
 
   const angleStep = (2 * Math.PI) / N;
@@ -51,8 +51,12 @@ export function SensoryRadar({ axes }: { axes: TastingAxes }) {
     gridPath.close();
   });
 
+  const summary = AXES
+    .map(({ key, label }) => `${label.toLowerCase()} ${axes[key] ?? 0}`)
+    .join(', ');
+
   return (
-    <View>
+    <View accessible accessibilityLabel={`Sensory radar: ${summary}`}>
       <View style={{ width: SIZE, height: SIZE }}>
         <Canvas style={{ width: SIZE, height: SIZE, position: 'absolute' }}>
           <Path path={gridPath} color={t.colors.paperEdge} style="stroke" strokeWidth={1} />
@@ -70,13 +74,13 @@ export function SensoryRadar({ axes }: { axes: TastingAxes }) {
           return (
             <View
               key={label}
-              style={{ position: 'absolute', left: x - 20, top: y - 8, width: 40 }}
+              style={{ position: 'absolute', left: x - 28, top: y - 8, width: 56 }}
             >
               <Text
                 variant="label"
                 color={t.colors.inkSoft}
                 testID={`radar-label-${label}`}
-                style={{ textAlign: 'center', fontSize: 8 }}
+                style={{ textAlign: 'center', fontSize: 9 }}
               >
                 {label}
               </Text>

@@ -9,6 +9,7 @@ export type BeanCardProps = {
   subtitle?: string;
   roastedOn?: Date | null;
   remainingPct?: number | null;
+  wouldBuyAgain?: boolean | null;
 };
 
 function freshnessColor(days: number, t: ReturnType<typeof useTheme>): string {
@@ -27,7 +28,7 @@ function freshnessLabel(days: number): string {
   return `${days}d`;
 }
 
-export function BeanCard({ name, subtitle, roastedOn, remainingPct }: BeanCardProps) {
+export function BeanCard({ name, subtitle, roastedOn, remainingPct, wouldBuyAgain }: BeanCardProps) {
   const t = useTheme();
   const daysSinceRoast = roastedOn ? differenceInDays(new Date(), roastedOn) : null;
 
@@ -54,12 +55,19 @@ export function BeanCard({ name, subtitle, roastedOn, remainingPct }: BeanCardPr
     >
       <View
         style={{
-          width: 48, height: 48, borderRadius: t.radii.sm,
-          backgroundColor: t.colors.forestDeep,
-          alignItems: 'center', justifyContent: 'center',
+          width: 56, height: 56, borderRadius: t.radii.sm,
+          backgroundColor: t.colors.paperDeep,
+          borderColor: t.colors.paperEdge,
+          borderWidth: 1,
+          alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
         }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
       >
-        <Text variant="bodyStrong" color={t.colors.paper}>☕</Text>
+        <View style={{ position: 'absolute', top: 9, width: 24, height: 32, borderRadius: 12, backgroundColor: t.colors.forestDeep }} />
+        <View style={{ position: 'absolute', top: 16, left: 26, width: 20, height: 28, borderRadius: 10, backgroundColor: t.colors.forest }} />
+        <View style={{ position: 'absolute', top: 24, left: 15, width: 26, height: 24, borderRadius: 13, backgroundColor: t.colors.amber }} />
+        <View style={{ position: 'absolute', bottom: 0, width: 56, height: 18, backgroundColor: t.colors.forestPale }} />
       </View>
       <View style={{ flex: 1 }}>
         <Text variant="heading">{name}</Text>
@@ -77,11 +85,18 @@ export function BeanCard({ name, subtitle, roastedOn, remainingPct }: BeanCardPr
           </View>
         ) : null}
       </View>
-      {daysSinceRoast != null ? (
-        <View style={{ paddingHorizontal: t.space.sm, paddingVertical: 4, borderRadius: t.radii.pill, backgroundColor: freshnessColor(daysSinceRoast, t) }}>
-          <Text variant="label" color={t.colors.paper}>{freshnessLabel(daysSinceRoast)}</Text>
-        </View>
-      ) : null}
+      <View style={{ alignItems: 'flex-end', gap: t.space.xs }}>
+        {wouldBuyAgain === true ? (
+          <View style={{ paddingHorizontal: t.space.sm, paddingVertical: 4, borderRadius: t.radii.pill, backgroundColor: t.colors.forest }}>
+            <Text variant="label" color={t.colors.paper}>BUY AGAIN</Text>
+          </View>
+        ) : null}
+        {daysSinceRoast != null ? (
+          <View style={{ paddingHorizontal: t.space.sm, paddingVertical: 4, borderRadius: t.radii.pill, backgroundColor: freshnessColor(daysSinceRoast, t) }}>
+            <Text variant="label" color={t.colors.paper}>{freshnessLabel(daysSinceRoast)}</Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }

@@ -40,6 +40,9 @@ export default function LibraryIndex() {
             label={f.label}
             variant={filter === f.value ? 'primary' : 'ghost'}
             onPress={() => setFilter(f.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: filter === f.value }}
+            accessibilityLabel={`Library filter ${f.label}`}
           />
         ))}
       </View>
@@ -67,7 +70,12 @@ export default function LibraryIndex() {
                 : null;
             const finishedDays = b.finishedAt ? differenceInDays(new Date(), b.finishedAt) : null;
             return (
-              <Pressable key={b.id} onPress={() => router.push(`/library/${b.id}` as never)}>
+              <Pressable
+                key={b.id}
+                onPress={() => router.push(`/library/${b.id}` as never)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${b.name}`}
+              >
                 <BeanCard
                   name={b.name}
                   subtitle={[
@@ -77,6 +85,7 @@ export default function LibraryIndex() {
                   ].filter(Boolean).join(' · ')}
                   roastedOn={b.roastedOn ?? null}
                   remainingPct={remainingPct}
+                  wouldBuyAgain={b.wouldBuyAgain}
                 />
               </Pressable>
             );

@@ -10,7 +10,7 @@ export function CupsRow({ progress }: { progress: CupsProgress }) {
   const { filled, total, overshoot } = progress;
 
   return (
-    <View>
+    <View accessible accessibilityLabel={`${filled} of ${total} espresso shots today`}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space.xs }}>
         {Array.from({ length: total }).map((_, i) => (
           <View
