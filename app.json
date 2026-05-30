@@ -8,11 +8,16 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.brewlog.app",
+      "bundleIdentifier": "de.birneklub.brewlog",
       "supportsTablet": false
     },
     "android": {
-      "package": "com.brewlog.app"
+      "package": "de.birneklub.brewlog",
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_ANDROID_MAPS_API_KEY"
+        }
+      }
     },
     "plugins": [
       [
@@ -28,10 +33,28 @@
       "expo-localization",
       "expo-sqlite",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Brewlog uses your location to find specialty coffee near you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        }
+      },
+      "eas": {
+        "projectId": "c4d1539b-70ea-4412-8ea0-d3fbbdb99900"
+      }
+    },
+    "owner": "birneklub"
   }
 }

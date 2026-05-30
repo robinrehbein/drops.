@@ -1,0 +1,9 @@
+appId: com.brewlog.app
+---
+- launchApp
+- tapOn: "Explore"
+- assertVisible: "Explore"
+- tapOn:
+    id: "mode-map"
+- tapOn:
+    id: "mode-list"

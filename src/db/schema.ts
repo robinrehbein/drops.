@@ -24,6 +24,7 @@ export const beans = sqliteTable(
     wouldBuyAgain: integer('would_buy_again', { mode: 'boolean' }),
     finishedAt: integer('finished_at', { mode: 'timestamp' }),
     recipeId: text('recipe_id'), // FK → recipes.id, set when a canonical recipe is locked in
+    sourcePlaceId: text('source_place_id'), // FK → places.id; null = no source recorded
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }),
@@ -138,6 +139,8 @@ export const preferences = sqliteTable('preferences', {
   shotFlushMl: real('shot_flush_ml').notNull().default(20),
   dailyCupsGoal: integer('daily_cups_goal').notNull().default(4),
   caffeineTargetMg: integer('caffeine_target_mg'),
+  dialTimeMinS: integer('dial_time_min_s').notNull().default(25),
+  dialTimeMaxS: integer('dial_time_max_s').notNull().default(30),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
@@ -231,5 +234,56 @@ export const maintenanceLogs = sqliteTable(
   },
   (t) => ({
     byTaskDone: index('maintenance_logs_task_done').on(t.taskId, t.doneAt),
+  }),
+);
+
+/* Places — specialty coffee directory (seed + user-added) */
+export const places = sqliteTable(
+  'places',
+  {
+    id: text('id').primaryKey(),
+    source: text('source').notNull().default('seed'), // 'seed' | 'user'
+    externalId: text('external_id'), // osmId for seed rows; upsert key
+    name: text('name').notNull(),
+    kind: text('kind').notNull().default('cafe'), // 'roaster' | 'coffee_shop' | 'cafe'
+    city: text('city'),
+    country: text('country').notNull().default('DE'),
+    address: text('address'),
+    lat: real('lat'),
+    lng: real('lng'),
+    website: text('website'),
+    openingHours: text('opening_hours'),
+    tags: text('tags', { mode: 'json' }).$type<string[]>(),
+    curated: integer('curated', { mode: 'boolean' }).notNull().default(false),
+    editorialNote: text('editorial_note'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => ({
+    byCity: index('places_city_name').on(t.city, t.name),
+    // NULL-safe: SQLite treats each NULL as distinct, so user-added rows (externalId NULL)
+    // coexist freely while seed rows stay unique by osmId.
+    byExternal: uniqueIndex('places_external_id').on(t.externalId),
+    byCurated: index('places_curated').on(t.curated, t.city),
+  }),
+);
+
+/* Per-place personal overlay — kept separate so re-seeding never clobbers user data */
+export const placeUserData = sqliteTable(
+  'place_user_data',
+  {
+    id: text('id').primaryKey(),
+    placeId: text('place_id')
+      .notNull()
+      .references(() => places.id, { onDelete: 'cascade' }),
+    wishlisted: integer('wishlisted', { mode: 'boolean' }).notNull().default(false),
+    visitedAt: integer('visited_at', { mode: 'timestamp' }),
+    rating: integer('rating'),
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => ({
+    byPlace: uniqueIndex('place_user_data_place').on(t.placeId),
   }),
 );

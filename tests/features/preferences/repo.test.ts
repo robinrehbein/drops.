@@ -60,4 +60,21 @@ describe('preferences repo', () => {
     const cleared = await repo.update({ caffeineTargetMg: null });
     expect(cleared.caffeineTargetMg).toBeNull();
   });
+
+  it('seeds the dialing target-time window defaults', async () => {
+    const db = makeTestDb();
+    const repo = makePreferencesRepo(db);
+    const prefs = await repo.get();
+    expect(prefs.dialTimeMinS).toBe(25);
+    expect(prefs.dialTimeMaxS).toBe(30);
+  });
+
+  it('updates the dialing window', async () => {
+    const db = makeTestDb();
+    const repo = makePreferencesRepo(db);
+    await repo.get();
+    const updated = await repo.update({ dialTimeMinS: 27, dialTimeMaxS: 33 });
+    expect(updated.dialTimeMinS).toBe(27);
+    expect(updated.dialTimeMaxS).toBe(33);
+  });
 });

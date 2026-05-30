@@ -6,6 +6,7 @@ import { differenceInDays, format } from 'date-fns';
 import type { BeanInput } from '@/domain/validators/bean';
 import { useBean, useRestoreBean, useSetBeanStatus, useSetWouldBuyAgain, useSoftDeleteBean, useUpdateBean } from '@/features/beans/hooks';
 import { useSessions, useTastingNotesForBean } from '@/features/brew/hooks';
+import { useLinkBeanSource, usePlaces } from '@/features/places/hooks';
 import { useRecipeForBean, useClearRecipe } from '@/features/recipes/hooks';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { tastingRadar } from '@/domain/tasting';
@@ -15,6 +16,7 @@ import { BeanCard } from '@/ui/primitives/BeanCard';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
+import { PlaceCard } from '@/ui/primitives/PlaceCard';
 import { RecipeCard } from '@/ui/primitives/RecipeCard';
 import { SensoryRadar } from '@/ui/primitives/SensoryRadar';
 import { Surface } from '@/ui/primitives/Surface';
@@ -27,6 +29,7 @@ export default function BeanDetail() {
   const t = useTheme();
   const { data: bean } = useBean(id ?? '');
   const { data: sessions } = useSessions(id);
+  const { data: places = [] } = usePlaces();
   const { data: recipe } = useRecipeForBean(id ?? null);
   const { data: tastingNoteRows } = useTastingNotesForBean(id ?? null);
   const softDelete = useSoftDeleteBean();
@@ -34,6 +37,7 @@ export default function BeanDetail() {
   const updateBean = useUpdateBean();
   const setStatus = useSetBeanStatus();
   const setWouldBuy = useSetWouldBuyAgain();
+  const linkBeanSource = useLinkBeanSource();
   const clearRecipe = useClearRecipe();
   const show = useSnackbarStore((s) => s.show);
 
@@ -42,6 +46,37 @@ export default function BeanDetail() {
   const [editRoaster, setEditRoaster] = useState('');
   const [editOrigin, setEditOrigin] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
+
+  // Quick stats from sessions
+  const stats = useMemo(() => {
+    if (!sessions || sessions.length === 0) return null;
+    const rated = sessions.filter((s) => s.rating != null);
+    const avgRating = rated.length > 0
+      ? rated.reduce((sum, s) => sum + (s.rating ?? 0), 0) / rated.length
+      : null;
+    const ratios = sessions.map((s) => brewRatio(s.doseG, s.yieldG ?? 0)).filter((r): r is number => r !== null);
+    const avgRatio = ratios.length > 0 ? ratios.reduce((a, b) => a + b, 0) / ratios.length : null;
+    const avgDuration = sessions.reduce((sum, s) => sum + (s.durationS ?? 0), 0) / sessions.length;
+    const avgDose = sessions.reduce((sum, s) => sum + s.doseG, 0) / sessions.length;
+    const bestShot = rated.length > 0
+      ? rated.reduce((best, s) => (s.rating ?? 0) > (best.rating ?? 0) ? s : best, rated[0]!)
+      : null;
+    return { avgRating, avgRatio, avgDuration, avgDose, bestShot, total: sessions.length };
+  }, [sessions]);
+
+  const radarAxes = useMemo(() => {
+    if (!tastingNoteRows || tastingNoteRows.length === 0) return null;
+    return tastingRadar(tastingNoteRows.map((n) => {
+      const note: Partial<import('@/domain/tasting').TastingAxes> = {};
+      if (n.mouthfeel != null) note.mouthfeel = n.mouthfeel;
+      if (n.acidity != null) note.acidity = n.acidity;
+      if (n.sweetness != null) note.sweetness = n.sweetness;
+      if (n.bitterness != null) note.bitterness = n.bitterness;
+      if (n.balance != null) note.balance = n.balance;
+      return note;
+    }));
+  }, [tastingNoteRows]);
 
   if (!bean) {
     return (
@@ -85,39 +120,17 @@ export default function BeanDetail() {
     show('Bean updated');
   };
 
-  // Quick stats from sessions
-  const stats = useMemo(() => {
-    if (!sessions || sessions.length === 0) return null;
-    const rated = sessions.filter((s) => s.rating != null);
-    const avgRating = rated.length > 0
-      ? rated.reduce((sum, s) => sum + (s.rating ?? 0), 0) / rated.length
-      : null;
-    const ratios = sessions.map((s) => brewRatio(s.doseG, s.yieldG ?? 0)).filter((r): r is number => r !== null);
-    const avgRatio = ratios.length > 0 ? ratios.reduce((a, b) => a + b, 0) / ratios.length : null;
-    const avgDuration = sessions.reduce((sum, s) => sum + (s.durationS ?? 0), 0) / sessions.length;
-    const avgDose = sessions.reduce((sum, s) => sum + s.doseG, 0) / sessions.length;
-    const bestShot = rated.length > 0
-      ? rated.reduce((best, s) => (s.rating ?? 0) > (best.rating ?? 0) ? s : best, rated[0]!)
-      : null;
-    return { avgRating, avgRatio, avgDuration, avgDose, bestShot, total: sessions.length };
-  }, [sessions]);
-
-  const radarAxes = useMemo(() => {
-    if (!tastingNoteRows || tastingNoteRows.length === 0) return null;
-    return tastingRadar(tastingNoteRows.map((n) => {
-      const note: Partial<import('@/domain/tasting').TastingAxes> = {};
-      if (n.mouthfeel != null) note.mouthfeel = n.mouthfeel;
-      if (n.acidity != null) note.acidity = n.acidity;
-      if (n.sweetness != null) note.sweetness = n.sweetness;
-      if (n.bitterness != null) note.bitterness = n.bitterness;
-      if (n.balance != null) note.balance = n.balance;
-      return note;
-    }));
-  }, [tastingNoteRows]);
-
   const cost = bean && stats
     ? costPerShot({ pricePaidMinor: bean.pricePaidMinor ?? null, startWeightG: bean.startWeightG ?? null, avgDoseG: stats.avgDose })
     : null;
+
+  const sourcePlace = places.find((p) => p.id === bean.sourcePlaceId) ?? null;
+
+  const selectSourcePlace = async (placeId: string | null) => {
+    await linkBeanSource.mutateAsync({ beanId: bean.id, placeId });
+    setSourcePickerOpen(false);
+    show(placeId ? 'Source linked' : 'Source cleared');
+  };
 
   const inputStyle = {
     borderWidth: 1,
@@ -206,6 +219,24 @@ export default function BeanDetail() {
                   onPress={() => setWouldBuy.mutate({ id: bean.id, value: null })}
                 />
               </View>
+            </View>
+
+            <View>
+              <Text variant="heading">Source</Text>
+              <Text variant="caption" style={{ marginTop: t.space.xs }}>
+                {sourcePlace ? sourcePlace.name : 'No source place linked'}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm }}>
+                <Pill label="Choose source" variant="ghost" onPress={() => setSourcePickerOpen((v) => !v)} />
+                {sourcePlace ? <Pill label="Clear" variant="ghost" onPress={() => selectSourcePlace(null)} /> : null}
+              </View>
+              {sourcePickerOpen ? (
+                <View style={{ marginTop: t.space.sm }}>
+                  {places.map((place) => (
+                    <PlaceCard key={place.id} place={place} onPress={() => selectSourcePlace(place.id)} />
+                  ))}
+                </View>
+              ) : null}
             </View>
 
             {/* Sensory radar */}

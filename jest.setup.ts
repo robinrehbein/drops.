@@ -12,3 +12,5 @@ jest.mock('expo-font', () => {
     useFonts: () => [true, null],
   };
 });
+
+import '@/i18n';

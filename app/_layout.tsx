@@ -25,14 +25,24 @@ export default function RootLayout() {
   useEffect(() => {
     initSentry();
     runMigrations()
+      .then(async () => {
+        // Seeding the places directory is best-effort: a failure here must never
+        // block app boot (the app is fully usable without the bundled seed).
+        try {
+          const { getRepos } = await import('@/features/_provider/repos');
+          const { seedPlacesIfNeeded } = await import('@/features/places/seed');
+          await seedPlacesIfNeeded(getRepos().places);
+        } catch (e) {
+          console.warn('Places seed skipped:', e);
+        }
+      })
       .then(() => setMigrated(true))
       .catch((e) => setError(e instanceof Error ? e : new Error(String(e))));
   }, []);
 
   if (error) {
     const isWebSQLiteSyncError =
-      Platform.OS === 'web' &&
-      /SharedArrayBuffer|Sync operation timeout/i.test(error.message);
+      Platform.OS === 'web' && /SharedArrayBuffer|Sync operation timeout/i.test(error.message);
 
     return (
       <ThemeProvider>
