@@ -1,6 +1,9 @@
 // Silence noisy logs in unit tests; per-test code may override.
 jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
+// Reanimated's Jest implementation runs animation worklets on the JS thread.
+require('react-native-reanimated').setUpTests();
+
 // expo-font's useFonts never resolves in jest because the native font loader is
 // stubbed without driving the load promise. ThemeProvider would render a blank
 // <View /> forever, hiding children from RNTL queries. Stubbing useFonts to
