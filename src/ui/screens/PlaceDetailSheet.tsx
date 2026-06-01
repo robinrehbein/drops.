@@ -35,7 +35,7 @@ export function PlaceDetailSheet({
   return (
     <BottomSheet
       key={placeId}
-      index={1}
+      index={0}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
