@@ -372,20 +372,6 @@ export function usePressAnimation(pressedScale = 0.88) {
 
 export type IconAnimation = 'pop' | 'pulse' | 'spin' | 'nudge';
 
-/**
- * One-shot, transform/opacity-only animations fired on a state change.
- * Returns the worklet body to assign to a shared value.
- */
-export const ICON_ANIMATIONS: Record<
-  IconAnimation,
-  { kind: 'scale' | 'rotate' | 'translateX' }
-> = {
-  pop: { kind: 'scale' },
-  pulse: { kind: 'scale' },
-  spin: { kind: 'rotate' },
-  nudge: { kind: 'translateX' },
-};
-
 /** withSequence builders kept here so AnimatedIcon and tests share one source. */
 export const buildPop = () =>
   withSequence(withSpring(1.35, { damping: 6, stiffness: 260 }), withSpring(1, SPRING));
