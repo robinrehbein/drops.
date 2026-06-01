@@ -1,7 +1,9 @@
-import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, type PressableProps, type StyleProp, View, type ViewStyle } from 'react-native';
 
-import { useTheme } from '@/ui/theme/useTheme';
 import { Text } from './Text';
+
+import { Icon, type IconName } from '@/ui/icons/line';
+import { useTheme } from '@/ui/theme/useTheme';
 
 export type PillVariant = 'primary' | 'ghost' | 'danger';
 
@@ -9,16 +11,24 @@ export type PillProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   variant?: PillVariant;
   size?: 'md' | 'lg';
+  rightIcon?: IconName;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
-export function Pill({ label, variant = 'primary', size = 'md', style, ...rest }: PillProps) {
+export function Pill({
+  label,
+  variant = 'primary',
+  size = 'md',
+  rightIcon,
+  style,
+  ...rest
+}: PillProps) {
   const t = useTheme();
   const palette = {
     primary: { bg: t.colors.forest, fg: t.colors.paper, border: 'transparent' },
-    ghost:   { bg: 'transparent',    fg: t.colors.forest, border: t.colors.forest },
-    danger:  { bg: t.colors.danger,  fg: t.colors.paper, border: 'transparent' },
+    ghost: { bg: 'transparent', fg: t.colors.forest, border: t.colors.forest },
+    danger: { bg: t.colors.danger, fg: t.colors.paper, border: 'transparent' },
   }[variant];
   const padV = size === 'lg' ? t.space.lg : t.space.md;
   const padH = size === 'lg' ? t.space.xl : t.space.lg;
@@ -41,9 +51,12 @@ export function Pill({ label, variant = 'primary', size = 'md', style, ...rest }
         style,
       ]}
     >
-      <Text variant="bodyStrong" color={palette.fg}>
-        {label}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs }}>
+        <Text variant="bodyStrong" color={palette.fg}>
+          {label}
+        </Text>
+        {rightIcon ? <Icon name={rightIcon} size={16} color={palette.fg} /> : null}
+      </View>
     </Pressable>
   );
 }

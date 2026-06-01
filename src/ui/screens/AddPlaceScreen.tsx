@@ -1,12 +1,13 @@
+import { Marker } from '@maplibre/maplibre-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Marker } from '@maplibre/maplibre-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { LatLng } from '@/domain/places';
 import type { PlaceInput } from '@/domain/validators/place';
 import { useAddPlace } from '@/features/places/hooks';
+import { Icon } from '@/ui/icons/line';
 import { BaseMap } from '@/ui/maps/BaseMap';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
@@ -126,11 +127,14 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
           marginBottom: theme.space.sm,
         }}
       >
-        <Text variant="caption">
-          {coords
-            ? `📍 ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
-            : t('explore.useCurrentLocation')}
-        </Text>
+        {coords ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.space.xs }}>
+            <Icon name="pin" size={14} color={theme.colors.ink} />
+            <Text variant="caption">{`${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}</Text>
+          </View>
+        ) : (
+          <Text variant="caption">{t('explore.useCurrentLocation')}</Text>
+        )}
       </Pressable>
       <Text
         variant="caption"
