@@ -1,11 +1,13 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { Marker } from '@maplibre/maplibre-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Platform, Pressable, TextInput, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, TextInput, View } from 'react-native';
 
 import { useBeansBySourcePlace } from '@/features/beans/hooks';
 import { usePlace, useSetUserData, useToggleWishlist } from '@/features/places/hooks';
+import { AnimatedIcon } from '@/ui/icons/AnimatedIcon';
+import type { IconName } from '@/ui/icons/line';
 import { BaseMap } from '@/ui/maps/BaseMap';
 import { RatingStars } from '@/ui/primitives/RatingStars';
 import { Text } from '@/ui/primitives/Text';
@@ -43,19 +45,37 @@ export function PlaceDetail({ id }: { id: string }) {
         })
       : null;
 
-  const action = (testID: string, label: string, onPress: () => void) => (
+  const action = (
+    testID: string,
+    label: string,
+    onPress: () => void,
+    icon?: { name: IconName; active: boolean },
+  ) => (
     <Pressable
       testID={testID}
       onPress={onPress}
       style={{
         flex: 1,
+        flexDirection: 'row',
+        gap: theme.space.xs,
         borderWidth: 1,
         borderColor: theme.colors.paperEdge,
         borderRadius: theme.radii.sm,
         paddingVertical: theme.space.sm,
         alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
+      {icon ? (
+        <AnimatedIcon
+          name={icon.name}
+          animation="pop"
+          trigger={icon.active}
+          size={16}
+          color={theme.colors.forest}
+          fill={icon.active ? theme.colors.forest : 'none'}
+        />
+      ) : null}
       <Text variant="caption" color={theme.colors.forest}>
         {label}
       </Text>
@@ -65,6 +85,19 @@ export function PlaceDetail({ id }: { id: string }) {
   return (
     <View style={{ gap: theme.space.sm }}>
       {/* Peek zone: identity + quick actions */}
+      {place.imageUrl ? (
+        <Image
+          source={{ uri: place.imageUrl }}
+          accessibilityIgnoresInvertColors
+          resizeMode="cover"
+          style={{
+            width: '100%',
+            height: 180,
+            borderRadius: theme.radii.sm,
+            backgroundColor: theme.colors.paperDeep,
+          }}
+        />
+      ) : null}
       <Text variant="title">{place.name}</Text>
       <Text variant="caption" style={{ color: theme.colors.inkFaint }}>
         {KIND_LABEL[place.kind] ?? place.kind}
@@ -78,20 +111,44 @@ export function PlaceDetail({ id }: { id: string }) {
       <View style={{ flexDirection: 'row', gap: theme.space.sm, marginTop: theme.space.xs }}>
         {action(
           'toggle-wishlist',
-          onWishlist ? `★ ${t('explore.wishlistOn')}` : `☆ ${t('explore.wishlistAdd')}`,
+          onWishlist ? t('explore.wishlistOn') : t('explore.wishlistAdd'),
           () => toggle.mutate(id),
+          { name: 'star', active: onWishlist },
         )}
         {action(
           'toggle-visited',
-          visited ? `✓ ${t('explore.visited')}` : t('explore.markVisited'),
+          visited ? t('explore.visited') : t('explore.markVisited'),
           () => setUserData.mutate({ id, patch: { visitedAt: visited ? null : new Date() } }),
+          { name: 'check', active: visited },
         )}
-        {mapsUrl ? action('open-maps', t('explore.openInMaps'), () => Linking.openURL(mapsUrl)) : null}
+        {mapsUrl
+          ? action('open-maps', t('explore.openInMaps'), () => Linking.openURL(mapsUrl))
+          : null}
       </View>
 
       {/* Expanded zone */}
       {place.openingHours ? <Text variant="caption">{place.openingHours}</Text> : null}
       {place.editorialNote ? <Text variant="body">{place.editorialNote}</Text> : null}
+
+      {place.tags && place.tags.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.xs }}>
+          {place.tags.map((tag) => (
+            <View
+              key={tag}
+              style={{
+                backgroundColor: theme.colors.paperEdge,
+                borderRadius: theme.radii.sm,
+                paddingHorizontal: theme.space.sm,
+                paddingVertical: 2,
+              }}
+            >
+              <Text variant="caption" color={theme.colors.forest}>
+                {tag.replace(/-/g, ' ')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {place.lat != null && place.lng != null ? (
         <View
