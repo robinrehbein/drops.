@@ -1,17 +1,19 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
-import { useRecentShots, useTodaySummary } from '@/features/dashboard/hooks';
-import { useWeeklyRecap } from '@/features/insights/hooks';
-import { useBeans } from '@/features/beans/hooks';
-import { usePrimaryMachine } from '@/features/machines/hooks';
-import { useTasksWithStatus } from '@/features/maintenance/hooks';
-import { usePreferences } from '@/features/preferences/hooks';
-import { useAddWaterRefill, useWaterSummary } from '@/features/water/hooks';
 import { cupsTowardGoal } from '@/domain/cups';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { formatVolume } from '@/domain/water';
+import { useBeans } from '@/features/beans/hooks';
+import { useRecentShots, useTodaySummary } from '@/features/dashboard/hooks';
+import { useWeeklyRecap } from '@/features/insights/hooks';
+import { usePrimaryMachine } from '@/features/machines/hooks';
+import { useTasksWithStatus } from '@/features/maintenance/hooks';
+import { useDailyPlace } from '@/features/places/hooks';
+import { usePreferences } from '@/features/preferences/hooks';
+import { useAddWaterRefill, useWaterSummary } from '@/features/water/hooks';
 import { CupsRow } from '@/ui/primitives/CupsRow';
+import { DailyPlaceCard } from '@/ui/primitives/DailyPlaceCard';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
@@ -33,6 +35,7 @@ export default function Daily() {
   const { data: prefs } = usePreferences();
   const { data: water } = useWaterSummary();
   const { data: primaryMachine } = usePrimaryMachine();
+  const dailyPlace = useDailyPlace();
   const { data: machineTasks = [] } = useTasksWithStatus(primaryMachine?.id ?? null);
   const addRefill = useAddWaterRefill();
 
@@ -48,9 +51,12 @@ export default function Daily() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
-      <Header title="Daily" rightLabel="Settings" onRightPress={() => router.push('/(modals)/settings' as never)} />
+      <Header
+        title="Daily"
+        rightLabel="Settings"
+        onRightPress={() => router.push('/(modals)/settings' as never)}
+      />
       <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.lg }}>
-
         {/* Match daily cups */}
         <Surface bg="paperDeep" padding="md" radius="md" bordered>
           <CupsRow progress={cupsProgress} />
@@ -77,6 +83,9 @@ export default function Daily() {
             </Text>
           </Surface>
         )}
+
+        {/* A nearby specialty spot worth trying */}
+        <DailyPlaceCard pick={dailyPlace} />
 
         <Text variant="heading">Today, at a glance</Text>
         <View style={{ flexDirection: 'row', gap: t.space.md }}>
@@ -110,7 +119,11 @@ export default function Daily() {
           </Surface>
         ) : null}
 
-        <Pill label="Start an Espresso Shot" size="lg" onPress={() => router.push('/lab' as never)} />
+        <Pill
+          label="Start an Espresso Shot"
+          size="lg"
+          onPress={() => router.push('/lab' as never)}
+        />
 
         <Surface bg="paperDeep" padding="md" radius="md" bordered>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: t.space.md }}>
@@ -134,24 +147,28 @@ export default function Daily() {
           <View style={{ marginTop: t.space.md }}>
             <ProgressBar progress={filterProgress} />
             <Text variant="caption" style={{ marginTop: t.space.xs }}>
-              Filter {Math.round(Math.min(1, filterProgress) * 100)}% used · tank {formatVolume(tankCapacityMl)}
+              Filter {Math.round(Math.min(1, filterProgress) * 100)}% used · tank{' '}
+              {formatVolume(tankCapacityMl)}
             </Text>
           </View>
         </Surface>
 
-        {recap && recap.totalShots > 0 ? (
-          <WeeklyRecapCard recap={recap} />
-        ) : null}
+        {recap && recap.totalShots > 0 ? <WeeklyRecapCard recap={recap} /> : null}
 
         {recent && recent.length > 0 ? (
           <View>
-            <Text variant="heading" style={{ marginBottom: t.space.sm }}>Recent</Text>
+            <Text variant="heading" style={{ marginBottom: t.space.sm }}>
+              Recent
+            </Text>
             <View style={{ gap: t.space.sm }}>
               {recent.map((s) => (
                 <Surface key={s.id} bg="paperDeep" padding="md" radius="md" bordered>
                   <View style={{ flexDirection: 'row', gap: t.space.md }}>
                     <MetricTile label="BEAN" value={beanName(s.beanId)} />
-                    <MetricTile label="RATIO" value={formatRatio(brewRatio(s.doseG, s.yieldG ?? 0))} />
+                    <MetricTile
+                      label="RATIO"
+                      value={formatRatio(brewRatio(s.doseG, s.yieldG ?? 0))}
+                    />
                     <MetricTile label="RATING" value={s.rating ? '★'.repeat(s.rating) : '—'} />
                   </View>
                 </Surface>
