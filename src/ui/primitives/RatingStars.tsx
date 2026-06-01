@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 
-import { Text } from '@/ui/primitives/Text';
+import { AnimatedIcon } from '@/ui/icons/AnimatedIcon';
 import { useTheme } from '@/ui/theme/useTheme';
 
 export function RatingStars({
@@ -22,9 +22,14 @@ export function RatingStars({
             disabled={!onChange}
             testID={`star-${n}`}
           >
-            <Text variant="title" style={{ color: selected ? t.colors.forest : t.colors.inkFaint }}>
-              {selected ? '★' : '☆'}
-            </Text>
+            <AnimatedIcon
+              name="star"
+              animation="pop"
+              trigger={selected}
+              size={28}
+              color={selected ? t.colors.forest : t.colors.inkFaint}
+              fill={selected ? t.colors.forest : 'none'}
+            />
           </Pressable>
         );
       })}
