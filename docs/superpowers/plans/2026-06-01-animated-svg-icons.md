@@ -152,21 +152,31 @@ import { render } from '@testing-library/react-native';
 import { Icon } from '@/ui/icons/line';
 
 describe('Icon', () => {
-  it('renders a Lucide icon for each known name with a stable testID', () => {
+  it('renders an icon wrapper with a stable testID for the name', () => {
     const { getByTestId } = render(<Icon name="cup" />);
     expect(getByTestId('icon-cup')).toBeTruthy();
   });
 
-  it('forwards color and size', () => {
-    const { getByTestId } = render(<Icon name="pin" color="#123456" size={32} />);
-    const node = getByTestId('icon-pin');
-    expect(node.props.color).toBe('#123456');
-    expect(node.props.size).toBe(32);
+  it('renders distinct icons for distinct names', () => {
+    const { getByTestId } = render(
+      <>
+        <Icon name="pin" />
+        <Icon name="star" />
+      </>,
+    );
+    expect(getByTestId('icon-pin')).toBeTruthy();
+    expect(getByTestId('icon-star')).toBeTruthy();
   });
 
-  it('defaults fill to none and accepts a fill override', () => {
-    const { getByTestId } = render(<Icon name="star" fill="#abc" />);
-    expect(getByTestId('icon-star').props.fill).toBe('#abc');
+  it('forwards color/size/fill to the underlying glyph', () => {
+    // The svg mock renders the Lucide <Svg> as a View carrying stroke (from
+    // color), width/height (from size) and fill. Query that inner node.
+    const { getByTestId } = render(<Icon name="pin" color="#123456" size={32} fill="#abc" />);
+    const wrapper = getByTestId('icon-pin');
+    const svg = wrapper.findAllByProps({ stroke: '#123456' })[0];
+    expect(svg.props.width).toBe(32);
+    expect(svg.props.height).toBe(32);
+    expect(svg.props.fill).toBe('#abc');
   });
 });
 ```
@@ -180,8 +190,11 @@ Expected: FAIL — current `Icon` renders emoji text, has no `testID`, and `name
 
 Replace the entire contents of `src/ui/icons/line.tsx`:
 
+> **Library behaviour (verified against lucide-react-native@1.x):** Lucide renders a passed `testID` as web-style `data-testid` on the `<Svg>` and spreads `accessibilityLabel` onto the Svg root **and every child path** — both useless/noisy for RNTL. So `Icon` wraps the glyph in a RN `<View>` that carries `testID={`icon-${name}`}` + `accessibilityLabel`. This is what makes `getByTestId('icon-<name>')` work at every call site in later tasks. With `exactOptionalPropertyTypes: true`, pass `color` via a conditional spread because Lucide's color prop rejects `undefined`.
+
 ```tsx
 import type { ComponentType } from 'react';
+import { View } from 'react-native';
 import {
   ArrowLeft,
   ArrowRight,
@@ -245,14 +258,14 @@ export function Icon({
 }) {
   const Glyph = MAP[name];
   return (
-    <Glyph
-      color={color}
-      size={size}
-      fill={fill}
-      strokeWidth={strokeWidth}
-      testID={`icon-${name}`}
-      accessibilityLabel={name}
-    />
+    <View testID={`icon-${name}`} accessibilityLabel={name} accessibilityRole="image">
+      <Glyph
+        {...(color !== undefined ? { color } : {})}
+        size={size}
+        fill={fill}
+        strokeWidth={strokeWidth}
+      />
+    </View>
   );
 }
 ```
