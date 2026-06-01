@@ -489,7 +489,13 @@ export function AnimatedIcon({ name, animation, trigger, color, size, fill }: Pr
 
   return (
     <Animated.View style={style}>
-      <Icon name={name} color={color} size={size} fill={fill} />
+      {/* Forward only defined props — exactOptionalPropertyTypes rejects explicit undefined. */}
+      <Icon
+        name={name}
+        {...(color !== undefined ? { color } : {})}
+        {...(size !== undefined ? { size } : {})}
+        {...(fill !== undefined ? { fill } : {})}
+      />
     </Animated.View>
   );
 }
