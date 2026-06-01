@@ -1,17 +1,19 @@
 import { View, type ViewProps } from 'react-native';
 
-import { useTheme } from '@/ui/theme/useTheme';
 import { Pill } from './Pill';
 import { Text } from './Text';
 
+import { Icon, type IconName } from '@/ui/icons/line';
+import { useTheme } from '@/ui/theme/useTheme';
+
 export type EmptyStateProps = ViewProps & {
-  icon?: string;
+  icon?: IconName;
   title: string;
   body?: string;
   cta?: { label: string; onPress: () => void };
 };
 
-export function EmptyState({ icon = '☕', title, body, cta, style, ...rest }: EmptyStateProps) {
+export function EmptyState({ icon = 'cup', title, body, cta, style, ...rest }: EmptyStateProps) {
   const t = useTheme();
   return (
     <View
@@ -29,10 +31,18 @@ export function EmptyState({ icon = '☕', title, body, cta, style, ...rest }: E
         style,
       ]}
     >
-      <Text style={{ fontSize: 32, marginBottom: t.space.md }}>{icon}</Text>
-      <Text variant="heading" align="center">{title}</Text>
+      <View style={{ marginBottom: t.space.md }}>
+        <Icon name={icon} size={32} color={t.colors.inkSoft} />
+      </View>
+      <Text variant="heading" align="center">
+        {title}
+      </Text>
       {body ? (
-        <Text variant="caption" align="center" style={{ marginTop: t.space.xs, marginBottom: t.space.md }}>
+        <Text
+          variant="caption"
+          align="center"
+          style={{ marginTop: t.space.xs, marginBottom: t.space.md }}
+        >
           {body}
         </Text>
       ) : null}
