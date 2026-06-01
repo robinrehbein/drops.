@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
+import type { PlaceWithUserData } from './types';
+
+import { type DailyPick, pickDailyPlace } from '@/domain/daily-place';
 import type { PlaceInput, UserDataInput } from '@/domain/validators/place';
 import { useRepos } from '@/features/_provider/RepoProvider';
+import { useDeviceLocation } from '@/features/location/hooks';
 
 const KEYS = {
   all: ['places'] as const,
@@ -41,6 +46,14 @@ export function useWishlist() {
 export function useVisited() {
   const { places } = useRepos();
   return useQuery({ queryKey: KEYS.visited, queryFn: () => places.listVisited() });
+}
+
+/** The curated, unvisited place suggested for today, biased to nearby. */
+export function useDailyPlace(): DailyPick<PlaceWithUserData> | null {
+  const { data: places = [] } = usePlaces();
+  const { origin } = useDeviceLocation();
+  const date = new Date().toISOString().slice(0, 10);
+  return useMemo(() => pickDailyPlace(places, { origin, date }), [places, origin, date]);
 }
 
 export function useAddPlace() {

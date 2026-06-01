@@ -14,6 +14,13 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+/** Human-readable distance: "850 m" under a km, "2.3 km" above. */
+export function formatDistance(km: number): string {
+  if (!Number.isFinite(km) || km < 0) return '—';
+  if (km < 1) return `${Math.round((km * 1000) / 10) * 10} m`;
+  return `${km.toFixed(1)} km`;
+}
+
 export function placeStatus(
   u?: { wishlisted?: boolean | null; visitedAt?: unknown } | null,
 ): PlaceStatus {

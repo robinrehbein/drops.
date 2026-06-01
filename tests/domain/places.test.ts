@@ -1,4 +1,4 @@
-import { distanceKm, placeStatus, filterPlaces, groupByCity, sortPlaces, placeStats } from '@/domain/places';
+import { distanceKm, formatDistance, placeStatus, filterPlaces, groupByCity, sortPlaces, placeStats } from '@/domain/places';
 
 describe('distanceKm', () => {
   it('is zero for identical points', () => {
@@ -8,6 +8,22 @@ describe('distanceKm', () => {
     const d = distanceKm({ lat: 48.7758, lng: 9.1829 }, { lat: 48.1372, lng: 11.5756 });
     expect(d).toBeGreaterThan(180);
     expect(d).toBeLessThan(205);
+  });
+});
+
+describe('formatDistance', () => {
+  it('renders sub-kilometre distances in metres, rounded to tens', () => {
+    expect(formatDistance(0.85)).toBe('850 m');
+    expect(formatDistance(0.123)).toBe('120 m');
+    expect(formatDistance(0)).toBe('0 m');
+  });
+  it('renders kilometres with one decimal', () => {
+    expect(formatDistance(2.34)).toBe('2.3 km');
+    expect(formatDistance(1)).toBe('1.0 km');
+  });
+  it('guards non-finite and negative values', () => {
+    expect(formatDistance(Number.NaN)).toBe('—');
+    expect(formatDistance(-1)).toBe('—');
   });
 });
 
