@@ -1,17 +1,76 @@
-import { Text as RNText, type TextStyle } from 'react-native';
+import type { ComponentType } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bean,
+  BookOpen,
+  Check,
+  Coffee,
+  FlaskConical,
+  type LucideProps,
+  MapPin,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Wrench,
+  X,
+} from 'lucide-react-native';
 
-export type IconName = 'cup' | 'book' | 'flask' | 'wrench' | 'pin';
+export type IconName =
+  | 'cup'
+  | 'book'
+  | 'flask'
+  | 'wrench'
+  | 'pin'
+  | 'bean'
+  | 'star'
+  | 'check'
+  | 'close'
+  | 'arrowLeft'
+  | 'arrowRight'
+  | 'trendUp'
+  | 'trendDown';
 
-const GLYPH: Record<IconName, string> = {
-  cup: '☕',
-  book: '📚',
-  flask: '⚗️',
-  wrench: '🔧',
-  pin: '📍',
+const MAP: Record<IconName, ComponentType<LucideProps>> = {
+  cup: Coffee,
+  book: BookOpen,
+  flask: FlaskConical,
+  wrench: Wrench,
+  pin: MapPin,
+  bean: Bean,
+  star: Star,
+  check: Check,
+  close: X,
+  arrowLeft: ArrowLeft,
+  arrowRight: ArrowRight,
+  trendUp: TrendingUp,
+  trendDown: TrendingDown,
 };
 
-export function Icon({ name, color, size = 18 }: { name: IconName; color?: string; size?: number }) {
-  const style: TextStyle = { fontSize: size };
-  if (color) style.color = color;
-  return <RNText style={style}>{GLYPH[name]}</RNText>;
+export function Icon({
+  name,
+  color,
+  size = 18,
+  fill = 'none',
+  strokeWidth = 2,
+}: {
+  name: IconName;
+  color?: string;
+  size?: number;
+  fill?: string;
+  strokeWidth?: number;
+}) {
+  const Glyph = MAP[name];
+  return (
+    <Glyph
+      // `color` is spread conditionally: under exactOptionalPropertyTypes,
+      // Lucide's ColorValue prop type does not accept `undefined`.
+      {...(color !== undefined ? { color } : {})}
+      size={size}
+      fill={fill}
+      strokeWidth={strokeWidth}
+      testID={`icon-${name}`}
+      accessibilityLabel={name}
+    />
+  );
 }
