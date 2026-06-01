@@ -1023,22 +1023,155 @@ git commit -m "feat(icons): EmptyState IconName prop and WeeklyRecapCard trend/s
 
 ---
 
+## Extension: app/ route screens (added after final-sweep discovery)
+
+The initial research only grepped `src/`; the `app/**` route screens carry many star-rating, trend, caret and arrow glyphs. The user approved extending the migration to cover them. These tasks (E1–E3) run before the final sweep. **Git hygiene reminder: stage only the files you edit — never `git add -A`.** Several `app/` files are already dirty in the working tree; staging a dirty file bundles its pre-existing edits — that is acceptable (it's the user's WIP), but never stage a file you did not edit.
+
+### Task E1: Shared infra — StarRating, Pill.leftIcon, MetricTile node value, chevronDown icon
+
+**Files:**
+- Modify: `src/ui/icons/line.tsx` (add `chevronDown` → `ChevronDown`)
+- Modify: `src/ui/primitives/Pill.tsx` (add `leftIcon?: IconName`)
+- Modify: `src/ui/primitives/MetricTile.tsx` (`value: string` → `value: ReactNode`)
+- Create: `src/ui/primitives/StarRating.tsx` (read-only row of N filled Star icons)
+- Test: `tests/ui/primitives/StarRating.test.tsx`
+
+- [ ] **Step 1: Add `chevronDown` to the Icon**
+
+In `src/ui/icons/line.tsx`, add `ChevronDown` to the lucide import, `'chevronDown'` to the `IconName` union, and `chevronDown: ChevronDown` to `MAP`.
+
+- [ ] **Step 2: Write the failing StarRating test** `tests/ui/primitives/StarRating.test.tsx`
+
+```tsx
+import { render } from '@testing-library/react-native';
+
+import { StarRating } from '@/ui/primitives/StarRating';
+import { ThemeProvider } from '@/ui/theme/ThemeProvider';
+
+const wrap = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
+
+describe('StarRating', () => {
+  it('renders one filled star per rating point', () => {
+    const { getAllByTestId } = wrap(<StarRating value={3} />);
+    expect(getAllByTestId('icon-star')).toHaveLength(3);
+  });
+
+  it('renders nothing for a zero/empty rating', () => {
+    const { queryAllByTestId } = wrap(<StarRating value={0} />);
+    expect(queryAllByTestId('icon-star')).toHaveLength(0);
+  });
+});
+```
+
+- [ ] **Step 3: Create `src/ui/primitives/StarRating.tsx`**
+
+```tsx
+import { View } from 'react-native';
+
+import { Icon } from '@/ui/icons/line';
+import { useTheme } from '@/ui/theme/useTheme';
+
+/**
+ * Read-only star rating: renders `value` filled star icons in a row (the SVG
+ * replacement for `'★'.repeat(value)`). Not interactive — see RatingStars for input.
+ */
+export function StarRating({
+  value,
+  size = 16,
+  color,
+}: {
+  value: number;
+  size?: number;
+  color?: string;
+}) {
+  const t = useTheme();
+  const fillColor = color ?? t.colors.forest;
+  const count = Math.max(0, Math.round(value));
+  if (count === 0) return null;
+  return (
+    <View style={{ flexDirection: 'row', gap: 1 }}>
+      {Array.from({ length: count }, (_, i) => (
+        <Icon key={i} name="star" size={size} color={fillColor} fill={fillColor} />
+      ))}
+    </View>
+  );
+}
+```
+
+- [ ] **Step 4: Add `leftIcon` to Pill** — mirror the existing `rightIcon` (Task 8). Add `leftIcon?: IconName` to the props, and render `{leftIcon ? <Icon name={leftIcon} size={16} color={palette.fg} /> : null}` BEFORE the label inside the row. (Read the current Pill to match the row layout and color token `palette.fg`.)
+
+- [ ] **Step 5: Widen MetricTile value** — in `src/ui/primitives/MetricTile.tsx`, change `value: string` to `value: ReactNode` (import `type { ReactNode } from 'react'`). If `value` is a string it still renders inside the existing `<Text variant="numeral">`; to allow a node, render: if `typeof value === 'string' || typeof value === 'number'` wrap in the `<Text variant="numeral">`, else render the node directly inside the tile (so a `<StarRating />` row isn't nested in a `<Text>`). Keep the label + tile styling identical.
+
+- [ ] **Step 6: Verify** — `npm test -- tests/ui/primitives/StarRating.test.tsx` PASS; full `npm test` + `npm run typecheck` PASS; `npx eslint` the 4 files clean.
+
+- [ ] **Step 7: Commit** (only these files):
+```bash
+git add src/ui/icons/line.tsx src/ui/primitives/Pill.tsx src/ui/primitives/MetricTile.tsx src/ui/primitives/StarRating.tsx tests/ui/primitives/StarRating.test.tsx
+git commit -m "feat(icons): StarRating display, Pill.leftIcon, MetricTile node value, chevronDown icon"
+```
+
+### Task E2: Home + lab screens — star displays, recipe-locked, bean caret, primary-machine toggle
+
+**Files (edit only what each needs):**
+- `app/(tabs)/index.tsx` — lastBrew rating (`· ★★★`), bestShot `'★'.repeat`, MetricTile RATING `'★'.repeat`
+- `app/(tabs)/lab/session/[id].tsx` — MetricTile RATING `'★'.repeat`; "Dialing history →" Pill
+- `app/(tabs)/lab/history.tsx` — `<Text>{'★'.repeat}</Text>`
+- `app/(tabs)/lab/index.tsx` — "★ Recipe locked" + bean-picker `▾` caret
+- `app/(tabs)/care/new.tsx` — primary-machine Pill `★`/`☆`
+
+- [ ] **Step 1: READ each file** to confirm exact code (line numbers drift).
+- [ ] **Step 2:** Replace each `'★'.repeat(rating)` / `${n}★` star DISPLAY with `<StarRating value={rating} size={…} />`:
+  - In a `<Text>…{'★'.repeat(n)}…</Text>` row, render `<StarRating>` as a sibling element in the surrounding `View` row (not inside the `<Text>`). For `index.tsx` lastBrew (`{formatRatio} · ★★★` in one caption Text), split into a row: the ratio `<Text>` + a `·` separator + `<StarRating>`.
+  - In `MetricTile value={'★'.repeat(n)}`, pass `value={rating ? <StarRating value={rating} size={14} /> : '—'}` (MetricTile now accepts a node).
+- [ ] **Step 3:** `app/(tabs)/lab/index.tsx`: replace `★ Recipe locked` with a row: `<Icon name="star" size={14} fill={t.colors.forest} color={t.colors.forest} />` + `<Text>Recipe locked</Text>`. Replace the bean-picker `▾` glyph with `<Icon name="chevronDown" size={16} color={…} />` placed beside the bean label (drop the ` ▾` from the string).
+- [ ] **Step 4:** `app/(tabs)/care/new.tsx`: the primary-machine `Pill` — drop the `★`/`☆` from the label (`'Primary machine'` / `'Set as primary'`) and add `leftIcon="star"`. (Pill has no per-state fill control, so the filled vs outline distinction is carried by the existing `variant` primary/ghost; leftIcon star is fine. If you want the star filled when primary, instead render the Pill without leftIcon and report — but the simple `leftIcon="star"` is acceptable.)
+- [ ] **Step 5:** "Dialing history →" Pill in `lab/session/[id].tsx`: drop ` →`, add `rightIcon="arrowRight"`.
+- [ ] **Step 6: Verify** — `npm run typecheck`, full `npm test`, `npx eslint` on edited files. Update any test asserting on these glyph strings (report before/after).
+- [ ] **Step 7: Commit** (only edited files):
+```bash
+git commit -m "feat(icons): home/lab screens use StarRating, chevron, star/arrow icons"
+```
+
+### Task E3: library detail + dialing comparison/trend
+
+**Files:**
+- `app/(tabs)/library/[id].tsx` — AVG RATING (`${avg.toFixed(1)}★`), BEST (`${n}★`), "Dialing history →" Pill
+- `app/(tabs)/lab/dialing.tsx` — ComparisonRow rating values (`'★'.repeat`), TrendSummary `↑`/`↓` + `★`
+
+- [ ] **Step 1: READ both files** to confirm exact code.
+- [ ] **Step 2:** `library/[id].tsx`:
+  - AVG RATING MetricTile: pass a node value showing the number + one star: `value={stats.avgRating ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><Text variant="numeral">{stats.avgRating.toFixed(1)}</Text><Icon name="star" size={14} fill={t.colors.forest} color={t.colors.forest} /></View> : '—'}` (import `Icon`, `Text`, `View` as available in the file).
+  - BEST MetricTile: `value={stats.bestShot ? <StarRating value={stats.bestShot.rating} size={14} /> : '—'}`.
+  - "Dialing history →" Pill: drop ` →`, add `rightIcon="arrowRight"`.
+- [ ] **Step 3:** `lab/dialing.tsx` — extend `ComparisonRow` so `values` may be nodes. Change its `values: string[]` type to `values: React.ReactNode[]`, and in the `.map`, render: if `typeof v === 'string' || typeof v === 'number'`, keep the existing `<Text variant="numeral" …>{v}</Text>`; else render the node inside the cell `<View>` (preserving the `changes[i]` highlight by passing the color into StarRating). For the Rating `ComparisonRow`, pass `values={reversed.map((s) => (s.rating ? <StarRating value={s.rating} size={14} color={…changes color…} /> : '—'))}`. Keep all other ComparisonRow usages passing strings (unchanged).
+- [ ] **Step 4:** `lab/dialing.tsx` `TrendSummary` — replace the inline `↑`/`↓` with `<Icon name={delta > 0 ? 'trendUp' : 'trendDown'} size={14} color={…} />` rendered in a row with the `<Text>`, and drop the trailing `★` after the rating delta (show the number only). Convert the "Rating:" and "Time:" lines to row Views with the icon + text.
+- [ ] **Step 5: Verify** — typecheck, full test, eslint on edited files. Update affected tests (report before/after).
+- [ ] **Step 6: Commit** (only edited files):
+```bash
+git commit -m "feat(icons): library detail + dialing comparison/trend use star/trend icons"
+```
+
+---
+
 ## Task 10: Final sweep and full verification
 
 **Files:** none (verification only).
 
 - [ ] **Step 1: Confirm no UI glyphs remain outside the text-only carve-outs**
 
-Run:
+Run (note: sweep BOTH `src` AND `app` — the Expo Router route screens live in `app/`):
 ```bash
-rg -n "[★☆✓✕←→↑↓]|☕|📚|⚗️|🔧|📍|🫘" src --glob '*.tsx'
+rg -n "[★☆✓✕←→↑↓▾▸]|☕|📚|⚗️|🔧|📍|🫘" src app --glob '*.tsx'
 ```
-Expected: NO matches in `.tsx` files. Any remaining matches must be in the carve-out `.ts` files only:
-- `src/features/export/shot-card.ts` (export `.txt` — `☕`, `★`)
-- `src/domain/dialing.ts`, `src/domain/ratio.ts`, `src/db/schema.ts` (prose/comments — `→`, `—`)
-- `src/ui/primitives/CoachCard.tsx` (the `→` is inside the `EMPTY_TIP` prose sentence — leave it).
+Expected: the only remaining matches are prose `→`/`—` inside full sentences, which are carve-outs:
+- `app/_layout.tsx` ("Restore … Settings → Reset.") and `app/(tabs)/index.tsx` ("Add a machine in Settings → Machines …") — prose sentences.
+- `src/ui/primitives/CoachCard.tsx` (`→` inside the `EMPTY_TIP` prose sentence).
+- `src/ui/screens/ExploreScreen.tsx` (`top→bottom` inside a code comment).
+- `app/(modals)/tasting-note.tsx` (`★` inside a transient toast/alert string — text, can't hold an SVG).
 
-If a `.tsx` match remains that is genuinely UI, swap it for the matching `<Icon />`; if it is prose inside a sentence, leave it and note it.
+And in `.ts` files only (carve-outs): `src/features/export/shot-card.ts` (`☕`,`★`), `src/domain/dialing.ts`, `src/domain/ratio.ts`, `src/db/schema.ts` (`→`,`—`).
+
+If a `.tsx` match remains that is genuinely a UI element (a rating, a button affordance, a caret), swap it for the matching `<Icon />` / `<StarRating />`; if it is prose inside a sentence or a transient string message, leave it and note it.
 
 - [ ] **Step 2: Full type + test gate**
 
@@ -1055,10 +1188,13 @@ Expected: PASS (no unused imports left from removed `Text` glyphs).
 
 - [ ] **Step 4: Commit any final fixes**
 
+Stage ONLY files you changed during the sweep (the working tree has unrelated pre-existing edits — never `git add -A`):
+
 ```bash
-git add -A
+git add <only the specific files you fixed>
 git commit -m "chore(icons): final emoji→SVG sweep and verification"
 ```
+If the sweep found nothing to fix, there is nothing to commit here.
 
 ---
 
