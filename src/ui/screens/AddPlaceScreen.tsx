@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
+import type { LatLng } from '@/domain/places';
 import type { PlaceInput } from '@/domain/validators/place';
 import { useAddPlace } from '@/features/places/hooks';
 import { Text } from '@/ui/primitives/Text';
@@ -18,6 +20,15 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
   const [address, setAddress] = useState('');
   const [tagsText, setTagsText] = useState('');
   const [kind, setKind] = useState<PlaceInput['kind']>('cafe');
+  const [coords, setCoords] = useState<LatLng | null>(null);
+
+  async function useCurrentLocation() {
+    const Location = await import('expo-location');
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+    const pos = await Location.getCurrentPositionAsync({});
+    setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+  }
 
   const inputStyle = {
     borderWidth: 1,
@@ -41,6 +52,7 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
       ...(city.trim() ? { city: city.trim() } : {}),
       ...(address.trim() ? { address: address.trim() } : {}),
       ...(tags.length ? { tags } : {}),
+      ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
     });
     onDone();
   }
@@ -98,6 +110,63 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
           </Pressable>
         ))}
       </View>
+
+      <Pressable
+        onPress={useCurrentLocation}
+        testID="use-location"
+        style={{
+          alignSelf: 'flex-start',
+          borderRadius: theme.radii.pill,
+          paddingHorizontal: theme.space.md,
+          paddingVertical: theme.space.sm,
+          backgroundColor: theme.colors.paperEdge,
+          marginBottom: theme.space.sm,
+        }}
+      >
+        <Text variant="caption">
+          {coords
+            ? `📍 ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+            : t('explore.useCurrentLocation')}
+        </Text>
+      </Pressable>
+      <Text
+        variant="caption"
+        style={{ color: theme.colors.inkFaint, marginBottom: theme.space.xs }}
+      >
+        {t('explore.tapMapHint')}
+      </Text>
+      <View
+        style={{
+          height: 200,
+          borderRadius: theme.radii.sm,
+          overflow: 'hidden',
+          marginBottom: theme.space.lg,
+        }}
+      >
+        <MapView
+          style={{ flex: 1 }}
+          testID="add-map"
+          initialRegion={
+            coords
+              ? {
+                  latitude: coords.lat,
+                  longitude: coords.lng,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }
+              : { latitude: 51.16, longitude: 10.45, latitudeDelta: 6, longitudeDelta: 6 }
+          }
+          onPress={(e) =>
+            setCoords({
+              lat: e.nativeEvent.coordinate.latitude,
+              lng: e.nativeEvent.coordinate.longitude,
+            })
+          }
+        >
+          {coords ? <Marker coordinate={{ latitude: coords.lat, longitude: coords.lng }} /> : null}
+        </MapView>
+      </View>
+
       <Pressable
         onPress={save}
         style={{

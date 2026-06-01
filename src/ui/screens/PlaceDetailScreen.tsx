@@ -1,5 +1,8 @@
-import { Linking, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Linking, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
 import { useBeansBySourcePlace } from '@/features/beans/hooks';
 import { usePlace, useSetUserData, useToggleWishlist } from '@/features/places/hooks';
@@ -14,6 +17,7 @@ export function PlaceDetailScreen({ id }: { id: string }) {
   const toggle = useToggleWishlist();
   const setUserData = useSetUserData();
   const { data: linkedBeans = [] } = useBeansBySourcePlace(id);
+  const [showPicker, setShowPicker] = useState(false);
   if (!place) return <View style={{ flex: 1, backgroundColor: theme.colors.paper }} />;
 
   const onWishlist = !!place.userData?.wishlisted;
@@ -40,6 +44,24 @@ export function PlaceDetailScreen({ id }: { id: string }) {
       ) : null}
       {place.openingHours ? <Text variant="caption">{place.openingHours}</Text> : null}
       {place.editorialNote ? <Text variant="body">{place.editorialNote}</Text> : null}
+
+      {place.lat != null && place.lng != null ? (
+        <View style={{ height: 160, borderRadius: theme.radii.sm, overflow: 'hidden' }}>
+          <MapView
+            style={{ flex: 1 }}
+            testID="detail-map"
+            pointerEvents="none"
+            initialRegion={{
+              latitude: place.lat,
+              longitude: place.lng,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
+            }}
+          >
+            <Marker coordinate={{ latitude: place.lat, longitude: place.lng }} />
+          </MapView>
+        </View>
+      ) : null}
 
       {place.website ? (
         <Pressable onPress={() => Linking.openURL(place.website!)}>
@@ -69,9 +91,29 @@ export function PlaceDetailScreen({ id }: { id: string }) {
         }
       >
         <Text variant="body">
-          {visited ? `✓ ${t('explore.visited')}` : t('explore.markVisited')}
+          {visited
+            ? `✓ ${t('explore.visited')} (${place.userData!.visitedAt!.toLocaleDateString()})`
+            : t('explore.markVisited')}
         </Text>
       </Pressable>
+      {visited ? (
+        <Pressable testID="edit-visit-date" onPress={() => setShowPicker(true)}>
+          <Text variant="caption" color={theme.colors.forest}>
+            {t('explore.editDate')}
+          </Text>
+        </Pressable>
+      ) : null}
+      {showPicker ? (
+        <DateTimePicker
+          testID="date-picker"
+          value={place.userData?.visitedAt ?? new Date()}
+          mode="date"
+          onChange={(_event, date) => {
+            setShowPicker(false);
+            if (date) setUserData.mutate({ id, patch: { visitedAt: date } });
+          }}
+        />
+      ) : null}
 
       <Text variant="caption" style={{ color: theme.colors.inkFaint }}>
         {t('explore.yourRating')}

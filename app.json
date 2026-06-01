@@ -39,7 +39,8 @@
         {
           "locationWhenInUsePermission": "Brewlog uses your location to find specialty coffee near you."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
