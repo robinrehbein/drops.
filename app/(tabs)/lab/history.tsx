@@ -9,6 +9,7 @@ import { brewRatio, formatRatio } from '@/domain/ratio';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Header } from '@/ui/primitives/Header';
 import { Pill } from '@/ui/primitives/Pill';
+import { StarRating } from '@/ui/primitives/StarRating';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
@@ -116,7 +117,7 @@ export default function LabHistory() {
                     <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.sm }}>
                       <Text variant="numeral">{s.durationS?.toFixed(1)}s</Text>
                       <Text variant="numeral">{formatRatio(brewRatio(s.doseG, s.yieldG ?? 0))}</Text>
-                      {s.rating ? <Text variant="numeral">{'★'.repeat(s.rating)}</Text> : null}
+                      {s.rating ? <StarRating value={s.rating} size={14} /> : null}
                     </View>
                   </Surface>
                 </Pressable>

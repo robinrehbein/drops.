@@ -97,7 +97,8 @@ export default function NewMachineScreen() {
           <TextInput value={notes} onChangeText={setNotes} multiline style={{ ...inputStyle, minHeight: 60 }} placeholder="optional" placeholderTextColor={t.colors.inkFaint} />
         </View>
         <Pill
-          label={isPrimary ? '★ Primary machine' : '☆ Set as primary'}
+          label={isPrimary ? 'Primary machine' : 'Set as primary'}
+          leftIcon="star"
           variant={isPrimary ? 'primary' : 'ghost'}
           onPress={() => setIsPrimary(!isPrimary)}
         />

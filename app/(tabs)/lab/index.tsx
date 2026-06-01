@@ -16,6 +16,7 @@ import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
 import { extractionPercent } from '@/domain/extraction';
 import { nudgeGrind } from '@/domain/dialing';
+import { Icon } from '@/ui/icons/line';
 import { CoachCard } from '@/ui/primitives/CoachCard';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
 import { Header } from '@/ui/primitives/Header';
@@ -72,9 +73,9 @@ export default function LabIndex() {
   // Keep screen awake while pulling (imperative API — a hook must not be called conditionally)
   useEffect(() => {
     if (status !== 'Pulling') return undefined;
-    void activateKeepAwakeAsync('brewlog-pulling');
+    void activateKeepAwakeAsync('drop-pulling');
     return () => {
-      void deactivateKeepAwake('brewlog-pulling');
+      void deactivateKeepAwake('drop-pulling');
     };
   }, [status]);
 
@@ -156,15 +157,19 @@ export default function LabIndex() {
               alignSelf: 'flex-start',
             }}
           >
-            <Text variant="bodyStrong" color={t.colors.forest}>
-              {selectedBean ? `Brewing with: ${selectedBean.name} ▾` : 'Pick a bean ▾'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs }}>
+              <Text variant="bodyStrong" color={t.colors.forest}>
+                {selectedBean ? `Brewing with: ${selectedBean.name}` : 'Pick a bean'}
+              </Text>
+              <Icon name="chevronDown" size={16} color={t.colors.forest} />
+            </View>
           </View>
         </Pressable>
         {recipe && selectedBean ? (
-          <Text variant="caption" color={t.colors.forest} style={{ marginTop: t.space.xs }}>
-            ★ Recipe locked
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginTop: t.space.xs }}>
+            <Icon name="star" size={14} color={t.colors.forest} fill={t.colors.forest} />
+            <Text variant="caption" color={t.colors.forest}>Recipe locked</Text>
+          </View>
         ) : null}
 
         {status === 'IdleSetup' ? (

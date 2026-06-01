@@ -11,6 +11,7 @@ import { formatElapsed } from '@/domain/format';
 import { Header } from '@/ui/primitives/Header';
 import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
+import { StarRating } from '@/ui/primitives/StarRating';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
@@ -45,7 +46,7 @@ export default function SessionDetail() {
         </View>
         <View style={{ flexDirection: 'row', gap: t.space.md }}>
           <MetricTile label="DURATION" value={session.durationS != null ? `${session.durationS.toFixed(1)} s` : '—'} />
-          <MetricTile label="RATING" value={session.rating ? '★'.repeat(session.rating) : '—'} />
+          <MetricTile label="RATING" value={session.rating ? <StarRating value={session.rating} size={14} /> : '—'} />
         </View>
 
         {(milestones?.length ?? 0) > 0 ? (
@@ -136,7 +137,8 @@ export default function SessionDetail() {
           style={{ marginTop: t.space.sm }}
         />
         <Pill
-          label="Dialing history →"
+          label="Dialing history"
+          rightIcon="arrowRight"
           variant="ghost"
           onPress={() => router.push(`/lab/dialing?beanId=${session.beanId}` as never)}
           style={{ marginTop: t.space.sm }}

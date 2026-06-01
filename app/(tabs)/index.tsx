@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { cupsTowardGoal } from '@/domain/cups';
 import { brewRatio, formatRatio } from '@/domain/ratio';
@@ -19,6 +19,7 @@ import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Pill } from '@/ui/primitives/Pill';
 import { ProgressBar } from '@/ui/primitives/ProgressBar';
 import { ReadinessRow } from '@/ui/primitives/ReadinessRow';
+import { StarRating } from '@/ui/primitives/StarRating';
 import { Stat } from '@/ui/primitives/Stat';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
@@ -64,22 +65,28 @@ export default function Daily() {
 
         {/* Machine readiness */}
         {primaryMachine ? (
-          <Surface bg="paperDeep" padding="md" radius="md" bordered>
-            <Text variant="heading">{primaryMachine.name}</Text>
-            {topTasks.length > 0 ? (
-              topTasks.map((task) => (
-                <ReadinessRow key={task.id} label={task.label} status={task.nextDue} />
-              ))
-            ) : (
-              <Text variant="caption" color={t.colors.inkFaint} style={{ marginTop: t.space.xs }}>
-                All tasks up to date
-              </Text>
-            )}
-          </Surface>
+          <Pressable
+            onPress={() => router.push(`/care/${primaryMachine.id}` as never)}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${primaryMachine.name} details`}
+          >
+            <Surface bg="paperDeep" padding="md" radius="md" bordered>
+              <Text variant="heading">{primaryMachine.name}</Text>
+              {topTasks.length > 0 ? (
+                topTasks.map((task) => (
+                  <ReadinessRow key={task.id} label={task.label} status={task.nextDue} />
+                ))
+              ) : (
+                <Text variant="caption" color={t.colors.inkFaint} style={{ marginTop: t.space.xs }}>
+                  All tasks up to date
+                </Text>
+              )}
+            </Surface>
+          </Pressable>
         ) : (
           <Surface bg="paperDeep" padding="sm" radius="md" bordered>
             <Text variant="caption" color={t.colors.inkSoft}>
-              Add a machine in Care to track readiness.
+              Add a machine in Settings → Machines to track readiness.
             </Text>
           </Surface>
         )}
@@ -98,10 +105,15 @@ export default function Daily() {
             <Text variant="heading" style={{ marginTop: t.space.xs }}>
               {today.lastBrew.beanName}
             </Text>
-            <Text variant="caption" style={{ marginTop: 2 }}>
-              {formatRatio(today.lastBrew.ratio)}
-              {today.lastBrew.rating ? ` · ${'★'.repeat(today.lastBrew.rating)}` : ''}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginTop: 2 }}>
+              <Text variant="caption">{formatRatio(today.lastBrew.ratio)}</Text>
+              {today.lastBrew.rating ? (
+                <>
+                  <Text variant="caption">·</Text>
+                  <StarRating value={today.lastBrew.rating} size={12} />
+                </>
+              ) : null}
+            </View>
           </Surface>
         ) : null}
 
@@ -112,7 +124,7 @@ export default function Daily() {
               {today.bestShot.beanName}
             </Text>
             <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.xs }}>
-              <Text variant="numeral">{'★'.repeat(today.bestShot.rating)}</Text>
+              <StarRating value={today.bestShot.rating} size={14} />
               <Text variant="numeral">{formatRatio(today.bestShot.ratio)}</Text>
               <Text variant="numeral">{today.bestShot.durationS.toFixed(1)}s</Text>
             </View>
@@ -169,7 +181,7 @@ export default function Daily() {
                       label="RATIO"
                       value={formatRatio(brewRatio(s.doseG, s.yieldG ?? 0))}
                     />
-                    <MetricTile label="RATING" value={s.rating ? '★'.repeat(s.rating) : '—'} />
+                    <MetricTile label="RATING" value={s.rating ? <StarRating value={s.rating} size={14} /> : '—'} />
                   </View>
                 </Surface>
               ))}
