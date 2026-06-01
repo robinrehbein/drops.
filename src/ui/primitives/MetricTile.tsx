@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { useTheme } from '@/ui/theme/useTheme';
 import { Text } from './Text';
 
-export function MetricTile({ label, value }: { label: string; value: string }) {
+import { useTheme } from '@/ui/theme/useTheme';
+
+export function MetricTile({ label, value }: { label: string; value: ReactNode }) {
   const t = useTheme();
   return (
     <View
@@ -16,9 +18,13 @@ export function MetricTile({ label, value }: { label: string; value: string }) {
       }}
     >
       <Text variant="label">{label}</Text>
-      <Text variant="numeral" style={{ marginTop: t.space.xs }}>
-        {value}
-      </Text>
+      {typeof value === 'string' || typeof value === 'number' ? (
+        <Text variant="numeral" style={{ marginTop: t.space.xs }}>
+          {value}
+        </Text>
+      ) : (
+        <View style={{ marginTop: t.space.xs }}>{value}</View>
+      )}
     </View>
   );
 }

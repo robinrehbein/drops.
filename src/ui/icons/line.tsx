@@ -4,6 +4,7 @@ import {
   Bean,
   BookOpen,
   Check,
+  ChevronDown,
   Coffee,
   FlaskConical,
   type LucideProps,
@@ -26,6 +27,7 @@ export type IconName =
   | 'bean'
   | 'star'
   | 'check'
+  | 'chevronDown'
   | 'close'
   | 'arrowLeft'
   | 'arrowRight'
@@ -41,6 +43,7 @@ const MAP: Record<IconName, ComponentType<LucideProps>> = {
   bean: Bean,
   star: Star,
   check: Check,
+  chevronDown: ChevronDown,
   close: X,
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,

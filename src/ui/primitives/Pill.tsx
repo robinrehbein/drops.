@@ -11,6 +11,7 @@ export type PillProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   variant?: PillVariant;
   size?: 'md' | 'lg';
+  leftIcon?: IconName;
   rightIcon?: IconName;
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -20,6 +21,7 @@ export function Pill({
   label,
   variant = 'primary',
   size = 'md',
+  leftIcon,
   rightIcon,
   style,
   ...rest
@@ -52,6 +54,7 @@ export function Pill({
       ]}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs }}>
+        {leftIcon ? <Icon name={leftIcon} size={16} color={palette.fg} /> : null}
         <Text variant="bodyStrong" color={palette.fg}>
           {label}
         </Text>
