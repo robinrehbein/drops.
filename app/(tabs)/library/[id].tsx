@@ -8,6 +8,8 @@ import { useBean, useRestoreBean, useSetBeanStatus, useSetWouldBuyAgain, useSoft
 import { useSessions, useTastingNotesForBean } from '@/features/brew/hooks';
 import { useLinkBeanSource, usePlaces } from '@/features/places/hooks';
 import { useRecipeForBean, useClearRecipe } from '@/features/recipes/hooks';
+import { Icon } from '@/ui/icons/line';
+import { StarRating } from '@/ui/primitives/StarRating';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { tastingRadar } from '@/domain/tasting';
 import { costPerShot } from '@/domain/cost';
@@ -286,15 +288,31 @@ export default function BeanDetail() {
               <View style={{ gap: t.space.md }}>
                 <View style={{ flexDirection: 'row', gap: t.space.md }}>
                   <MetricTile label="SHOTS" value={String(stats.total)} />
-                  <MetricTile label="AVG RATING" value={stats.avgRating ? `${stats.avgRating.toFixed(1)}★` : '—'} />
+                  <MetricTile
+                    label="AVG RATING"
+                    value={
+                      stats.avgRating ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                          <Text variant="numeral">{stats.avgRating.toFixed(1)}</Text>
+                          <Icon name="star" size={14} color={t.colors.forest} fill={t.colors.forest} />
+                        </View>
+                      ) : (
+                        '—'
+                      )
+                    }
+                  />
                   <MetricTile label="AVG RATIO" value={formatRatio(stats.avgRatio)} />
                 </View>
                 <View style={{ flexDirection: 'row', gap: t.space.md }}>
                   <MetricTile label="AVG TIME" value={`${stats.avgDuration.toFixed(1)}s`} />
-                  <MetricTile label="BEST" value={stats.bestShot ? `${stats.bestShot.rating}★` : '—'} />
+                  <MetricTile
+                    label="BEST"
+                    value={stats.bestShot ? <StarRating value={stats.bestShot.rating ?? 0} size={14} /> : '—'}
+                  />
                 </View>
                 <Pill
-                  label="Dialing history →"
+                  label="Dialing history"
+                  rightIcon="arrowRight"
                   variant="ghost"
                   onPress={() => router.push(`/lab/dialing?beanId=${bean.id}` as never)}
                 />

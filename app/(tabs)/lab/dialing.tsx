@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { format } from 'date-fns';
 
@@ -7,6 +8,8 @@ import { useShotsForBean } from '@/features/brew/hooks';
 import { useDialingAdvice } from '@/features/dialing/hooks';
 import type { SessionRow } from '@/features/brew/types';
 import { brewRatio, formatRatio } from '@/domain/ratio';
+import { Icon } from '@/ui/icons/line';
+import { StarRating } from '@/ui/primitives/StarRating';
 import { CoachCard } from '@/ui/primitives/CoachCard';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Header } from '@/ui/primitives/Header';
@@ -138,7 +141,7 @@ export default function DialingScreen() {
               {/* Rating */}
               <ComparisonRow
                 label="Rating"
-                values={reversed.map((s) => (s.rating ? '★'.repeat(s.rating) : '—'))}
+                values={reversed.map((s) => (s.rating ? <StarRating value={s.rating} size={12} /> : '—'))}
                 changes={reversed.map((_, i) => changes(i, 'rating'))}
                 t={t}
                 highlightColor={t.colors.forest}
@@ -167,7 +170,7 @@ function ComparisonRow({
   highlightColor,
 }: {
   label: string;
-  values: string[];
+  values: ReactNode[];
   changes: boolean[];
   t: ReturnType<typeof useTheme>;
   highlightColor?: string;
@@ -188,13 +191,17 @@ function ComparisonRow({
       </View>
       {values.map((v, i) => (
         <View key={i} style={{ flex: 1, minWidth: 80 }}>
-          <Text
-            variant="numeral"
-            color={changes[i] ? (highlightColor ?? t.colors.amber) : t.colors.ink}
-            style={{ fontWeight: changes[i] ? '700' : '400' }}
-          >
-            {v}
-          </Text>
+          {typeof v === 'string' || typeof v === 'number' ? (
+            <Text
+              variant="numeral"
+              color={changes[i] ? (highlightColor ?? t.colors.amber) : t.colors.ink}
+              style={{ fontWeight: changes[i] ? '700' : '400' }}
+            >
+              {v}
+            </Text>
+          ) : (
+            v
+          )}
         </View>
       ))}
     </View>
@@ -215,19 +222,32 @@ function TrendSummary({ shots, t }: { shots: SessionRow[]; t: ReturnType<typeof 
   return (
     <View style={{ marginTop: t.space.sm, gap: t.space.xs }}>
       {ratingDelta !== 0 ? (
-        <Text variant="body" color={ratingDelta > 0 ? t.colors.forest : t.colors.amber}>
-          Rating: {ratingDelta > 0 ? '↑' : '↓'} {Math.abs(ratingDelta).toFixed(0)}★ across{' '}
-          {shots.length} shots
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs }}>
+          <Icon
+            name={ratingDelta > 0 ? 'trendUp' : 'trendDown'}
+            size={14}
+            color={ratingDelta > 0 ? t.colors.forest : t.colors.amber}
+          />
+          <Text variant="body" color={ratingDelta > 0 ? t.colors.forest : t.colors.amber}>
+            Rating: {Math.abs(ratingDelta).toFixed(0)} across {shots.length} shots
+          </Text>
+        </View>
       ) : (
         <Text variant="body" color={t.colors.inkSoft}>
           Rating: steady across {shots.length} shots
         </Text>
       )}
       {Math.abs(timeDelta) > 0.5 ? (
-        <Text variant="body" color={t.colors.inkSoft}>
-          Time: {timeDelta > 0 ? '↑' : '↓'} {Math.abs(timeDelta).toFixed(1)}s
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs }}>
+          <Icon
+            name={timeDelta > 0 ? 'trendUp' : 'trendDown'}
+            size={14}
+            color={t.colors.inkSoft}
+          />
+          <Text variant="body" color={t.colors.inkSoft}>
+            Time: {Math.abs(timeDelta).toFixed(1)}s
+          </Text>
+        </View>
       ) : null}
     </View>
   );
