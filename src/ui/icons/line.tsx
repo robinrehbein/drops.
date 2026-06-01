@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,6 +14,8 @@ import {
   Wrench,
   X,
 } from 'lucide-react-native';
+import type { ComponentType } from 'react';
+import { View } from 'react-native';
 
 export type IconName =
   | 'cup'
@@ -62,15 +63,13 @@ export function Icon({
 }) {
   const Glyph = MAP[name];
   return (
-    <Glyph
-      // `color` is spread conditionally: under exactOptionalPropertyTypes,
-      // Lucide's ColorValue prop type does not accept `undefined`.
-      {...(color !== undefined ? { color } : {})}
-      size={size}
-      fill={fill}
-      strokeWidth={strokeWidth}
-      testID={`icon-${name}`}
-      accessibilityLabel={name}
-    />
+    <View testID={`icon-${name}`} accessibilityLabel={name} accessibilityRole="image">
+      <Glyph
+        {...(color !== undefined ? { color } : {})}
+        size={size}
+        fill={fill}
+        strokeWidth={strokeWidth}
+      />
+    </View>
   );
 }
