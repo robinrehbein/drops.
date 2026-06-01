@@ -1,7 +1,14 @@
+// Polyfill crypto.getRandomValues() before anything calls uuid() (e.g. places
+// seeding on boot). Hermes has no Web Crypto, so uuid v9 throws without this.
+// Must be the first import so the global is patched before any module runs.
+import 'react-native-get-random-values';
+
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import '@/i18n';
 import { runMigrations } from '@/db/migrate';
@@ -49,12 +56,12 @@ export default function RootLayout() {
         <View style={{ flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' }}>
           <Text variant="title" align="center">
             {isWebSQLiteSyncError
-              ? 'Brewlog cannot open its local database in this browser.'
-              : 'Brewlog needs to rebuild its data.'}
+              ? 'Drop cannot open its local database in this browser.'
+              : 'Drop needs to rebuild its data.'}
           </Text>
           <Text variant="caption" align="center" style={{ marginTop: 12 }}>
             {isWebSQLiteSyncError
-              ? 'Open Brewlog in Expo Go or a browser with SharedArrayBuffer support enabled.'
+              ? 'Open Drop in Expo Go or a browser with SharedArrayBuffer support enabled.'
               : 'Restore from device backup or start fresh from Settings → Reset.'}
           </Text>
           {__DEV__ ? (
@@ -77,23 +84,27 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <QueryProvider>
-          <RepoProvider>
-            <StatusBar style="dark" />
-            {onboardingCompleted ? (
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-              </Stack>
-            ) : (
-              <OnboardingScreen />
-            )}
-            <Snackbar />
-          </RepoProvider>
-        </QueryProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <QueryProvider>
+            <RepoProvider>
+              <BottomSheetModalProvider>
+                <StatusBar style="dark" />
+                {onboardingCompleted ? (
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                  </Stack>
+                ) : (
+                  <OnboardingScreen />
+                )}
+                <Snackbar />
+              </BottomSheetModalProvider>
+            </RepoProvider>
+          </QueryProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }

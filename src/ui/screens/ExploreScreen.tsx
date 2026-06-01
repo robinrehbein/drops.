@@ -1,34 +1,36 @@
+import { type CameraRef } from '@maplibre/maplibre-react-native';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  filterPlaces,
-  groupByCity,
-  placeStatus,
-  placeStats,
-  sortPlaces,
-  type LatLng,
-} from '@/domain/places';
+import { filterPlaces, placeStatus, sortPlaces, type LatLng } from '@/domain/places';
 import { usePlaces } from '@/features/places/hooks';
-import type { PlaceWithUserData } from '@/features/places/types';
-import { PlaceCard } from '@/ui/primitives/PlaceCard';
 import { Text } from '@/ui/primitives/Text';
 import { ExploreMap } from '@/ui/screens/ExploreMap';
+import { PlaceDetailSheet } from '@/ui/screens/PlaceDetailSheet';
+import {
+  LIST_SHEET_SNAP_RATIOS,
+  PlaceListSheet,
+  type StatusFilter,
+} from '@/ui/screens/PlaceListSheet';
 import { useTheme } from '@/ui/theme/useTheme';
-
-type StatusFilter = 'all' | 'curated' | 'wishlist' | 'visited';
 
 export function ExploreScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const router = useRouter();
   const { t } = useTranslation();
   const { data: places = [] } = usePlaces();
+  const cameraRef = useRef<CameraRef>(null);
+
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [mode, setMode] = useState<'list' | 'map'>('list');
   const [origin, setOrigin] = useState<LatLng | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [listSheetIndex, setListSheetIndex] = useState(1);
   const nearest = origin !== null;
 
   const byStatus = useMemo(
@@ -45,16 +47,28 @@ export function ExploreScreen() {
     () => sortPlaces(filtered, nearest ? 'distance' : 'name', origin ?? undefined),
     [filtered, nearest, origin],
   );
-  const stats = useMemo(() => placeStats(places.map((p) => p.userData ?? {})), [places]);
-  const groups = useMemo(() => groupByCity(filtered), [filtered]);
 
-  const chip = (active: boolean) => ({
-    borderRadius: theme.radii.pill,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm,
-    backgroundColor: active ? theme.colors.forest : theme.colors.paperEdge,
-  });
-  const chipText = (active: boolean) => ({ color: active ? theme.colors.paper : theme.colors.ink });
+  function mapBottomPadding(): number {
+    const ratio = LIST_SHEET_SNAP_RATIOS[listSheetIndex] ?? LIST_SHEET_SNAP_RATIOS[1];
+    return Math.round(height * ratio);
+  }
+
+  function focusCoordinate(coord: LatLng, zoom: number) {
+    cameraRef.current?.flyTo({
+      center: [coord.lng, coord.lat],
+      zoom,
+      duration: 600,
+      padding: { top: insets.top + theme.space.md, right: 0, bottom: mapBottomPadding(), left: 0 },
+    });
+  }
+
+  function selectPlace(id: string) {
+    const p = places.find((x) => x.id === id);
+    if (p?.lat != null && p?.lng != null) {
+      focusCoordinate({ lat: p.lat, lng: p.lng }, 14);
+    }
+    setSelectedId(id);
+  }
 
   async function toggleNearest() {
     if (nearest) {
@@ -65,124 +79,78 @@ export function ExploreScreen() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return;
     const pos = await Location.getCurrentPositionAsync({});
-    setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    const o = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    setOrigin(o);
+    focusCoordinate(o, 12);
   }
 
-  const renderCard = (p: PlaceWithUserData) => (
-    <PlaceCard key={p.id} place={p} onPress={() => router.push(`/explore/${p.id}` as never)} />
-  );
-
-  const STATUS: StatusFilter[] = ['all', 'curated', 'wishlist', 'visited'];
+  const fab = {
+    position: 'absolute' as const,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: theme.colors.paperEdge,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.colors.paper }}
-      contentContainerStyle={{ padding: theme.space.lg }}
-      scrollEnabled={mode !== 'map'}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: theme.space.xs,
-        }}
-      >
-        <Text variant="title">{t('explore.title')}</Text>
-        <Pressable onPress={() => router.push('/explore/new' as never)}>
-          <Text variant="bodyStrong" color={theme.colors.forest}>
-            {t('explore.addPlace')}
-          </Text>
-        </Pressable>
-      </View>
-      <Text
-        variant="caption"
-        style={{ color: theme.colors.inkFaint, marginBottom: theme.space.md }}
-      >
-        {t('explore.statLine', { visited: stats.visited, wishlist: stats.wishlist })}
-      </Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.paper }}>
+      <ExploreMap
+        places={sorted}
+        onSelect={selectPlace}
+        selectedId={selectedId}
+        cameraRef={cameraRef}
+      />
 
-      <View style={{ flexDirection: 'row', gap: theme.space.sm, marginBottom: theme.space.md }}>
-        {(['list', 'map'] as const).map((m) => (
-          <Pressable
-            key={m}
-            onPress={() => setMode(m)}
-            testID={`mode-${m}`}
-            style={chip(mode === m)}
-          >
-            <Text variant="caption" style={chipText(mode === m)}>
-              {m === 'list' ? t('explore.list') : t('explore.map')}
-            </Text>
-          </Pressable>
-        ))}
-        <Pressable onPress={toggleNearest} testID="sort-nearest" style={chip(nearest)}>
-          <Text variant="caption" style={chipText(nearest)}>
-            {t('explore.nearest')}
-          </Text>
-        </Pressable>
-      </View>
+      {/* Add place (top-right) */}
+      <Pressable
+        testID="add-place"
+        accessibilityRole="button"
+        accessibilityLabel={t('explore.addPlace')}
+        onPress={() => router.push('/explore/new' as never)}
+        style={[fab, { top: insets.top + theme.space.md, right: theme.space.lg, backgroundColor: theme.colors.paper }]}
+      >
+        <Text variant="title" color={theme.colors.forest}>
+          ＋
+        </Text>
+      </Pressable>
 
-      <TextInput
-        placeholder={t('explore.searchPlaceholder')}
-        value={query}
-        onChangeText={setQuery}
-        style={{
-          borderWidth: 1,
-          borderColor: theme.colors.paperEdge,
-          borderRadius: theme.radii.sm,
-          padding: theme.space.md,
-          marginBottom: theme.space.sm,
-          color: theme.colors.ink,
-          fontFamily: theme.fonts.sans,
+      {/* Locate / nearest (above the sheet's mid snap) */}
+      <Pressable
+        testID="sort-nearest"
+        accessibilityRole="button"
+        accessibilityLabel={t('explore.nearMe')}
+        onPress={toggleNearest}
+        style={[
+          fab,
+          {
+            bottom: '52%',
+            right: theme.space.lg,
+            backgroundColor: nearest ? theme.colors.forest : theme.colors.paper,
+          },
+        ]}
+      >
+        <Text variant="title" color={nearest ? theme.colors.paper : theme.colors.forest}>
+          ◎
+        </Text>
+      </Pressable>
+
+      <PlaceListSheet
+        places={sorted}
+        query={query}
+        onQuery={setQuery}
+        statusFilter={statusFilter}
+        onStatusFilter={setStatusFilter}
+        onSelect={selectPlace}
+        nearest={nearest}
+        onSnapIndexChange={(index) => {
+          if (index >= 0) setListSheetIndex(index);
         }}
       />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: theme.space.sm,
-          marginBottom: theme.space.md,
-        }}
-      >
-        {STATUS.map((s) => (
-          <Pressable
-            key={s}
-            onPress={() => setStatusFilter(s)}
-            testID={`status-${s}`}
-            style={chip(statusFilter === s)}
-          >
-            <Text variant="caption" style={chipText(statusFilter === s)}>
-              {t(`explore.filter_${s}`)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {mode === 'map' ? (
-        <View style={{ height: 420, overflow: 'hidden', borderRadius: theme.radii.sm }}>
-          <ExploreMap places={sorted} onSelect={(id) => router.push(`/explore/${id}` as never)} />
-        </View>
-      ) : nearest ? (
-        // Distance-sorted flat list (city grouping would re-sort by name)
-        sorted.map(renderCard)
-      ) : (
-        groups.map((g) => (
-          <View key={g.city} style={{ marginBottom: theme.space.lg }}>
-            <Text
-              variant="caption"
-              style={{ color: theme.colors.inkFaint, marginBottom: theme.space.xs }}
-            >
-              {g.city}
-            </Text>
-            {g.places.map(renderCard)}
-          </View>
-        ))
-      )}
-
-      <Text variant="caption" style={{ color: theme.colors.inkFaint, marginTop: theme.space.md }}>
-        {t('explore.attribution')}
-      </Text>
-    </ScrollView>
+      <PlaceDetailSheet placeId={selectedId} onClose={() => setSelectedId(null)} />
+    </View>
   );
 }

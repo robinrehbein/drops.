@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ExploreMap } from '@/ui/screens/ExploreMap';
 import { ThemeProvider } from '@/ui/theme/ThemeProvider';
@@ -16,4 +16,15 @@ it('renders a marker per place with coordinates', () => {
   );
   expect(screen.getByTestId('map-view')).toBeTruthy();
   expect(screen.getAllByTestId('map-marker')).toHaveLength(1);
+});
+
+it('selects a place when its marker is pressed', () => {
+  const onSelect = jest.fn();
+  render(
+    <ThemeProvider>
+      <ExploreMap places={places as never} onSelect={onSelect} />
+    </ThemeProvider>,
+  );
+  fireEvent.press(screen.getByTestId('map-marker'));
+  expect(onSelect).toHaveBeenCalledWith('p1');
 });

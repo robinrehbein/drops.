@@ -1,4 +1,5 @@
-import { Pressable, View } from 'react-native';
+import { TouchableOpacity } from '@gorhom/bottom-sheet';
+import { View } from 'react-native';
 
 import { placeStatus } from '@/domain/places';
 import type { PlaceWithUserData } from '@/features/places/types';
@@ -16,8 +17,9 @@ export function PlaceCard({ place, onPress }: { place: PlaceWithUserData; onPres
   const t = useTheme();
   const status = placeStatus(place.userData);
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.78}
       style={{
         backgroundColor: t.colors.paper,
         borderColor: t.colors.paperEdge,
@@ -47,6 +49,6 @@ export function PlaceCard({ place, onPress }: { place: PlaceWithUserData; onPres
         {KIND_LABEL[place.kind] ?? place.kind}
         {place.address ? ` · ${place.address}` : ''}
       </Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 }

@@ -13,4 +13,15 @@ jest.mock('expo-font', () => {
   };
 });
 
+// Screens read safe-area insets (e.g. ExploreScreen, Header) but tests don't
+// mount a SafeAreaProvider, so the real useSafeAreaInsets throws. Return zero
+// insets — layout math degrades gracefully and queries still find content.
+jest.mock('react-native-safe-area-context', () => {
+  const actual = jest.requireActual('react-native-safe-area-context');
+  return {
+    ...actual,
+    useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+  };
+});
+
 import '@/i18n';

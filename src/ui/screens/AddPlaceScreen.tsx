@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Marker } from '@maplibre/maplibre-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { LatLng } from '@/domain/places';
 import type { PlaceInput } from '@/domain/validators/place';
 import { useAddPlace } from '@/features/places/hooks';
+import { BaseMap } from '@/ui/maps/BaseMap';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
 
@@ -13,6 +15,7 @@ const KINDS: PlaceInput['kind'][] = ['cafe', 'coffee_shop', 'roaster'];
 
 export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const add = useAddPlace();
   const [name, setName] = useState('');
@@ -60,7 +63,7 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.paper }}
-      contentContainerStyle={{ padding: theme.space.lg }}
+      contentContainerStyle={{ padding: theme.space.lg, paddingTop: insets.top + theme.space.lg }}
     >
       <Text variant="title" style={{ marginBottom: theme.space.md }}>
         {t('explore.addPlace')}
@@ -143,28 +146,27 @@ export function AddPlaceScreen({ onDone }: { onDone: () => void }) {
           marginBottom: theme.space.lg,
         }}
       >
-        <MapView
-          style={{ flex: 1 }}
+        <BaseMap
           testID="add-map"
-          initialRegion={
-            coords
-              ? {
-                  latitude: coords.lat,
-                  longitude: coords.lng,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                }
-              : { latitude: 51.16, longitude: 10.45, latitudeDelta: 6, longitudeDelta: 6 }
-          }
-          onPress={(e) =>
-            setCoords({
-              lat: e.nativeEvent.coordinate.latitude,
-              lng: e.nativeEvent.coordinate.longitude,
-            })
-          }
+          center={coords ?? { lat: 51.16, lng: 10.45 }}
+          zoom={coords ? 12 : 5}
+          onPressCoord={setCoords}
         >
-          {coords ? <Marker coordinate={{ latitude: coords.lat, longitude: coords.lng }} /> : null}
-        </MapView>
+          {coords ? (
+            <Marker lngLat={[coords.lng, coords.lat]} anchor="bottom">
+              <View
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  backgroundColor: '#c0392b',
+                  borderWidth: 2,
+                  borderColor: '#fff',
+                }}
+              />
+            </Marker>
+          ) : null}
+        </BaseMap>
       </View>
 
       <Pressable
