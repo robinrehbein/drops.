@@ -13,7 +13,16 @@ import { Stepper } from '@/ui/primitives/Stepper';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
 
-const FLAVORS = ['bergamot', 'jasmine', 'stone fruit', 'chocolate', 'caramel', 'citrus', 'berry', 'floral'];
+const FLAVORS = [
+  'bergamot',
+  'jasmine',
+  'stone fruit',
+  'chocolate',
+  'caramel',
+  'citrus',
+  'berry',
+  'floral',
+];
 
 export default function TastingNote() {
   const t = useTheme();
@@ -56,7 +65,11 @@ export default function TastingNote() {
         yieldG,
         ...(rating ? { rating } : {}),
         ...(comment ? { comment } : {}),
-        mouthfeel, acidity, sweetness, bitterness, balance,
+        mouthfeel,
+        acidity,
+        sweetness,
+        bitterness,
+        balance,
         flavorTags: tags,
       },
     });
@@ -95,13 +108,26 @@ export default function TastingNote() {
         {session.durationS?.toFixed(1)}s · dose {session.doseG.toFixed(1)} g
       </Text>
 
-      <Stepper label="Yield" unit="g" min={1} max={120} step={0.5} value={yieldG} onChange={setYieldG} />
+      <Stepper
+        label="Yield"
+        unit="g"
+        min={1}
+        max={120}
+        step={0.5}
+        value={yieldG}
+        onChange={setYieldG}
+      />
 
       <View style={{ marginTop: t.space.lg }}>
         <Text variant="label">RATING</Text>
         <View style={{ flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm }}>
           {[1, 2, 3, 4, 5].map((n) => (
-            <Pill key={n} label={String(n)} variant={rating === n ? 'primary' : 'ghost'} onPress={() => setRating(n)} />
+            <Pill
+              key={n}
+              label={String(n)}
+              variant={rating === n ? 'primary' : 'ghost'}
+              onPress={() => setRating(n)}
+            />
           ))}
         </View>
       </View>
@@ -114,15 +140,29 @@ export default function TastingNote() {
         { label: 'Balance', value: balance, set: setBalance },
       ].map((row) => (
         <View key={row.label} style={{ marginTop: t.space.md }}>
-          <Stepper label={row.label} min={1} max={5} step={1} value={row.value} onChange={row.set} />
+          <Stepper
+            label={row.label}
+            min={1}
+            max={5}
+            step={1}
+            value={row.value}
+            onChange={row.set}
+          />
         </View>
       ))}
 
       <View style={{ marginTop: t.space.lg }}>
         <Text variant="label">FLAVOR TAGS</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, marginTop: t.space.sm }}>
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, marginTop: t.space.sm }}
+        >
           {FLAVORS.map((f) => (
-            <Pill key={f} label={f} variant={tags.includes(f) ? 'primary' : 'ghost'} onPress={() => toggleTag(f)} />
+            <Pill
+              key={f}
+              label={f}
+              variant={tags.includes(f) ? 'primary' : 'ghost'}
+              onPress={() => toggleTag(f)}
+            />
           ))}
         </View>
       </View>
@@ -134,22 +174,34 @@ export default function TastingNote() {
           onChangeText={setComment}
           multiline
           style={{
-            marginTop: 4, borderWidth: 1, borderColor: t.colors.paperEdge,
-            backgroundColor: t.colors.paperDeep, padding: t.space.md, borderRadius: t.radii.md,
-            minHeight: 80, fontFamily: t.fonts.sans, color: t.colors.ink,
+            marginTop: 4,
+            borderWidth: 1,
+            borderColor: t.colors.paperEdge,
+            backgroundColor: t.colors.paperDeep,
+            padding: t.space.md,
+            borderRadius: t.radii.md,
+            minHeight: 80,
+            fontFamily: t.fonts.sans,
+            color: t.colors.ink,
           }}
         />
       </View>
 
       <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.xl }}>
         <Pill label="Save" onPress={() => save('keep')} size="lg" style={{ flex: 1 }} />
-        <Pill label="Save & log another" variant="ghost" onPress={() => save('another')} size="lg" style={{ flex: 1 }} />
+        <Pill
+          label="Save & log another"
+          variant="ghost"
+          onPress={() => save('another')}
+          size="lg"
+          style={{ flex: 1 }}
+        />
       </View>
       <Pill
         label={confirmDiscard ? 'Tap again to confirm discard' : 'Discard shot'}
         variant={confirmDiscard ? 'danger' : 'ghost'}
         onPress={() => {
-          if (confirmDiscard) onDiscard();
+          if (confirmDiscard) void onDiscard();
           else setConfirmDiscard(true);
         }}
         style={{ marginTop: t.space.md }}

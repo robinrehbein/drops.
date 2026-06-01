@@ -42,7 +42,7 @@ export function SensoryRadar({ axes }: { axes: TastingAxes }) {
 
   const gridPath = Skia.Path.Make();
   [0.25, 0.5, 0.75, 1].forEach((level) => {
-    AXES.forEach(({ }, i) => {
+    AXES.forEach((_axis, i) => {
       const angle = startAngle + i * angleStep;
       const { x, y } = polarToXY(angle, level * maxR, cx, cy);
       if (i === 0) gridPath.moveTo(x, y);
@@ -51,31 +51,24 @@ export function SensoryRadar({ axes }: { axes: TastingAxes }) {
     gridPath.close();
   });
 
-  const summary = AXES
-    .map(({ key, label }) => `${label.toLowerCase()} ${axes[key] ?? 0}`)
-    .join(', ');
+  const summary = AXES.map(({ key, label }) => `${label.toLowerCase()} ${axes[key] ?? 0}`).join(
+    ', ',
+  );
 
   return (
     <View accessible accessibilityLabel={`Sensory radar: ${summary}`}>
       <View style={{ width: SIZE, height: SIZE }}>
         <Canvas style={{ width: SIZE, height: SIZE, position: 'absolute' }}>
           <Path path={gridPath} color={t.colors.paperEdge} style="stroke" strokeWidth={1} />
-          {!allZero && (
-            <Path path={path} color={t.colors.forestPale} style="fill" opacity={0.7} />
-          )}
-          {!allZero && (
-            <Path path={path} color={t.colors.forest} style="stroke" strokeWidth={2} />
-          )}
+          {!allZero && <Path path={path} color={t.colors.forestPale} style="fill" opacity={0.7} />}
+          {!allZero && <Path path={path} color={t.colors.forest} style="stroke" strokeWidth={2} />}
         </Canvas>
         {/* Axis labels */}
         {AXES.map(({ label }, i) => {
           const angle = startAngle + i * angleStep;
           const { x, y } = polarToXY(angle, maxR + 12, cx, cy);
           return (
-            <View
-              key={label}
-              style={{ position: 'absolute', left: x - 28, top: y - 8, width: 56 }}
-            >
+            <View key={label} style={{ position: 'absolute', left: x - 28, top: y - 8, width: 56 }}>
               <Text
                 variant="label"
                 color={t.colors.inkSoft}

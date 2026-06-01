@@ -1,15 +1,20 @@
 import { useEffect, useRef } from 'react';
-import { useKeepAwake } from 'expo-keep-awake';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { useBeans } from '@/features/beans/hooks';
-import { useStartSession, useEndSession, useAddMilestone, useLastShotForBean } from '@/features/brew/hooks';
+import {
+  useStartSession,
+  useEndSession,
+  useAddMilestone,
+  useLastShotForBean,
+} from '@/features/brew/hooks';
 import { useRecipeForBean } from '@/features/recipes/hooks';
 import { useDialingAdvice } from '@/features/dialing/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
-import { extractionPercent, qualityBand } from '@/domain/extraction';
+import { extractionPercent } from '@/domain/extraction';
 import { nudgeGrind } from '@/domain/dialing';
 import { CoachCard } from '@/ui/primitives/CoachCard';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
@@ -64,8 +69,14 @@ export default function LabIndex() {
     prevBeanId.current = draft.beanId;
   }, [draft.beanId, recipe]);
 
-  // Keep screen awake while pulling
-  if (status === 'Pulling') useKeepAwake('brewlog-pulling');
+  // Keep screen awake while pulling (imperative API — a hook must not be called conditionally)
+  useEffect(() => {
+    if (status !== 'Pulling') return undefined;
+    void activateKeepAwakeAsync('brewlog-pulling');
+    return () => {
+      void deactivateKeepAwake('brewlog-pulling');
+    };
+  }, [status]);
 
   const selectedBean = beans?.find((b) => b.id === draft.beanId) ?? null;
 
@@ -129,14 +140,22 @@ export default function LabIndex() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
-      <Header title="Brew Lab" rightLabel="History" onRightPress={() => router.push('/lab/history' as never)} />
+      <Header
+        title="Brew Lab"
+        rightLabel="History"
+        onRightPress={() => router.push('/lab/history' as never)}
+      />
       <RecoveryBanner />
       <View style={{ padding: t.space.lg, flex: 1 }}>
         <Pressable onPress={() => router.push('/(modals)/pick-bean' as never)}>
-          <View style={{
-            backgroundColor: t.colors.paperDeep,
-            padding: t.space.md, borderRadius: t.radii.pill, alignSelf: 'flex-start',
-          }}>
+          <View
+            style={{
+              backgroundColor: t.colors.paperDeep,
+              padding: t.space.md,
+              borderRadius: t.radii.pill,
+              alignSelf: 'flex-start',
+            }}
+          >
             <Text variant="bodyStrong" color={t.colors.forest}>
               {selectedBean ? `Brewing with: ${selectedBean.name} ▾` : 'Pick a bean ▾'}
             </Text>
@@ -167,23 +186,22 @@ export default function LabIndex() {
             <Stepper
               label="Dose"
               unit="g"
-              min={5} max={30} step={0.1}
+              min={5}
+              max={30}
+              step={0.1}
               value={draft.doseG}
               onChange={(v) => send({ type: 'configure', doseG: v })}
             />
             <Stepper
               label="Target yield"
               unit="g"
-              min={5} max={80} step={0.5}
+              min={5}
+              max={80}
+              step={0.5}
               value={draft.targetYieldG}
               onChange={(v) => send({ type: 'configure', targetYieldG: v })}
             />
-            <Pill
-              label="Start Shot"
-              size="lg"
-              onPress={onStart}
-              disabled={!selectedBean}
-            />
+            <Pill label="Start Shot" size="lg" onPress={onStart} disabled={!selectedBean} />
           </View>
         ) : status === 'Pulling' && session ? (
           <View style={{ marginTop: t.space.xl, alignItems: 'center', gap: t.space.lg }}>
@@ -199,7 +217,11 @@ export default function LabIndex() {
               <MetricTile label="TARGET" value={`${draft.targetYieldG.toFixed(1)} g`} />
             </View>
             <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.lg }}>
-              <Pill variant="ghost" label="Pre-infusion end" onPress={() => onMilestone('pre_infusion_end')} />
+              <Pill
+                variant="ghost"
+                label="Pre-infusion end"
+                onPress={() => onMilestone('pre_infusion_end')}
+              />
               <Pill variant="ghost" label="First drop" onPress={() => onMilestone('first_drop')} />
             </View>
             <Pill variant="danger" size="lg" label="Stop Pull" onPress={onStop} />

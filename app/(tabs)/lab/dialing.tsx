@@ -10,7 +10,6 @@ import { brewRatio, formatRatio } from '@/domain/ratio';
 import { CoachCard } from '@/ui/primitives/CoachCard';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Header } from '@/ui/primitives/Header';
-import { MetricTile } from '@/ui/primitives/MetricTile';
 import { Surface } from '@/ui/primitives/Surface';
 import { Text } from '@/ui/primitives/Text';
 import { useTheme } from '@/ui/theme/useTheme';
@@ -38,7 +37,7 @@ export default function DialingScreen() {
   const reversed = [...shots].reverse(); // oldest first for comparison
 
   // Find which params changed between consecutive shots
-  const changes = (i: number, field: keyof typeof shots[0]): boolean => {
+  const changes = (i: number, field: keyof (typeof shots)[0]): boolean => {
     if (i === 0) return false;
     const prev = reversed[i - 1];
     const curr = reversed[i];
@@ -50,16 +49,21 @@ export default function DialingScreen() {
       <Header title={`Dialing: ${bean?.name ?? 'Bean'}`} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <CoachCard advice={advice} />
-        <Text variant="caption">
-          {shots.length} shots · newest on right
-        </Text>
+        <Text variant="caption">{shots.length} shots · newest on right</Text>
 
         {/* Comparison table */}
         <Surface bg="paperDeep" padding="md" radius="md" bordered>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={{ minWidth: 500 }}>
               {/* Header row */}
-              <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: t.colors.paperEdge, paddingBottom: t.space.sm }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  borderBottomWidth: 1,
+                  borderBottomColor: t.colors.paperEdge,
+                  paddingBottom: t.space.sm,
+                }}
+              >
                 <View style={{ width: 90 }}>
                   <Text variant="label">PARAM</Text>
                 </View>
@@ -97,7 +101,7 @@ export default function DialingScreen() {
               {/* Yield */}
               <ComparisonRow
                 label="Yield"
-                values={reversed.map((s) => s.yieldG != null ? `${s.yieldG.toFixed(1)}g` : '—')}
+                values={reversed.map((s) => (s.yieldG != null ? `${s.yieldG.toFixed(1)}g` : '—'))}
                 changes={reversed.map((_, i) => changes(i, 'yieldG'))}
                 t={t}
               />
@@ -118,10 +122,14 @@ export default function DialingScreen() {
               {/* Duration */}
               <ComparisonRow
                 label="Time"
-                values={reversed.map((s) => s.durationS != null ? `${s.durationS.toFixed(1)}s` : '—')}
+                values={reversed.map((s) =>
+                  s.durationS != null ? `${s.durationS.toFixed(1)}s` : '—',
+                )}
                 changes={reversed.map((_, i) => {
                   if (i === 0) return false;
-                  const diff = Math.abs((reversed[i]!.durationS ?? 0) - (reversed[i - 1]!.durationS ?? 0));
+                  const diff = Math.abs(
+                    (reversed[i]!.durationS ?? 0) - (reversed[i - 1]!.durationS ?? 0),
+                  );
                   return diff > 0.5;
                 })}
                 t={t}
@@ -130,7 +138,7 @@ export default function DialingScreen() {
               {/* Rating */}
               <ComparisonRow
                 label="Rating"
-                values={reversed.map((s) => s.rating ? '★'.repeat(s.rating) : '—')}
+                values={reversed.map((s) => (s.rating ? '★'.repeat(s.rating) : '—'))}
                 changes={reversed.map((_, i) => changes(i, 'rating'))}
                 t={t}
                 highlightColor={t.colors.forest}
@@ -165,9 +173,18 @@ function ComparisonRow({
   highlightColor?: string;
 }) {
   return (
-    <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: t.colors.paperEdge, paddingVertical: t.space.xs }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: t.colors.paperEdge,
+        paddingVertical: t.space.xs,
+      }}
+    >
       <View style={{ width: 90 }}>
-        <Text variant="caption" color={t.colors.inkSoft}>{label}</Text>
+        <Text variant="caption" color={t.colors.inkSoft}>
+          {label}
+        </Text>
       </View>
       {values.map((v, i) => (
         <View key={i} style={{ flex: 1, minWidth: 80 }}>
@@ -199,7 +216,8 @@ function TrendSummary({ shots, t }: { shots: SessionRow[]; t: ReturnType<typeof 
     <View style={{ marginTop: t.space.sm, gap: t.space.xs }}>
       {ratingDelta !== 0 ? (
         <Text variant="body" color={ratingDelta > 0 ? t.colors.forest : t.colors.amber}>
-          Rating: {ratingDelta > 0 ? '↑' : '↓'} {Math.abs(ratingDelta).toFixed(0)}★ across {shots.length} shots
+          Rating: {ratingDelta > 0 ? '↑' : '↓'} {Math.abs(ratingDelta).toFixed(0)}★ across{' '}
+          {shots.length} shots
         </Text>
       ) : (
         <Text variant="body" color={t.colors.inkSoft}>

@@ -18,9 +18,9 @@ export function useSaveRecipeForBean() {
   return useMutation({
     mutationFn: (args: SaveRecipeArgs) => recipes.saveForBean(args),
     onSuccess: (_data, args) => {
-      qc.invalidateQueries({ queryKey: ['recipe', args.beanId] });
-      qc.invalidateQueries({ queryKey: ['bean', args.beanId] });
-      qc.invalidateQueries({ queryKey: ['beans'] });
+      void qc.invalidateQueries({ queryKey: ['recipe', args.beanId] });
+      void qc.invalidateQueries({ queryKey: ['bean', args.beanId] });
+      void qc.invalidateQueries({ queryKey: ['beans'] });
     },
   });
 }
@@ -32,9 +32,9 @@ export function useSaveRecipeFromSession() {
     mutationFn: ({ sessionId, notes }: { sessionId: string; notes?: string }) =>
       recipes.saveFromSession(sessionId, notes),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['recipe', data.beanId] });
-      qc.invalidateQueries({ queryKey: ['bean', data.beanId] });
-      qc.invalidateQueries({ queryKey: ['beans'] });
+      void qc.invalidateQueries({ queryKey: ['recipe', data.beanId] });
+      void qc.invalidateQueries({ queryKey: ['bean', data.beanId] });
+      void qc.invalidateQueries({ queryKey: ['beans'] });
     },
   });
 }
@@ -45,9 +45,9 @@ export function useClearRecipe() {
   return useMutation({
     mutationFn: (beanId: string) => recipes.clearForBean(beanId),
     onSuccess: (_data, beanId) => {
-      qc.invalidateQueries({ queryKey: ['recipe', beanId] });
-      qc.invalidateQueries({ queryKey: ['bean', beanId] });
-      qc.invalidateQueries({ queryKey: ['beans'] });
+      void qc.invalidateQueries({ queryKey: ['recipe', beanId] });
+      void qc.invalidateQueries({ queryKey: ['bean', beanId] });
+      void qc.invalidateQueries({ queryKey: ['beans'] });
     },
   });
 }

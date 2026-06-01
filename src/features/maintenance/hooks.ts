@@ -40,8 +40,8 @@ export function useAddTask() {
   return useMutation({
     mutationFn: (input: MaintenanceTaskInput) => maintenance.addTask(input),
     onSuccess: (_data, input) => {
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', input.machineId] });
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', input.machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', input.machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', input.machineId] });
     },
   });
 }
@@ -52,7 +52,7 @@ export function useLogTask() {
   return useMutation({
     mutationFn: (args: LogTaskArgs & { machineId: string }) => maintenance.logTask(args),
     onSuccess: (_data, { machineId }) => {
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
     },
   });
 }
@@ -70,8 +70,8 @@ export function useUpdateTask() {
       machineId: string;
     }) => maintenance.updateTask(id, patch),
     onSuccess: (_data, { machineId }) => {
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', machineId] });
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
     },
   });
 }
@@ -82,8 +82,8 @@ export function useDeleteTask() {
   return useMutation({
     mutationFn: ({ id }: { id: string; machineId: string }) => maintenance.softDeleteTask(id),
     onSuccess: (_data, { machineId }) => {
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', machineId] });
-      qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks', machineId] });
+      void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks-status', machineId] });
     },
   });
 }

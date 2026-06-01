@@ -41,9 +41,9 @@ export function useUpdateMachine() {
     mutationFn: ({ id, patch }: { id: string; patch: Partial<MachineInput> }) =>
       machines.updateMachine(id, patch),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: ['machines'] });
-      qc.invalidateQueries({ queryKey: ['machine', id] });
-      qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
+      void qc.invalidateQueries({ queryKey: ['machines'] });
+      void qc.invalidateQueries({ queryKey: ['machine', id] });
+      void qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
     },
   });
 }
@@ -54,8 +54,8 @@ export function useSetPrimaryMachine() {
   return useMutation({
     mutationFn: (id: string) => machines.setPrimary(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['machines'] });
-      qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
+      void qc.invalidateQueries({ queryKey: ['machines'] });
+      void qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
     },
   });
 }
@@ -66,8 +66,8 @@ export function useDeleteMachine() {
   return useMutation({
     mutationFn: (id: string) => machines.softDeleteMachine(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['machines'] });
-      qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
+      void qc.invalidateQueries({ queryKey: ['machines'] });
+      void qc.invalidateQueries({ queryKey: ['machine', 'primary'] });
     },
   });
 }
