@@ -3,12 +3,22 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 
-import { filterPlaces, groupByCity, placeStats } from '@/domain/places';
+import {
+  filterPlaces,
+  groupByCity,
+  placeStatus,
+  placeStats,
+  sortPlaces,
+  type LatLng,
+} from '@/domain/places';
 import { usePlaces } from '@/features/places/hooks';
+import type { PlaceWithUserData } from '@/features/places/types';
 import { PlaceCard } from '@/ui/primitives/PlaceCard';
 import { Text } from '@/ui/primitives/Text';
 import { ExploreMap } from '@/ui/screens/ExploreMap';
 import { useTheme } from '@/ui/theme/useTheme';
+
+type StatusFilter = 'all' | 'curated' | 'wishlist' | 'visited';
 
 export function ExploreScreen() {
   const theme = useTheme();
@@ -16,12 +26,24 @@ export function ExploreScreen() {
   const { t } = useTranslation();
   const { data: places = [] } = usePlaces();
   const [query, setQuery] = useState('');
-  const [curatedOnly, setCuratedOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [mode, setMode] = useState<'list' | 'map'>('list');
+  const [origin, setOrigin] = useState<LatLng | null>(null);
+  const nearest = origin !== null;
 
-  const filtered = useMemo(
-    () => filterPlaces(places, { query, curatedOnly }),
-    [places, query, curatedOnly],
+  const byStatus = useMemo(
+    () =>
+      places.filter((p) => {
+        if (statusFilter === 'all') return true;
+        if (statusFilter === 'curated') return p.curated;
+        return placeStatus(p.userData) === statusFilter;
+      }),
+    [places, statusFilter],
+  );
+  const filtered = useMemo(() => filterPlaces(byStatus, { query }), [byStatus, query]);
+  const sorted = useMemo(
+    () => sortPlaces(filtered, nearest ? 'distance' : 'name', origin ?? undefined),
+    [filtered, nearest, origin],
   );
   const stats = useMemo(() => placeStats(places.map((p) => p.userData ?? {})), [places]);
   const groups = useMemo(() => groupByCity(filtered), [filtered]);
@@ -32,6 +54,25 @@ export function ExploreScreen() {
     paddingVertical: theme.space.sm,
     backgroundColor: active ? theme.colors.forest : theme.colors.paperEdge,
   });
+  const chipText = (active: boolean) => ({ color: active ? theme.colors.paper : theme.colors.ink });
+
+  async function toggleNearest() {
+    if (nearest) {
+      setOrigin(null);
+      return;
+    }
+    const Location = await import('expo-location');
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+    const pos = await Location.getCurrentPositionAsync({});
+    setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+  }
+
+  const renderCard = (p: PlaceWithUserData) => (
+    <PlaceCard key={p.id} place={p} onPress={() => router.push(`/explore/${p.id}` as never)} />
+  );
+
+  const STATUS: StatusFilter[] = ['all', 'curated', 'wishlist', 'visited'];
 
   return (
     <ScrollView
@@ -69,14 +110,16 @@ export function ExploreScreen() {
             testID={`mode-${m}`}
             style={chip(mode === m)}
           >
-            <Text
-              variant="caption"
-              style={{ color: mode === m ? theme.colors.paper : theme.colors.ink }}
-            >
+            <Text variant="caption" style={chipText(mode === m)}>
               {m === 'list' ? t('explore.list') : t('explore.map')}
             </Text>
           </Pressable>
         ))}
+        <Pressable onPress={toggleNearest} testID="sort-nearest" style={chip(nearest)}>
+          <Text variant="caption" style={chipText(nearest)}>
+            {t('explore.nearest')}
+          </Text>
+        </Pressable>
       </View>
 
       <TextInput
@@ -94,22 +137,35 @@ export function ExploreScreen() {
         }}
       />
 
-      <Pressable
-        onPress={() => setCuratedOnly((v) => !v)}
-        style={[chip(curatedOnly), { alignSelf: 'flex-start', marginBottom: theme.space.md }]}
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: theme.space.sm,
+          marginBottom: theme.space.md,
+        }}
       >
-        <Text
-          variant="caption"
-          style={{ color: curatedOnly ? theme.colors.paper : theme.colors.ink }}
-        >
-          {t('explore.curatedOnly')}
-        </Text>
-      </Pressable>
+        {STATUS.map((s) => (
+          <Pressable
+            key={s}
+            onPress={() => setStatusFilter(s)}
+            testID={`status-${s}`}
+            style={chip(statusFilter === s)}
+          >
+            <Text variant="caption" style={chipText(statusFilter === s)}>
+              {t(`explore.filter_${s}`)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       {mode === 'map' ? (
         <View style={{ height: 420, overflow: 'hidden', borderRadius: theme.radii.sm }}>
-          <ExploreMap places={filtered} onSelect={(id) => router.push(`/explore/${id}` as never)} />
+          <ExploreMap places={sorted} onSelect={(id) => router.push(`/explore/${id}` as never)} />
         </View>
+      ) : nearest ? (
+        // Distance-sorted flat list (city grouping would re-sort by name)
+        sorted.map(renderCard)
       ) : (
         groups.map((g) => (
           <View key={g.city} style={{ marginBottom: theme.space.lg }}>
@@ -119,13 +175,7 @@ export function ExploreScreen() {
             >
               {g.city}
             </Text>
-            {g.places.map((p) => (
-              <PlaceCard
-                key={p.id}
-                place={p}
-                onPress={() => router.push(`/explore/${p.id}` as never)}
-              />
-            ))}
+            {g.places.map(renderCard)}
           </View>
         ))
       )}

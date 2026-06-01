@@ -38,3 +38,12 @@ it('lists seeded places and filters by search', async () => {
   await waitFor(() => expect(screen.queryByText('Starbucks')).toBeNull());
   expect(screen.getByText('Mókuska')).toBeTruthy();
 });
+
+it('filters to curated via the status chip', async () => {
+  const { wrap } = await setup();
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Starbucks')).toBeTruthy());
+  fireEvent.press(screen.getByTestId('status-curated'));
+  await waitFor(() => expect(screen.queryByText('Starbucks')).toBeNull());
+  expect(screen.getByText('Mókuska')).toBeTruthy();
+});
