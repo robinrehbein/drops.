@@ -964,10 +964,9 @@ Replace the icon `Text` (line 32):
       </View>
 ```
 
-- [ ] **Step 2: Find and fix every EmptyState call site**
+- [ ] **Step 2: Confirm call sites (verified: none pass `icon`)**
 
-Run: `rg -n "EmptyState" src app --type tsx -l`
-For each usage that passes `icon="<emoji>"`, replace the emoji with the matching `IconName` (e.g. `icon="☕"` → `icon="cup"`, `icon="📚"` → `icon="book"`, `icon="⚗️"` → `icon="flask"`, `icon="🔧"` → `icon="wrench"`, `icon="📍"` → `icon="pin"`, `icon="🫘"` → `icon="bean"`). Usages that pass no `icon` keep the default.
+Run: `rg -n "icon=" app src --glob '*.tsx'` near `<EmptyState`. **Verified during execution: no `EmptyState` call site passes an `icon=` prop** — all six usages (`pick-bean`, `care/[id]`, `care/index`, `library/index`, `lab/history`, `lab/dialing`) rely on the default. So changing the default to `'cup'` and the prop type to `IconName` requires NO call-site edits. (If a future call site passes `icon="<emoji>"`, map it: ☕→cup, 📚→book, ⚗️→flask, 🔧→wrench, 📍→pin, 🫘→bean.)
 
 - [ ] **Step 3: Replace WeeklyRecapCard star and trend glyphs**
 
@@ -1015,9 +1014,10 @@ Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
+Stage ONLY the two edited files (the working tree has unrelated pre-existing changes — never `git add -A`):
+
 ```bash
 git add src/ui/primitives/EmptyState.tsx src/ui/primitives/WeeklyRecapCard.tsx
-git add -A  # picks up updated EmptyState call sites
 git commit -m "feat(icons): EmptyState IconName prop and WeeklyRecapCard trend/star icons"
 ```
 
