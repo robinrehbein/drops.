@@ -30,6 +30,7 @@ for (const p of list) {
     ...(lat !== undefined ? { lat } : {}),
     ...(lng !== undefined ? { lng } : {}),
     ...(p.website ? { website: p.website } : {}),
+    ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
     ...(p.openingHours ? { openingHours: p.openingHours } : {}),
     ...(Array.isArray(p.tags) ? { tags: p.tags } : {}),
     ...(p.curated ? { curated: true } : {}),
@@ -39,7 +40,7 @@ for (const p of list) {
 
 const out = {
   attribution: '© OpenStreetMap contributors (ODbL)',
-  generatedFor: 'brewlog Explore seed',
+  generatedFor: 'drop Explore seed',
   total: seed.length,
   curatedCount: seed.filter((s) => s.curated).length,
   places: seed,

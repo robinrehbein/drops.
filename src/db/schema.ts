@@ -252,6 +252,7 @@ export const places = sqliteTable(
     lat: real('lat'),
     lng: real('lng'),
     website: text('website'),
+    imageUrl: text('image_url'),
     openingHours: text('opening_hours'),
     tags: text('tags', { mode: 'json' }).$type<string[]>(),
     curated: integer('curated', { mode: 'boolean' }).notNull().default(false),

@@ -22,5 +22,9 @@
   {
     "tag": "0005_square_captain_america",
     "sql": "CREATE TABLE `place_user_data` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`place_id` text NOT NULL,\n\t`wishlisted` integer DEFAULT false NOT NULL,\n\t`visited_at` integer,\n\t`rating` integer,\n\t`notes` text,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\tFOREIGN KEY (`place_id`) REFERENCES `places`(`id`) ON UPDATE no action ON DELETE cascade\n);\n--> statement-breakpoint\nCREATE UNIQUE INDEX `place_user_data_place` ON `place_user_data` (`place_id`);--> statement-breakpoint\nCREATE TABLE `places` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`source` text DEFAULT 'seed' NOT NULL,\n\t`external_id` text,\n\t`name` text NOT NULL,\n\t`kind` text DEFAULT 'cafe' NOT NULL,\n\t`city` text,\n\t`country` text DEFAULT 'DE' NOT NULL,\n\t`address` text,\n\t`lat` real,\n\t`lng` real,\n\t`website` text,\n\t`opening_hours` text,\n\t`tags` text,\n\t`curated` integer DEFAULT false NOT NULL,\n\t`editorial_note` text,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL\n);\n--> statement-breakpoint\nCREATE INDEX `places_city_name` ON `places` (`city`,`name`);--> statement-breakpoint\nCREATE UNIQUE INDEX `places_external_id` ON `places` (`external_id`);--> statement-breakpoint\nCREATE INDEX `places_curated` ON `places` (`curated`,`city`);--> statement-breakpoint\nALTER TABLE `beans` ADD `source_place_id` text;"
+  },
+  {
+    "tag": "0006_places_image_url",
+    "sql": "ALTER TABLE `places` ADD `image_url` text;\n"
   }
 ]

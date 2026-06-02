@@ -16,6 +16,7 @@ export type SeedPlace = {
   lat?: number;
   lng?: number;
   website?: string;
+  imageUrl?: string;
   openingHours?: string;
   tags?: string[];
   curated?: boolean;

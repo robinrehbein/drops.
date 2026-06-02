@@ -20,6 +20,7 @@ type PlaceWhere = ReturnType<typeof and>;
 export type PlacesRepo = {
   addPlace: (input: PlaceInput) => Promise<PlaceRow>;
   getPlace: (id: string) => Promise<PlaceWithUserData | null>;
+  hasSeedPlaces: () => Promise<boolean>;
   listPlaces: () => Promise<PlaceWithUserData[]>;
   listCities: () => Promise<string[]>;
   listWishlist: () => Promise<PlaceWithUserData[]>;
@@ -78,6 +79,7 @@ export function makePlacesRepo(db: Db): PlacesRepo {
         lat: v.value.lat ?? null,
         lng: v.value.lng ?? null,
         website: v.value.website ?? null,
+        imageUrl: null,
         openingHours: null,
         tags: v.value.tags ?? null,
         curated: false,
@@ -92,6 +94,15 @@ export function makePlacesRepo(db: Db): PlacesRepo {
     async getPlace(id) {
       const rows = await rowsWithUserData(and(eq(places.id, id)));
       return rows[0] ?? null;
+    },
+
+    async hasSeedPlaces() {
+      const rows = await db
+        .select()
+        .from(places)
+        .where(eq(places.source, 'seed'))
+        .limit(1);
+      return rows.length > 0;
     },
 
     async listPlaces() {
@@ -166,9 +177,8 @@ export function makePlacesRepo(db: Db): PlacesRepo {
     async upsertSeed(seed) {
       const now = new Date();
       let count = 0;
-      for (const s of seed) {
-        const existing = await db.select().from(places).where(eq(places.externalId, s.osmId));
-        const facts = {
+      function factsForSeed(s: SeedPlace) {
+        return {
           name: s.name,
           kind: s.kind,
           city: s.city ?? null,
@@ -177,24 +187,60 @@ export function makePlacesRepo(db: Db): PlacesRepo {
           lat: s.lat ?? null,
           lng: s.lng ?? null,
           website: s.website ?? null,
+          imageUrl: s.imageUrl ?? null,
           openingHours: s.openingHours ?? null,
           tags: s.tags ?? null,
           curated: s.curated ?? false,
           editorialNote: s.editorialNote ?? null,
           updatedAt: now,
         };
-        if (existing[0]) {
-          await db.update(places).set(facts).where(eq(places.id, existing[0].id));
-        } else {
-          await db.insert(places).values({
-            id: uuid(),
-            source: 'seed',
-            externalId: s.osmId,
-            createdAt: now,
-            ...facts,
-          });
+      }
+      const writeSeedSync = (tx: Db) => {
+        for (const s of seed) {
+          const existing = tx.select().from(places).where(eq(places.externalId, s.osmId)).all();
+          const facts = factsForSeed(s);
+          if (existing[0]) {
+            tx.update(places).set(facts).where(eq(places.id, existing[0].id)).run();
+          } else {
+            tx.insert(places).values({
+              id: uuid(),
+              source: 'seed',
+              externalId: s.osmId,
+              createdAt: now,
+              ...facts,
+            }).run();
+          }
+          count++;
         }
-        count++;
+      };
+      const writeSeedAsync = async (tx: Db) => {
+        for (const s of seed) {
+          const existing = await tx.select().from(places).where(eq(places.externalId, s.osmId));
+          const facts = factsForSeed(s);
+          if (existing[0]) {
+            await tx.update(places).set(facts).where(eq(places.id, existing[0].id));
+          } else {
+            await tx.insert(places).values({
+              id: uuid(),
+              source: 'seed',
+              externalId: s.osmId,
+              createdAt: now,
+              ...facts,
+            });
+          }
+          count++;
+        }
+      };
+      const supportsSyncExecution =
+        typeof db.select().from(places).limit(0).all === 'function';
+      if ('transaction' in db && typeof db.transaction === 'function') {
+        if (supportsSyncExecution) {
+          db.transaction((tx) => writeSeedSync(tx as Db));
+        } else {
+          await db.transaction((tx) => writeSeedAsync(tx as Db));
+        }
+      } else {
+        await writeSeedAsync(db);
       }
       return count;
     },
