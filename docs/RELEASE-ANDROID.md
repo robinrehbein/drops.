@@ -20,18 +20,16 @@ listing, testers) is manual and must be done by the account owner.
    eas login               # interactive — needs your Expo credentials
    eas whoami              # confirm you're on the birneklub account
    ```
-3. **(Build blocker) Sentry sourcemap upload.** `eas.json` production sets
-   `SENTRY_DISABLE_AUTO_UPLOAD=false`, so the build tries to upload sourcemaps and
-   will FAIL without Sentry creds. Choose one:
-   - **Disable for alpha (simplest):** set `"SENTRY_DISABLE_AUTO_UPLOAD": "true"`
-     in `eas.json` → `build.production.env` (crash reports still work; only
-     sourcemap upload is skipped, so stack traces are unminified-less). OR
-   - **Configure it:** add EAS secrets and an org/project:
-     ```bash
-     eas secret:create --scope project --name SENTRY_AUTH_TOKEN --value <token>
-     eas secret:create --scope project --name SENTRY_ORG --value <org-slug>
-     eas secret:create --scope project --name SENTRY_PROJECT --value <project-slug>
-     ```
+3. **Sentry sourcemap upload — already disabled for the alpha.** `eas.json`
+   `build.production.env` now sets `SENTRY_DISABLE_AUTO_UPLOAD=true` (there were no
+   Sentry secrets on the EAS project, so an upload would have failed the build).
+   Crash reporting still works; only sourcemap upload is skipped (stack traces are
+   less symbolicated). To re-enable later, set it back to `"false"` and add secrets:
+   ```bash
+   eas secret:create --scope project --name SENTRY_AUTH_TOKEN --value <token>
+   eas secret:create --scope project --name SENTRY_ORG --value <org-slug>
+   eas secret:create --scope project --name SENTRY_PROJECT --value <project-slug>
+   ```
 
 ---
 

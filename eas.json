@@ -16,12 +16,9 @@
     },
     "production": {
       "credentialsSource": "remote",
-      "autoIncrement": {
-        "versionCode": true,
-        "buildNumber": true
-      },
+      "autoIncrement": true,
       "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "app-bundle"
@@ -39,10 +36,7 @@
         "changesNotSentForReview": false
       },
       "ios": {
-        "ascApiKeyPath": "./.eas/asc-api-key.p8",
-        "appleId": "TODO_FILL_APPLE_ID",
-        "itcTeamId": "TODO_FILL_ITC_TEAM_ID",
-        "appSpecificPassword": "TODO_FILL_APP_SPECIFIC_PASSWORD"
+        "ascApiKeyPath": "./.eas/asc-api-key.p8"
       }
     }
   }
