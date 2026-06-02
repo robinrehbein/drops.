@@ -7,6 +7,10 @@
 
 # Node / Expo (anticipated for the app)
 node_modules/
+# This repo uses npm (package-lock.json + .npmrc legacy-peer-deps). Keep bun's
+# lockfile out so EAS Build doesn't pick bun and break the install phase.
+bun.lock
+bun.lockb
 .expo/
 .expo-shared/
 dist/
