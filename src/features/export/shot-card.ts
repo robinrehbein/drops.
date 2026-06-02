@@ -16,7 +16,7 @@ export type ShotCardInput = {
 function formatShotCard(data: ShotCardInput): string {
   const lines: string[] = [];
 
-  lines.push('☕ BREWLOG');
+  lines.push('☕ DROP');
 
   // Bean name + roaster
   const header = data.roaster
@@ -44,7 +44,7 @@ function formatShotCard(data: ShotCardInput): string {
 
 export async function shareShotCard(data: ShotCardInput): Promise<void> {
   const text = formatShotCard(data);
-  const path = `${FileSystem.cacheDirectory}brewlog-shot-${Date.now()}.txt`;
+  const path = `${FileSystem.cacheDirectory}drop-shot-${Date.now()}.txt`;
 
   await FileSystem.writeAsStringAsync(path, text, { encoding: 'utf8' });
 

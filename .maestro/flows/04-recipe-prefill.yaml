@@ -1,4 +1,4 @@
-appId: com.brewlog.app
+appId: de.birneklub.drop
 name: Recipe prefill from saved shot
 ---
 - launchApp:

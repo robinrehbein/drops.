@@ -21,6 +21,9 @@ coverage/
 *.key
 *.mobileprovision
 
+# EAS credentials (kept local, never committed)
+.eas/
+
 # Env
 .env*.local
 .env
@@ -36,6 +39,16 @@ yarn-error.log*
 
 # Project-local agent/plugin tooling (Pi)
 .pi/
+
+# Kilo Code tooling (local agent workspace with its own node_modules)
+.kilo/
+
+# Web build output
+public/
+
+# Large local research artifacts (kept out of git)
+docs/places-enrichment-research.json
+docs/places-image-search-report.json
 
 # Expo (additional from create-expo-app template)
 expo-env.d.ts

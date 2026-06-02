@@ -27,7 +27,7 @@ describe('exportAllData', () => {
 
     expect(FileSystem.writeAsStringAsync).toHaveBeenCalledTimes(1);
     const [path, contents] = (FileSystem.writeAsStringAsync as jest.Mock).mock.calls[0];
-    expect(path).toMatch(/^\/tmp\/cache\/brewlog-export-/);
+    expect(path).toMatch(/^\/tmp\/cache\/drop-export-/);
     expect(path).toMatch(/\.json$/);
 
     const payload = JSON.parse(contents);
@@ -47,9 +47,9 @@ describe('exportAllData', () => {
     expect(Sharing.isAvailableAsync).toHaveBeenCalledTimes(1);
     expect(Sharing.shareAsync).toHaveBeenCalledTimes(1);
     const [path, options] = (Sharing.shareAsync as jest.Mock).mock.calls[0];
-    expect(path).toMatch(/brewlog-export-.*\.json$/);
+    expect(path).toMatch(/drop-export-.*\.json$/);
     expect(options.mimeType).toBe('application/json');
-    expect(options.dialogTitle).toBe('Export Brewlog Data');
+    expect(options.dialogTitle).toBe('Export Drop Data');
   });
 
   it('skips sharing when share sheet is unavailable', async () => {

@@ -6,7 +6,7 @@
 
 ## 1. Overview
 
-Brewlog captures rich per-shot signal (dose, yield, shot time, pre-infusion, first-drop,
+Drop captures rich per-shot signal (dose, yield, shot time, pre-infusion, first-drop,
 star rating, and five tasting axes) but never translates it into an actionable next step.
 The Dialing screen today is a **passive comparison table** — it shows *what* changed
 between shots but never tells the user *what to do next*.

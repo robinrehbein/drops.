@@ -1,4 +1,4 @@
-# Maestro flows for Brewlog
+# Maestro flows for Drop
 
 Run with `npm run e2e:ios` or `npm run e2e:android` after `npx expo prebuild`
 and a release build.

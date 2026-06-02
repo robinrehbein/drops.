@@ -1,4 +1,4 @@
-# Brewlog — design brief for Google Stitch
+# Drop — design brief for Google Stitch
 
 > A self-contained design prompt you can paste into Google Stitch (or any
 > design-generation tool) to produce screens for the app. Scoped to the
@@ -6,7 +6,7 @@
 
 ## App identity
 
-**Brewlog** is a high-fidelity coffee brewing companion for specialty espresso enthusiasts. It's a **local-first iOS + Android app** built with Expo + React Native. The user is a home barista who pulls 1–5 espresso shots a day and wants to log every variable that affects taste — bean, dose, yield, time, grind, rating, flavor notes — so they can build intuition over time.
+**Drop** is a high-fidelity coffee brewing companion for specialty espresso enthusiasts. It's a **local-first iOS + Android app** built with Expo + React Native. The user is a home barista who pulls 1–5 espresso shots a day and wants to log every variable that affects taste — bean, dose, yield, time, grind, rating, flavor notes — so they can build intuition over time.
 
 Tone: **calm, ritualistic, precise**. Think *barista's leather notebook*, not *tech bro dashboard*. Every screen should feel like a clean place to think.
 
@@ -325,7 +325,7 @@ The most important screen. It's a state machine with three visible modes.
   - `Caffeine target (optional)` → `not set` *(if set, Daily caption gets a "/ Y mg goal" suffix)*
   - `Theme` → `Earthy Forest`
   - `Send diagnostic report` → `↗` (tappable)
-  - `About` → `Brewlog v0.1.0`
+  - `About` → `Drop v0.1.0`
 - `Done` text button at the bottom centered (forest green).
 
 ## Modal 4 — Save Recipe Confirm (slides up from session detail)

@@ -27,14 +27,14 @@ export async function exportAllData(): Promise<void> {
   };
 
   const json = JSON.stringify(payload, null, 2);
-  const path = `${FileSystem.cacheDirectory}brewlog-export-${Date.now()}.json`;
+  const path = `${FileSystem.cacheDirectory}drop-export-${Date.now()}.json`;
 
   await FileSystem.writeAsStringAsync(path, json, { encoding: 'utf8' });
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(path, {
       mimeType: 'application/json',
-      dialogTitle: 'Export Brewlog Data',
+      dialogTitle: 'Export Drop Data',
     });
   }
 }

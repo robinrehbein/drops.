@@ -1,4 +1,4 @@
-# Brewlog — Parallel Implementation Plan
+# Drop — Parallel Implementation Plan
 
 **Date:** 2026-05-08
 **Status:** Planning complete, awaiting prioritization

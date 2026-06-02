@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn Brewlog's passive shot data into one concrete next dialing action ("grind ~2 steps finer"), surfaced in the Lab and Dialing screens, with a one-tap "Repeat last shot" + grind nudge.
+**Goal:** Turn Drop's passive shot data into one concrete next dialing action ("grind ~2 steps finer"), surfaced in the Lab and Dialing screens, with a one-tap "Repeat last shot" + grind nudge.
 
 **Architecture:** All decision logic is pure code in `src/domain/dialing.ts` (target resolution, signal assembly, advice, grind nudge) at 100% coverage. A thin hook in `src/features/dialing/hooks.ts` composes the latest shot, its tasting note, the bean's recipe, and preferences into a `DialingAdvice`. A `CoachCard` primitive renders it. Screens wire the card + repeat/nudge via the existing brew-store `configure` event. A configurable target-time window is added to preferences via a Drizzle migration.
 

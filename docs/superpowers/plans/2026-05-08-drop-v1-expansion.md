@@ -1,4 +1,4 @@
-# Brewlog v1 Expansion Plan — recipes, machines, cups, radar
+# Drop v1 Expansion Plan — recipes, machines, cups, radar
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,9 +8,9 @@
 
 **Tech Stack:** Same as v1 (Expo + React Native + TypeScript, Drizzle ORM + expo-sqlite, Zustand, TanStack Query, Skia, Maestro). No new dependencies expected.
 
-**Spec:** [`docs/superpowers/specs/2026-05-08-brewlog-design.md`](../specs/2026-05-08-brewlog-design.md)
+**Spec:** [`docs/superpowers/specs/2026-05-08-drop-design.md`](../specs/2026-05-08-drop-design.md)
 
-**Original v1 plan:** [`docs/superpowers/plans/2026-05-08-brewlog-v1.md`](2026-05-08-brewlog-v1.md) — referenced for patterns; this expansion follows the same conventions (TDD on `domain/`, repo+hooks+screen layering, explicit `git add`, Co-Authored-By trailer).
+**Original v1 plan:** [`docs/superpowers/plans/2026-05-08-drop-v1.md`](2026-05-08-drop-v1.md) — referenced for patterns; this expansion follows the same conventions (TDD on `domain/`, repo+hooks+screen layering, explicit `git add`, Co-Authored-By trailer).
 
 ---
 

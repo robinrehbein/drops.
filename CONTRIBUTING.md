@@ -1,4 +1,4 @@
-# Contributing to Brewlog
+# Contributing to Drop
 
 Thanks for your interest in contributing! 🫘
 

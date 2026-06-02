@@ -1,4 +1,4 @@
-# Brewlog — v1 Design Spec
+# Drop — v1 Design Spec
 
 **Status:** Approved (brainstorming complete, awaiting implementation plan)
 **Date:** 2026-05-08
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Brewlog is the digital version of a serious home barista's paper notebook — a lifetime archive of every bean ever tasted, with the dialed-in recipe locked in beside it, and the daily reality of the machine that brews them all. It treats brewing as a daily ritual: a tactile, sensory practice supported by precise data. v1 covers all four conceptual pillars in service of the paper-notebook test (*if it's not on the page in front of a barista dialing in a shot, it doesn't belong in v1*).
+Drop is the digital version of a serious home barista's paper notebook — a lifetime archive of every bean ever tasted, with the dialed-in recipe locked in beside it, and the daily reality of the machine that brews them all. It treats brewing as a daily ritual: a tactile, sensory practice supported by precise data. v1 covers all four conceptual pillars in service of the paper-notebook test (*if it's not on the page in front of a barista dialing in a shot, it doesn't belong in v1*).
 
 ### Conceptual pillars (all in v1)
 
@@ -19,7 +19,7 @@ Brewlog is the digital version of a serious home barista's paper notebook — a 
 
 ### Vision in one sentence
 
-> Brewlog is the leather notebook by the espresso machine — the place where you remember the great shots, dial in the new beans, and never let the filter go stale.
+> Drop is the leather notebook by the espresso machine — the place where you remember the great shots, dial in the new beans, and never let the filter go stale.
 
 ### Audience
 
@@ -33,7 +33,7 @@ Specialty coffee enthusiasts running real machines + grinders. v1 targets the **
 
 | Decision | Choice |
 |---|---|
-| Product name | **Brewlog** |
+| Product name | **Drop** |
 | Target | Real product — App Store and Play Store, after personal use validates v1 |
 | Stack | Expo + React Native + TypeScript |
 | v1 scope | **All four pillars** — Brew Lab + Bean Library (lifetime archive + recipes) + Daily Brew + Maintenance |
@@ -461,9 +461,9 @@ shadow-opacity: 1; elevation: 4 (Android)
 | **Input validation** (zod) | Inline field caption | Red caption under field; submit disabled until clean. Never modal. |
 | **DB write fails during a brew** (`INSERT brew_sessions` on tap Start) | Stays in `IdleSetup`; blocking dialog | "Couldn't start the shot — your data is safe but storage isn't responding. Try again?" |
 | **DB write fails outside a brew** (saving a bean) | Toast + retry | Optimistic write rolled back; user retries. |
-| **Schema mismatch on launch** (corrupted DB, downgrade) | Recovery screen, not crash | "Brewlog needs to rebuild its data. [Restore from device backup] or [Start fresh]." |
+| **Schema mismatch on launch** (corrupted DB, downgrade) | Recovery screen, not crash | "Drop needs to rebuild its data. [Restore from device backup] or [Start fresh]." |
 | **OS lifecycle interruption** | Handled by state machine | Wall-clock timer + persisted session row + Recovering banner on relaunch. |
-| **Unhandled JS error** | Error boundary at `_layout.tsx` | Friendly fallback with "Reload Brewlog"; Sentry receives the stack. |
+| **Unhandled JS error** | Error boundary at `_layout.tsx` | Friendly fallback with "Reload Drop"; Sentry receives the stack. |
 
 ### Codebase rules
 

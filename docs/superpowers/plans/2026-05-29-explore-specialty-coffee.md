@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a 5th "Explore" tab to Brewlog for discovering specialty coffee places (curated OSM seed + user-added), with a personal layer (wishlist / visited / rating / notes) and a link from beans to their source place, including a real in-app map.
+**Goal:** Add a 5th "Explore" tab to Drop for discovering specialty coffee places (curated OSM seed + user-added), with a personal layer (wishlist / visited / rating / notes) and a link from beans to their source place, including a real in-app map.
 
 **Architecture:** Two new tables — `places` (seed + user rows, unified) and `place_user_data` (personal overlay, separate so re-seeding is loss-free) — plus a `beans.source_place_id` column. Pure domain functions (`src/domain/places.ts`) drive filtering/sorting/grouping/stats; a feature repo+hooks layer (`src/features/places/`) mirrors the existing beans pattern; a bundled JSON seed is upserted once on first launch by `external_id`. Screens live under `app/(tabs)/explore/` using `react-native-maps`.
 
@@ -48,7 +48,7 @@ In `app.json`, inside the `expo` object add (merge with existing keys; do not re
   "expo-router",
   [
     "expo-location",
-    { "locationWhenInUsePermission": "Brewlog uses your location to find specialty coffee near you." }
+    { "locationWhenInUsePermission": "Drop uses your location to find specialty coffee near you." }
   ]
 ]
 ```
@@ -1154,7 +1154,7 @@ for (const p of list) {
 
 const out = {
   attribution: '© OpenStreetMap contributors (ODbL)',
-  generatedFor: 'brewlog Explore seed',
+  generatedFor: 'drop Explore seed',
   total: seed.length,
   curatedCount: seed.filter((s) => s.curated).length,
   places: seed,
@@ -1172,7 +1172,7 @@ Expected: prints `Wrote N places (8 curated) → .../places.seed.json` and the f
 
 > If `/tmp/stuttgart-curated.json` is gone, create a 2-entry fallback by writing `src/features/places/seed/places.seed.json` directly:
 > ```json
-> { "attribution": "© OpenStreetMap contributors (ODbL)", "generatedFor": "brewlog Explore seed", "total": 2, "curatedCount": 2,
+> { "attribution": "© OpenStreetMap contributors (ODbL)", "generatedFor": "drop Explore seed", "total": 2, "curatedCount": 2,
 >   "places": [
 >     { "osmId": "n1", "name": "Mókuska Kaffeerösterei", "kind": "cafe", "city": "Stuttgart", "address": "Johannesstr. 34", "lat": 48.769, "lng": 9.165, "curated": true, "editorialNote": "Specialty pioneer" },
 >     { "osmId": "n2", "name": "Kaffeerakete", "kind": "coffee_shop", "city": "Stuttgart", "lat": 48.772, "lng": 9.16, "curated": true, "editorialNote": "Filter + espresso" }

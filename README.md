@@ -1,4 +1,4 @@
-# Brewlog
+# Drop
 
 A high-fidelity coffee brewing companion for specialty coffee enthusiasts. Local-first, privacy-respecting, designed around the daily ritual of pulling a clean espresso shot.
 
@@ -27,4 +27,4 @@ Expo SDK 54 · Expo Router · TypeScript strict · Drizzle ORM + expo-sqlite · 
 
 ## Design
 
-See [`docs/superpowers/specs/2026-05-08-brewlog-design.md`](docs/superpowers/specs/2026-05-08-brewlog-design.md) for the v1 design spec, and [`docs/superpowers/plans/2026-05-08-brewlog-v1.md`](docs/superpowers/plans/2026-05-08-brewlog-v1.md) for the implementation plan.
+See [`docs/superpowers/specs/2026-05-08-drop-design.md`](docs/superpowers/specs/2026-05-08-drop-design.md) for the v1 design spec, and [`docs/superpowers/plans/2026-05-08-drop-v1.md`](docs/superpowers/plans/2026-05-08-drop-v1.md) for the implementation plan.

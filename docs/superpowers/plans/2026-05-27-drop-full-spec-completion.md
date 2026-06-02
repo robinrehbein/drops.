@@ -1,8 +1,8 @@
-# Brewlog Full-Spec Completion Implementation Plan
+# Drop Full-Spec Completion Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the gap between the shipped Brewlog code and the approved v1 spec (`docs/superpowers/specs/2026-05-08-brewlog-design.md`) — add per-bean **recipes**, the **Care/Maintenance** pillar (machines + tasks + logs + Care tab), **bean lifecycle** (status / would-buy-again / finished), the **sensory radar**, and the **daily-cups** widget.
+**Goal:** Close the gap between the shipped Drop code and the approved v1 spec (`docs/superpowers/specs/2026-05-08-drop-design.md`) — add per-bean **recipes**, the **Care/Maintenance** pillar (machines + tasks + logs + Care tab), **bean lifecycle** (status / would-buy-again / finished), the **sensory radar**, and the **daily-cups** widget.
 
 **Architecture:** Existing layered Expo + RN + TS app. Pure `src/domain/` (validators + math, 100% covered) → `src/db/` (Drizzle + expo-sqlite, migration-bundle pattern) → `src/features/<x>/repo.ts` factory + `hooks.ts` (TanStack Query) → `app/` Expo Router screens + `src/ui/` bespoke primitives. New work follows these exact patterns — no new libraries.
 
@@ -10,7 +10,7 @@
 
 ---
 
-## VERIFICATION GATES (run after EVERY task — from project memory `brewlog-execution-gotchas`)
+## VERIFICATION GATES (run after EVERY task — from project memory `drop-execution-gotchas`)
 
 1. `npm run typecheck` — must pass (catches zod-4 `PropertyKey[]` symbol bleed; `exactOptionalPropertyTypes` null/undefined drift).
 2. `npm test` — FULL suite, never `--passWithNoTests`.
@@ -614,7 +614,7 @@ Screens compose hooks + primitives. Each screen task: build screen, add a compon
 ### Task 23: Update project memory + plan checkboxes
 
 - [ ] Tick all completed checkboxes in this plan.
-- [ ] Note in `brewlog-project.md` memory that full-spec pillars (recipes, Care, lifecycle, radar, cups) are now implemented.
+- [ ] Note in `drop-project.md` memory that full-spec pillars (recipes, Care, lifecycle, radar, cups) are now implemented.
 
 ---
 

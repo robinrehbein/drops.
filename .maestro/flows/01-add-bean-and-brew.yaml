@@ -1,4 +1,4 @@
-appId: com.brewlog.app
+appId: de.birneklub.drop
 name: Add a bean and brew an espresso
 ---
 - launchApp:

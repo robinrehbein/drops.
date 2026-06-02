@@ -15,19 +15,34 @@
       }
     },
     "production": {
-      "autoIncrement": true,
+      "credentialsSource": "remote",
+      "autoIncrement": {
+        "versionCode": true,
+        "buildNumber": true
+      },
       "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
       },
       "android": {
         "buildType": "app-bundle"
+      },
+      "ios": {
+        "applicationArchivePath": "build/Drop.ipa"
       }
     }
   },
   "submit": {
     "production": {
       "android": {
-        "track": "internal"
+        "track": "internal",
+        "serviceAccountKeyPath": "./.eas/play-service-account.json",
+        "changesNotSentForReview": false
+      },
+      "ios": {
+        "ascApiKeyPath": "./.eas/asc-api-key.p8",
+        "appleId": "TODO_FILL_APPLE_ID",
+        "itcTeamId": "TODO_FILL_ITC_TEAM_ID",
+        "appSpecificPassword": "TODO_FILL_APP_SPECIFIC_PASSWORD"
       }
     }
   }

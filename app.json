@@ -1,23 +1,38 @@
 {
   "expo": {
-    "name": "Brewlog",
-    "slug": "brewlog",
-    "scheme": "brewlog",
+    "name": "Drop",
+    "slug": "drop",
+    "scheme": "drop",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/drop-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "de.birneklub.brewlog",
-      "supportsTablet": false
+      "bundleIdentifier": "de.birneklub.drop",
+      "supportsTablet": false,
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Drop uses your location to find specialty coffee near you.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleAllowMixedLocalizations": false
+      }
     },
     "android": {
-      "package": "de.birneklub.brewlog",
-      "config": {
-        "googleMaps": {
-          "apiKey": "REPLACE_WITH_ANDROID_MAPS_API_KEY"
-        }
+      "package": "de.birneklub.drop",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/drop-icon.png",
+        "backgroundColor": "#F6EAD4"
       }
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F6EAD4"
+    },
+    "privacy": "https://robinrehbein.de/drop/privacy",
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "plugins": [
       [
@@ -37,10 +52,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Brewlog uses your location to find specialty coffee near you."
+          "locationWhenInUsePermission": "Drop uses your location to find specialty coffee near you."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true

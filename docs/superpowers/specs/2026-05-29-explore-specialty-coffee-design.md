@@ -8,9 +8,9 @@
 
 ## 1. Overview
 
-Explore is a new fifth pillar for Brewlog: a way to **discover specialty coffee places** — espresso-bar ("Siebträger") focused cafés and roasters with genuinely good coffee and nice ambiance — across cities, and to keep a **personal layer** on top of them: a wishlist of places to visit, a "visited" passport with dates, personal ratings and notes, and a link back to the beans you bought there.
+Explore is a new fifth pillar for Drop: a way to **discover specialty coffee places** — espresso-bar ("Siebträger") focused cafés and roasters with genuinely good coffee and nice ambiance — across cities, and to keep a **personal layer** on top of them: a wishlist of places to visit, a "visited" passport with dates, personal ratings and notes, and a link back to the beans you bought there.
 
-It is inspired by *European Coffee Trip* (a curated specialty-café directory) for its **feature shape only**. The **data** comes from a source Brewlog can ship legally: **OpenStreetMap** (factual data — names, addresses, coordinates, opening hours; licensed under **ODbL**, attribution "© OpenStreetMap contributors"), cross-referenced against public editorial guides to flag the genuinely-specialty spots. Brewlog never scrapes or bundles a commercial competitor's curated database.
+It is inspired by *European Coffee Trip* (a curated specialty-café directory) for its **feature shape only**. The **data** comes from a source Drop can ship legally: **OpenStreetMap** (factual data — names, addresses, coordinates, opening hours; licensed under **ODbL**, attribution "© OpenStreetMap contributors"), cross-referenced against public editorial guides to flag the genuinely-specialty spots. Drop never scrapes or bundles a commercial competitor's curated database.
 
 ### Vision in one sentence
 
@@ -18,7 +18,7 @@ It is inspired by *European Coffee Trip* (a curated specialty-café directory) f
 
 ### How it fits the product
 
-Brewlog tracks *your* brewing (Daily, Library, Lab, Care). Explore is the one pillar that looks **outward** — at places out in the world — while staying **local-first**: the directory is a bundled, read-only seed; everything personal lives in SQLite and never leaves the device.
+Drop tracks *your* brewing (Daily, Library, Lab, Care). Explore is the one pillar that looks **outward** — at places out in the world — while staying **local-first**: the directory is a bundled, read-only seed; everything personal lives in SQLite and never leaves the device.
 
 ### Locked decisions
 
@@ -153,7 +153,7 @@ The Stuttgart curated set already produced (`/tmp/stuttgart-curated.json`) is th
   - Screen smoke tests with mocked map + location.
   - (Optional) Maestro E2E: open Explore → search → add to wishlist → mark visited.
 
-### Execution gates (from prior Brewlog drift)
+### Execution gates (from prior Drop drift)
 
 `jest@^29` (not 30) · `.npmrc legacy-peer-deps=true` · `npm run typecheck` as a gate, not just tests · keep `src/domain/**` at 100% after any domain change · native map/location modules mocked under `__mocks__/` and wired via the jest preset (mind `setupFiles` vs `setupFilesAfterEnv`).
 
@@ -173,4 +173,4 @@ The Stuttgart curated set already produced (`/tmp/stuttgart-curated.json`) is th
 
 - Factual fields (name, address, coords, hours) originate from **OpenStreetMap** under **ODbL** — in-app attribution is mandatory and included.
 - `editorialNote` values are **short summaries** of publicly available coffee guides used only to *flag* likely-specialty spots — not verbatim reproductions.
-- Brewlog does **not** extract, scrape, or bundle European Coffee Trip's (or any single commercial provider's) curated database — that selection is protected as an EU sui-generis database right.
+- Drop does **not** extract, scrape, or bundle European Coffee Trip's (or any single commercial provider's) curated database — that selection is protected as an EU sui-generis database right.

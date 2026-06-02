@@ -44,7 +44,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       reset: () => set({ completed: false, step: 0 }),
     }),
     {
-      name: 'brewlog-onboarding',
+      name: 'drop-onboarding',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),
@@ -59,7 +59,7 @@ Step 0: Welcome
 │                                         │
 │           ☕ (illustration)              │
 │                                         │
-│        Welcome to Brewlog               │
+│        Welcome to Drop               │
 │                                         │
 │   Your private espresso journal.        │
 │   No accounts. No cloud. Just coffee.   │
@@ -171,7 +171,7 @@ The card should be a ~400×500px image with the Earthy Forest aesthetic:
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
-│  BREWLOG                    ⚗️          │
+│  DROP                    ⚗️          │
 │  ─────────────────────────────          │
 │                                         │
 │  Ethiopia Yirgacheffe                   │

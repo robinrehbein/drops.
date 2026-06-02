@@ -162,7 +162,7 @@ export default function Settings() {
         <Row label="Send diagnostic report" value="↗" />
 
         {/* About */}
-        <Row label="About" value={`Brewlog v${appJson.expo.version}`} />
+        <Row label="About" value={`Drop v${appJson.expo.version}`} />
       </ScrollView>
       {/* ...Done button... */}
     </Sheet>
@@ -340,14 +340,14 @@ export async function exportAllData(): Promise<void> {
   };
 
   const json = JSON.stringify(payload, null, 2);
-  const path = `${FileSystem.cacheDirectory}brewlog-export-${Date.now()}.json`;
+  const path = `${FileSystem.cacheDirectory}drop-export-${Date.now()}.json`;
 
   await FileSystem.writeAsStringAsync(path, json, { encoding: FileSystem.EncodingType.UTF8 });
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(path, {
       mimeType: 'application/json',
-      dialogTitle: 'Export Brewlog Data',
+      dialogTitle: 'Export Drop Data',
     });
   }
 }

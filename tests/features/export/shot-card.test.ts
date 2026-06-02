@@ -34,11 +34,11 @@ describe('shareShotCard', () => {
 
     expect(FileSystem.writeAsStringAsync).toHaveBeenCalledTimes(1);
     const [path, contents] = (FileSystem.writeAsStringAsync as jest.Mock).mock.calls[0];
-    expect(path).toMatch(/^\/tmp\/cache\/brewlog-shot-/);
+    expect(path).toMatch(/^\/tmp\/cache\/drop-shot-/);
     expect(path).toMatch(/\.txt$/);
 
     // Verify text card format
-    expect(contents).toContain('☕ BREWLOG');
+    expect(contents).toContain('☕ DROP');
     expect(contents).toContain('Ethiopia Yirgacheffe · Onyx Coffee Lab');
     expect(contents).toContain('18.0g dose · 36.0g yield · 1:2.00');
     expect(contents).toContain('27.4s · ★★★★');
