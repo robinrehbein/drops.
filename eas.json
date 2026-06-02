@@ -32,6 +32,7 @@
     "production": {
       "android": {
         "track": "alpha",
+        "releaseStatus": "draft",
         "serviceAccountKeyPath": "./.eas/play-service-account.json",
         "changesNotSentForReview": false
       },
