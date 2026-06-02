@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           <Text variant="caption" align="center" style={{ marginVertical: 12 }}>
             {this.state.error.message}
           </Text>
-          <Pill label="Reload Brewlog" onPress={this.reset} />
+          <Pill label="Reload Drop" onPress={this.reset} />
         </View>
       );
     }

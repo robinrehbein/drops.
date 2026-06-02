@@ -32,6 +32,15 @@ export default function LibraryIndex() {
         rightLabel="+ Add"
         onRightPress={() => router.push('/library/new' as never)}
       />
+      {/* Shot history entry */}
+      <View style={{ paddingHorizontal: t.space.lg, paddingTop: t.space.md }}>
+        <Pill
+          label="Shot history"
+          variant="ghost"
+          onPress={() => router.push('/lab/history' as never)}
+          style={{ alignSelf: 'flex-start' }}
+        />
+      </View>
       {/* Filter chips */}
       <View style={{ flexDirection: 'row', paddingHorizontal: t.space.lg, paddingTop: t.space.sm, gap: t.space.sm }}>
         {FILTERS.map((f) => (

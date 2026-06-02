@@ -1,4 +1,10 @@
-import { Camera, type CameraRef, Map, type MapProps } from '@maplibre/maplibre-react-native';
+import {
+  Camera,
+  type CameraRef,
+  Map,
+  type MapProps,
+  type MapRef,
+} from '@maplibre/maplibre-react-native';
 import type { ReactNode, Ref } from 'react';
 
 import type { LatLng } from '@/domain/places';
@@ -15,6 +21,8 @@ type BaseMapProps = {
   onPressCoord?: (coord: LatLng) => void;
   /** Imperative camera handle for flyTo/easeTo from the parent. */
   cameraRef?: Ref<CameraRef> | undefined;
+  /** Imperative map handle (e.g. getZoom) for the parent's zoom controls. */
+  mapRef?: Ref<MapRef> | undefined;
   /** Show + track the user's location dot. */
   trackUserLocation?: boolean;
   testID: string;
@@ -32,6 +40,7 @@ export function BaseMap({
   interactive = true,
   onPressCoord,
   cameraRef,
+  mapRef,
   trackUserLocation = false,
   testID,
   children,
@@ -52,9 +61,13 @@ export function BaseMap({
     ...(cameraRef ? { ref: cameraRef } : {}),
     ...(trackUserLocation ? { trackUserLocation: 'default' as const } : {}),
   };
+  // Forward the map ref only when provided (exactOptionalPropertyTypes forbids
+  // passing an explicit `undefined` ref).
+  const mapRefProp = mapRef ? { ref: mapRef } : {};
   return (
     <Map
       style={{ flex: 1 }}
+      {...mapRefProp}
       testID={testID}
       mapStyle={OSM_STYLE}
       logo={false}

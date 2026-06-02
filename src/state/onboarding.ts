@@ -8,7 +8,7 @@ type OnboardingState = {
   reset: () => void;
 };
 
-const STORAGE_KEY = 'brewlog_onboarding_completed';
+const STORAGE_KEY = 'drop_onboarding_completed';
 
 function readStored(): boolean {
   try {

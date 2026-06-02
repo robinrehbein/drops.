@@ -12,7 +12,7 @@ describe('Text', () => {
   });
 
   it('applies the title variant style', () => {
-    render(wrap(<Text variant="title" testID="t">Brewlog</Text>));
+    render(wrap(<Text variant="title" testID="t">Drop</Text>));
     const el = screen.getByTestId('t');
     expect(el.props.style).toEqual(expect.objectContaining({ fontSize: 24 }));
   });

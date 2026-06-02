@@ -2,6 +2,7 @@
 jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
 // Reanimated's Jest implementation runs animation worklets on the JS thread.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require('react-native-reanimated').setUpTests();
 
 // expo-font's useFonts never resolves in jest because the native font loader is

@@ -1,5 +1,5 @@
 {
-  "app": { "name": "Brewlog" },
+  "app": { "name": "Drop" },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -9,11 +9,18 @@
   },
   "explore": {
     "title": "Explore",
-    "searchPlaceholder": "Search cafés…",
+    "searchPlaceholder": "Search cafés, roasters, cities…",
     "curatedOnly": "Curated only",
     "list": "List",
     "map": "Map",
     "nearest": "Nearest",
+    "nearMe": "Near me",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "locationDeniedTitle": "Location access needed",
+    "locationDeniedBody": "Enable location for Drop in Settings to centre the map on where you are.",
+    "locationErrorTitle": "Couldn’t get your location",
+    "locationErrorBody": "We couldn’t read your position right now. Check that location services are on and try again.",
     "filter_all": "All",
     "filter_curated": "Curated",
     "filter_wishlist": "Wishlist",
@@ -38,6 +45,8 @@
     "openInMaps": "Open in maps",
     "source": "Source",
     "attribution": "© OpenStreetMap contributors (ODbL)",
+    "sortDistance": "Nearest",
+    "sortName": "A–Z",
     "statLine": "{{visited}} visited · {{wishlist}} wishlist"
   }
 }

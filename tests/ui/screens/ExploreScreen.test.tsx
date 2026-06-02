@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import * as Location from 'expo-location';
 import type { ReactNode } from 'react';
+import { Alert } from 'react-native';
 
 import { RepoProvider } from '@/features/_provider/RepoProvider';
 import { makePlacesRepo } from '@/features/places/repo';
@@ -82,4 +84,72 @@ it('opens the detail sheet when a map marker is tapped', async () => {
   expect(screen.queryByTestId('toggle-wishlist')).toBeNull();
   fireEvent.press(screen.getAllByTestId('map-marker')[0]);
   await waitFor(() => expect(screen.getByTestId('toggle-wishlist')).toBeTruthy());
+});
+
+it('shows map zoom controls above the follow-me button', async () => {
+  const { wrap } = await setup();
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Mókuska')).toBeTruthy());
+
+  expect(screen.getByTestId('map-zoom-in')).toBeTruthy();
+  expect(screen.getByTestId('map-zoom-out')).toBeTruthy();
+  expect(screen.getByTestId('sort-nearest')).toBeTruthy();
+});
+
+it('alerts (instead of failing silently) when location permission is denied', async () => {
+  const { wrap } = await setup();
+  (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+    status: 'denied',
+  });
+  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Mókuska')).toBeTruthy());
+
+  fireEvent.press(screen.getByTestId('sort-nearest'));
+
+  await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+  // No user-location puck when we never got a fix.
+  expect(screen.queryByTestId('user-location')).toBeNull();
+  alertSpy.mockRestore();
+});
+
+it('shows the user-location puck and never alerts when permission is granted', async () => {
+  const { wrap } = await setup();
+  (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+    status: 'granted',
+  });
+  (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({
+    coords: { latitude: 48.775, longitude: 9.185 },
+  });
+  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Mókuska')).toBeTruthy());
+
+  fireEvent.press(screen.getByTestId('sort-nearest'));
+
+  await waitFor(() => expect(screen.getByTestId('user-location')).toBeTruthy());
+  expect(alertSpy).not.toHaveBeenCalled();
+  alertSpy.mockRestore();
+});
+
+it('falls back to the last known position when a fresh fix fails (emulator/cold GPS)', async () => {
+  const { wrap } = await setup();
+  (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+    status: 'granted',
+  });
+  (Location.getCurrentPositionAsync as jest.Mock).mockRejectedValueOnce(
+    new Error('location unavailable'),
+  );
+  (Location.getLastKnownPositionAsync as jest.Mock).mockResolvedValueOnce({
+    coords: { latitude: 50.776, longitude: 6.083 },
+  });
+  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Mókuska')).toBeTruthy());
+
+  fireEvent.press(screen.getByTestId('sort-nearest'));
+
+  await waitFor(() => expect(screen.getByTestId('user-location')).toBeTruthy());
+  expect(alertSpy).not.toHaveBeenCalled();
+  alertSpy.mockRestore();
 });

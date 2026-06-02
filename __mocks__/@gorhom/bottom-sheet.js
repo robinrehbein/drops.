@@ -3,7 +3,7 @@
 // content stays queryable. The modal renders children (open or not) so detail
 // content is testable once mounted.
 const React = require('react');
-const { View, ScrollView, TouchableOpacity } = require('react-native');
+const { View, ScrollView, FlatList, TouchableOpacity } = require('react-native');
 
 const Passthrough = ({ children, testID }) => React.createElement(View, { testID }, children);
 const Scroll = ({ children, testID }) => React.createElement(ScrollView, { testID }, children);
@@ -13,6 +13,7 @@ const BottomSheetModal = Passthrough;
 const BottomSheetModalProvider = ({ children }) => React.createElement(View, null, children);
 const BottomSheetView = Passthrough;
 const BottomSheetScrollView = Scroll;
+const BottomSheetFlatList = FlatList;
 const BottomSheetBackdrop = () => null;
 
 module.exports = {
@@ -23,6 +24,7 @@ module.exports = {
   BottomSheetModalProvider,
   BottomSheetView,
   BottomSheetScrollView,
+  BottomSheetFlatList,
   BottomSheetBackdrop,
   TouchableOpacity,
 };

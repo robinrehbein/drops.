@@ -12,5 +12,14 @@ const Marker = ({ children, testID, onPress }) =>
 const ViewAnnotation = ({ children, testID }) =>
   React.createElement(View, { testID }, children);
 const Callout = ({ children }) => React.createElement(View, null, children);
+const UserLocation = () => React.createElement(View, { testID: 'user-location' });
 
-module.exports = { __esModule: true, Map, Camera, Marker, ViewAnnotation, Callout };
+module.exports = {
+  __esModule: true,
+  Map,
+  Camera,
+  Marker,
+  ViewAnnotation,
+  Callout,
+  UserLocation,
+};

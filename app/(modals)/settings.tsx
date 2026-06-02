@@ -38,10 +38,10 @@ export default function Settings() {
 
   const sendReport = async () => {
     const text = exportDebugLog();
-    const path = `${FileSystem.cacheDirectory}brewlog-debug.txt`;
+    const path = `${FileSystem.cacheDirectory}drop-debug.txt`;
     await FileSystem.writeAsStringAsync(path, text);
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(path, { mimeType: 'text/plain', dialogTitle: 'Brewlog debug log' });
+      await Sharing.shareAsync(path, { mimeType: 'text/plain', dialogTitle: 'Drop debug log' });
     }
   };
 
@@ -150,6 +150,17 @@ export default function Settings() {
         ) : null}
 
         <Text variant="label" style={{ marginTop: t.space.md }}>MACHINE</Text>
+        <Surface bg="paperDeep" padding="md" radius="md" bordered>
+          <Pressable
+            onPress={() => router.push('/care' as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Machines"
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <Text variant="body">Machines</Text>
+            <Text variant="caption" color={t.colors.forest}>›</Text>
+          </Pressable>
+        </Surface>
         <Surface bg="paper" padding="md" radius="md" bordered>
         <Stepper
           label="Tank capacity"
@@ -226,7 +237,7 @@ export default function Settings() {
         <Row label="Theme" value="Earthy Forest" />
         <Row label="Send diagnostic report" value="↗" onPress={sendReport} />
         <Row label="Export all data (JSON)" value="↗" onPress={async () => { try { await exportAllData(); } catch { /* cancelled */ } }} />
-        <Row label="About" value={`Brewlog v${appJson.expo.version}`} />
+        <Row label="About" value={`Drop v${appJson.expo.version}`} />
       </ScrollView>
       <Pressable onPress={() => router.back()} style={{ alignItems: 'center', padding: t.space.md, marginTop: t.space.lg }}>
         <Text variant="bodyStrong" color={t.colors.forest}>Done</Text>
