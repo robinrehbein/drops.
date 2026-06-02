@@ -20,6 +20,9 @@ it('ships only concrete non-generic image urls for imaged seed places', () => {
   ]);
   const generic = seedData.places.filter((p) => p.imageUrl && genericFallbacks.has(p.imageUrl));
   const invalid = seedData.places.filter((p) => p.imageUrl && !/^https?:\/\//.test(p.imageUrl));
+  // Plain http:// is blocked by iOS App Transport Security — require https.
+  const insecure = seedData.places.filter((p) => p.imageUrl && p.imageUrl.startsWith('http://'));
   expect(generic).toEqual([]);
   expect(invalid).toEqual([]);
+  expect(insecure).toEqual([]);
 });

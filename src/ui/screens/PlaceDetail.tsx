@@ -1,6 +1,6 @@
 import { Marker } from '@maplibre/maplibre-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Linking, Platform, Pressable, TextInput, View } from 'react-native';
 
@@ -33,6 +33,10 @@ export function PlaceDetail({ id }: { id: string }) {
   const setUserData = useSetUserData();
   const { data: linkedBeans = [] } = useBeansBySourcePlace(id);
   const [showPicker, setShowPicker] = useState(false);
+  // Hide the hero banner if the remote image fails to load, not only when it's
+  // absent. Reset when the shown place changes (the sheet reuses this component).
+  const [heroFailed, setHeroFailed] = useState(false);
+  useEffect(() => setHeroFailed(false), [place?.imageUrl]);
   if (!place) return null;
 
   const onWishlist = !!place.userData?.wishlisted;
@@ -85,11 +89,12 @@ export function PlaceDetail({ id }: { id: string }) {
   return (
     <View style={{ gap: theme.space.sm }}>
       {/* Peek zone: identity + quick actions */}
-      {place.imageUrl ? (
+      {place.imageUrl && !heroFailed ? (
         <Image
           source={{ uri: place.imageUrl }}
           accessibilityIgnoresInvertColors
           resizeMode="cover"
+          onError={() => setHeroFailed(true)}
           style={{
             width: '100%',
             height: 180,

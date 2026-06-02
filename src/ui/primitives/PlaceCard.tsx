@@ -1,4 +1,5 @@
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
+import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 
 import { placeStatus } from '@/domain/places';
@@ -21,6 +22,11 @@ const KIND_MARK: Record<string, string> = {
 
 export function PlaceCard({ place, onPress }: { place: PlaceWithUserData; onPress: () => void }) {
   const t = useTheme();
+  // Fall back to the letter badge if the remote image fails to load (404,
+  // hotlink-blocked, etc.) — not just when imageUrl is null. Reset on url
+  // change so recycled list rows don't inherit a stale failure.
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => setImageFailed(false), [place.imageUrl]);
   const status = placeStatus(place.userData);
   const kindLabel = KIND_LABEL[place.kind] ?? place.kind;
   const locationLabel = [kindLabel, place.city].filter(Boolean).join(' · ');
@@ -53,11 +59,13 @@ export function PlaceCard({ place, onPress }: { place: PlaceWithUserData; onPres
           overflow: 'hidden',
         }}
       >
-        {place.imageUrl ? (
+        {place.imageUrl && !imageFailed ? (
           <Image
             source={{ uri: place.imageUrl }}
             accessibilityIgnoresInvertColors
             resizeMode="cover"
+            onError={() => setImageFailed(true)}
+            testID="place-image"
             style={{ width: '100%', height: '100%' }}
           />
         ) : (
