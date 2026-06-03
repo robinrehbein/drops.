@@ -16,7 +16,7 @@ export type ShotCardInput = {
 function formatShotCard(data: ShotCardInput): string {
   const lines: string[] = [];
 
-  lines.push('☕ DROP');
+  lines.push('☕ DROPS');
 
   // Bean name + roaster
   const header = data.roaster

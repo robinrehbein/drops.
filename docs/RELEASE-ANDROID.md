@@ -1,6 +1,6 @@
-# Drop — Android Closed Alpha Release Runbook
+# Drops — Android Closed Alpha Release Runbook
 
-Goal: ship **Drop** to a **Google Play closed testing ("alpha") track** for a closed
+Goal: ship **Drops** to a **Google Play closed testing ("alpha") track** for a closed
 group of invited testers. This is a closed alpha — not public, not production.
 
 App identity: package `de.birneklub.drop`, Expo owner `birneklub`,
@@ -52,7 +52,7 @@ APK you can sideload before committing to a store upload.
 ## 2. Create the app in Play Console (manual, web UI)
 
 In https://play.google.com/console → **Create app**:
-- App name: **Drop**, default language, type **App**, **Free**.
+- App name: **Drops**, default language, type **App**, **Free**.
 - Then complete the required "Set up your app" items (all gate a closed test going live):
   - **App access** (any login required? no → all functionality available).
   - **Content rating** (IARC questionnaire).
@@ -101,7 +101,7 @@ Play Console → **Testing → Closed testing** → the **Alpha** track:
 2. **Releases** → your submitted build appears → **Create release** → review → **Roll out**.
 3. Google reviews the first closed release (typically hours, up to a couple of days).
 4. Once live, copy the **opt-in URL** (or "Copy link") and send it to your testers —
-   they tap it, accept, and install Drop from Play.
+   they tap it, accept, and install Drops from Play.
 
 > New developer accounts: Google's "12 testers for 14 days" rule gates applying for
 > **production** access — it does **not** block running this closed alpha.

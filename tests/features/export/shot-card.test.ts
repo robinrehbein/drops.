@@ -38,7 +38,7 @@ describe('shareShotCard', () => {
     expect(path).toMatch(/\.txt$/);
 
     // Verify text card format
-    expect(contents).toContain('☕ DROP');
+    expect(contents).toContain('☕ DROPS');
     expect(contents).toContain('Ethiopia Yirgacheffe · Onyx Coffee Lab');
     expect(contents).toContain('18.0g dose · 36.0g yield · 1:2.00');
     expect(contents).toContain('27.4s · ★★★★');

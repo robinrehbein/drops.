@@ -1,4 +1,4 @@
-# Drop
+# Drops
 
 A high-fidelity coffee brewing companion for specialty coffee enthusiasts. Local-first, privacy-respecting, designed around the daily ritual of pulling a clean espresso shot.
 

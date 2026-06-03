@@ -49,7 +49,7 @@ describe('exportAllData', () => {
     const [path, options] = (Sharing.shareAsync as jest.Mock).mock.calls[0];
     expect(path).toMatch(/drop-export-.*\.json$/);
     expect(options.mimeType).toBe('application/json');
-    expect(options.dialogTitle).toBe('Export Drop Data');
+    expect(options.dialogTitle).toBe('Export Drops Data');
   });
 
   it('skips sharing when share sheet is unavailable', async () => {

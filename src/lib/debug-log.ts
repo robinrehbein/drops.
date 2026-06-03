@@ -54,7 +54,7 @@ export function buildDiagnosticReport(): DiagnosticReport {
 export function exportDebugLog(): string {
   const report = buildDiagnosticReport();
   const header = [
-    `Drop Diagnostic Report`,
+    `Drops Diagnostic Report`,
     `Generated: ${report.timestamp}`,
     ``,
     `App: v${report.app.version} (build ${report.app.buildNumber}, native ${report.app.nativeAppVersion})`,

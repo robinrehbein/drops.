@@ -1,5 +1,5 @@
 {
-  "app": { "name": "Drop" },
+  "app": { "name": "Drops" },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -18,7 +18,7 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "locationDeniedTitle": "Location access needed",
-    "locationDeniedBody": "Enable location for Drop in Settings to centre the map on where you are.",
+    "locationDeniedBody": "Enable location for Drops in Settings to centre the map on where you are.",
     "locationErrorTitle": "Couldn’t get your location",
     "locationErrorBody": "We couldn’t read your position right now. Check that location services are on and try again.",
     "filter_all": "All",

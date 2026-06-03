@@ -1,4 +1,4 @@
-# Contributing to Drop
+# Contributing to Drops
 
 Thanks for your interest in contributing! 🫘
 

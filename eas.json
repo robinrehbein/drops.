@@ -24,7 +24,7 @@
         "buildType": "app-bundle"
       },
       "ios": {
-        "applicationArchivePath": "build/Drop.ipa"
+        "applicationArchivePath": "build/Drops.ipa"
       }
     }
   },

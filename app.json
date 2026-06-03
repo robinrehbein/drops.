@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Drop",
+    "name": "Drops",
     "slug": "brewlog",
     "scheme": "drop",
     "version": "0.1.0",
@@ -13,7 +13,7 @@
       "supportsTablet": false,
       "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Drop uses your location to find specialty coffee near you.",
+        "NSLocationWhenInUseUsageDescription": "Drops uses your location to find specialty coffee near you.",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleAllowMixedLocalizations": false
       }
@@ -52,7 +52,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Drop uses your location to find specialty coffee near you."
+          "locationWhenInUsePermission": "Drops uses your location to find specialty coffee near you."
         }
       ],
       "@react-native-community/datetimepicker",

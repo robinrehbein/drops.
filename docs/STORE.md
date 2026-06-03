@@ -4,7 +4,7 @@
 A calm, precise brewing companion for espresso lovers — track every shot, every bean.
 
 ## Long description
-Drop is your barista's notebook in app form. Log every espresso pull with dose, yield, time, and tasting notes. Curate a library of beans with origin, roast level, and flavor profiles. Designed for specialty coffee enthusiasts who treat brewing as a daily ritual.
+Drops is your barista's notebook in app form. Log every espresso pull with dose, yield, time, and tasting notes. Curate a library of beans with origin, roast level, and flavor profiles. Designed for specialty coffee enthusiasts who treat brewing as a daily ritual.
 
 ## Keywords
 coffee, espresso, brew tracker, barista, specialty coffee, brewing, tasting notes, bean library
@@ -17,4 +17,4 @@ coffee, espresso, brew tracker, barista, specialty coffee, brewing, tasting note
 5. History — past shots
 
 ## Privacy
-Drop stores all data locally on your device. No accounts, no tracking, no analytics. Crash reports via Sentry are anonymous and do not include personal data.
+Drops stores all data locally on your device. No accounts, no tracking, no analytics. Crash reports via Sentry are anonymous and do not include personal data.

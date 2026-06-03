@@ -56,12 +56,12 @@ export default function RootLayout() {
         <View style={{ flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' }}>
           <Text variant="title" align="center">
             {isWebSQLiteSyncError
-              ? 'Drop cannot open its local database in this browser.'
-              : 'Drop needs to rebuild its data.'}
+              ? 'Drops cannot open its local database in this browser.'
+              : 'Drops needs to rebuild its data.'}
           </Text>
           <Text variant="caption" align="center" style={{ marginTop: 12 }}>
             {isWebSQLiteSyncError
-              ? 'Open Drop in Expo Go or a browser with SharedArrayBuffer support enabled.'
+              ? 'Open Drops in Expo Go or a browser with SharedArrayBuffer support enabled.'
               : 'Restore from device backup or start fresh from Settings → Reset.'}
           </Text>
           {__DEV__ ? (

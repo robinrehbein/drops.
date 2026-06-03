@@ -12,7 +12,7 @@ import { useTheme } from '@/ui/theme/useTheme';
 const STEPS = [
   {
     icon: 'cup' as IconName,
-    title: 'Welcome to Drop',
+    title: 'Welcome to Drops',
     body: 'Your private espresso journal.\nNo accounts. No cloud. Just coffee.',
     cta: 'Get started',
   },

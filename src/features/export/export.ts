@@ -34,7 +34,7 @@ export async function exportAllData(): Promise<void> {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(path, {
       mimeType: 'application/json',
-      dialogTitle: 'Export Drop Data',
+      dialogTitle: 'Export Drops Data',
     });
   }
 }

@@ -41,7 +41,7 @@ export default function Settings() {
     const path = `${FileSystem.cacheDirectory}drop-debug.txt`;
     await FileSystem.writeAsStringAsync(path, text);
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(path, { mimeType: 'text/plain', dialogTitle: 'Drop debug log' });
+      await Sharing.shareAsync(path, { mimeType: 'text/plain', dialogTitle: 'Drops debug log' });
     }
   };
 
@@ -237,7 +237,7 @@ export default function Settings() {
         <Row label="Theme" value="Earthy Forest" />
         <Row label="Send diagnostic report" value="↗" onPress={sendReport} />
         <Row label="Export all data (JSON)" value="↗" onPress={async () => { try { await exportAllData(); } catch { /* cancelled */ } }} />
-        <Row label="About" value={`Drop v${appJson.expo.version}`} />
+        <Row label="About" value={`Drops v${appJson.expo.version}`} />
       </ScrollView>
       <Pressable onPress={() => router.back()} style={{ alignItems: 'center', padding: t.space.md, marginTop: t.space.lg }}>
         <Text variant="bodyStrong" color={t.colors.forest}>Done</Text>
