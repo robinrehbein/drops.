@@ -50,6 +50,9 @@ yarn-error.log*
 # Web build output
 public/
 
+# Store asset intermediates (large embedded-font SVG; PNGs are committed)
+store-assets/_*.svg
+
 # Large local research artifacts (kept out of git)
 docs/places-enrichment-research.json
 docs/places-image-search-report.json
