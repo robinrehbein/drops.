@@ -4,6 +4,7 @@ import {
   Map,
   type MapProps,
   type MapRef,
+  type ViewPadding,
 } from '@maplibre/maplibre-react-native';
 import type { ReactNode, Ref } from 'react';
 
@@ -25,6 +26,11 @@ type BaseMapProps = {
   mapRef?: Ref<MapRef> | undefined;
   /** Show + track the user's location dot. */
   trackUserLocation?: boolean;
+  /** Inset between the map frame and its logical viewport, so the camera
+   *  centers content in the visible area (e.g. above a bottom sheet). */
+  contentInset?: ViewPadding;
+  /** Fired when the user pans/zooms the map by gesture (not programmatically). */
+  onUserPan?: () => void;
   testID: string;
   children?: ReactNode;
 };
@@ -42,6 +48,8 @@ export function BaseMap({
   cameraRef,
   mapRef,
   trackUserLocation = false,
+  contentInset,
+  onUserPan,
   testID,
   children,
 }: BaseMapProps) {
@@ -64,6 +72,17 @@ export function BaseMap({
   // Forward the map ref only when provided (exactOptionalPropertyTypes forbids
   // passing an explicit `undefined` ref).
   const mapRefProp = mapRef ? { ref: mapRef } : {};
+  // Spread optional props only when present (exactOptionalPropertyTypes).
+  const insetProps = contentInset ? { contentInset } : {};
+  // Only user-driven region changes deactivate "follow me" — programmatic
+  // flyTo/zoomTo report userInteraction=false and must be ignored.
+  const panProps: Pick<MapProps, 'onRegionIsChanging'> | undefined = onUserPan
+    ? {
+        onRegionIsChanging: (e) => {
+          if (e.nativeEvent.userInteraction) onUserPan();
+        },
+      }
+    : undefined;
   return (
     <Map
       style={{ flex: 1 }}
@@ -78,6 +97,8 @@ export function BaseMap({
       touchRotate={false}
       touchPitch={false}
       doubleTapZoom={interactive}
+      {...insetProps}
+      {...panProps}
       {...pressProps}
     >
       <Camera initialViewState={{ center: [center.lng, center.lat], zoom }} {...cameraProps} />

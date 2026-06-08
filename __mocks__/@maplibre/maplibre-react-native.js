@@ -4,8 +4,21 @@
 const React = require('react');
 const { View } = require('react-native');
 
-const Map = ({ children, style, testID }) =>
-  React.createElement(View, { style, testID: testID || 'map-view' }, children);
+// Renders children plus, when the map wires gesture tracking, a hidden node
+// tests can press to simulate a user pan (userInteraction: true).
+const Map = ({ children, style, testID, onRegionIsChanging }) =>
+  React.createElement(
+    View,
+    { style, testID: testID || 'map-view' },
+    onRegionIsChanging
+      ? React.createElement(View, {
+          key: '__pan__',
+          testID: 'map-pan-gesture',
+          onPress: () => onRegionIsChanging({ nativeEvent: { userInteraction: true } }),
+        })
+      : null,
+    children,
+  );
 const Camera = () => null;
 const Marker = ({ children, testID, onPress }) =>
   React.createElement(View, { testID: testID || 'map-marker', onPress }, children);

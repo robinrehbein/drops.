@@ -1,4 +1,10 @@
-import { type CameraRef, type MapRef, Marker, UserLocation } from '@maplibre/maplibre-react-native';
+import {
+  type CameraRef,
+  type MapRef,
+  Marker,
+  UserLocation,
+  type ViewPadding,
+} from '@maplibre/maplibre-react-native';
 import { useEffect, useMemo, useState, type Ref } from 'react';
 import { Pressable } from 'react-native';
 
@@ -27,14 +33,20 @@ export function ExploreMap({
   cameraRef,
   mapRef,
   showUserLocation = false,
+  contentInset,
+  onUserPan,
 }: {
   places: PlaceWithUserData[];
   onSelect: (id: string) => void;
   selectedId?: string | null;
   cameraRef?: Ref<CameraRef> | undefined;
   mapRef?: Ref<MapRef> | undefined;
-  /** Render the device's location puck (only once we have permission + a fix). */
+  /** Render the device's location puck (once location permission is granted). */
   showUserLocation?: boolean;
+  /** Inset so the camera centers above the list sheet. */
+  contentInset?: ViewPadding;
+  /** Fired when the user pans/zooms by gesture. */
+  onUserPan?: () => void;
 }) {
   const withCoords = places.filter((p) => p.lat != null && p.lng != null);
   const first = withCoords[0];
@@ -68,6 +80,8 @@ export function ExploreMap({
       zoom={first ? 11 : 5}
       cameraRef={cameraRef}
       mapRef={mapRef}
+      {...(contentInset ? { contentInset } : {})}
+      {...(onUserPan ? { onUserPan } : {})}
     >
       {showUserLocation ? <UserLocation accuracy /> : null}
       {visiblePlaces.map((p) => {

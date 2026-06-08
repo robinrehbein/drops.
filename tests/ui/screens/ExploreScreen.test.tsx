@@ -132,6 +132,33 @@ it('shows the user-location puck and never alerts when permission is granted', a
   alertSpy.mockRestore();
 });
 
+it('marks the locate button active after centring, then clears it when the user pans', async () => {
+  const { wrap } = await setup();
+  (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+    status: 'granted',
+  });
+  (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({
+    coords: { latitude: 48.775, longitude: 9.185 },
+  });
+  render(<ExploreScreen />, { wrapper: wrap });
+  await waitFor(() => expect(screen.getByText('Mókuska')).toBeTruthy());
+
+  // Inactive until the user asks to be located.
+  expect(screen.getByTestId('sort-nearest').props.accessibilityState?.selected).toBe(false);
+
+  fireEvent.press(screen.getByTestId('sort-nearest'));
+  await waitFor(() =>
+    expect(screen.getByTestId('sort-nearest').props.accessibilityState?.selected).toBe(true),
+  );
+
+  // A user pan (Google-Maps style) stops following without losing the puck.
+  fireEvent.press(screen.getByTestId('map-pan-gesture'));
+  await waitFor(() =>
+    expect(screen.getByTestId('sort-nearest').props.accessibilityState?.selected).toBe(false),
+  );
+  expect(screen.getByTestId('user-location')).toBeTruthy();
+});
+
 it('falls back to the last known position when a fresh fix fails (emulator/cold GPS)', async () => {
   const { wrap } = await setup();
   (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({

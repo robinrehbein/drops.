@@ -40,6 +40,20 @@ export function ExploreScreen() {
   const [sortMode, setSortMode] = useState<SortMode>('name');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [listSheetIndex, setListSheetIndex] = useState(1);
+  // Location permission gates the native puck; granting it lets MapLibre draw +
+  // refine the dot immediately, without waiting on our one-shot JS fix.
+  const [locationGranted, setLocationGranted] = useState(false);
+  // Whether the camera is currently centred on the user (Google-Maps-style):
+  // the locate button is "active" only while true, and any user pan clears it.
+  const [following, setFollowing] = useState(false);
+  const followingRef = useRef(false);
+  const setFollow = (v: boolean) => {
+    followingRef.current = v;
+    setFollowing(v);
+  };
+  // Measured map viewport height (excludes the tab bar), used to centre the
+  // camera in the area above the list sheet rather than the full window.
+  const [mapHeight, setMapHeight] = useState(0);
   const nearest = origin !== null;
   // Effective sort: distance only works with an origin. Without one, fall back
   // to name regardless of the user's pick so the list never looks random.
@@ -79,19 +93,20 @@ export function ExploreScreen() {
     [filtered, effectiveSort, origin],
   );
 
-  function mapBottomPadding(): number {
-    const ratio = LIST_SHEET_SNAP_RATIOS[listSheetIndex] ?? LIST_SHEET_SNAP_RATIOS[1];
-    return Math.round(height * ratio);
-  }
+  // Inset the camera's logical viewport so coordinates centre in the strip of
+  // map visible above the list sheet — not the full window. Using the measured
+  // map height keeps this correct on devices where the tab bar shrinks the map.
+  const sheetRatio = LIST_SHEET_SNAP_RATIOS[listSheetIndex] ?? LIST_SHEET_SNAP_RATIOS[1];
+  const mapContentInset = {
+    top: Math.round(insets.top + theme.space.md),
+    bottom: Math.round((mapHeight || height) * sheetRatio),
+    left: 0,
+    right: 0,
+  };
 
   function focusCoordinate(coord: LatLng, zoom: number) {
     zoomRef.current = zoom;
-    cameraRef.current?.flyTo({
-      center: [coord.lng, coord.lat],
-      zoom,
-      duration: 600,
-      padding: { top: insets.top + theme.space.md, right: 0, bottom: mapBottomPadding(), left: 0 },
-    });
+    cameraRef.current?.flyTo({ center: [coord.lng, coord.lat], zoom, duration: 600 });
   }
 
   async function zoomMap(delta: 1 | -1) {
@@ -99,10 +114,7 @@ export function ExploreScreen() {
     const currentZoom = liveZoom ?? zoomRef.current;
     const nextZoom = Math.min(18, Math.max(2, Math.round(currentZoom) + delta));
     zoomRef.current = nextZoom;
-    cameraRef.current?.zoomTo(nextZoom, {
-      duration: 250,
-      padding: { top: insets.top + theme.space.md, right: 0, bottom: mapBottomPadding(), left: 0 },
-    });
+    cameraRef.current?.zoomTo(nextZoom, { duration: 250 });
   }
 
   function selectPlace(id: string) {
@@ -113,10 +125,21 @@ export function ExploreScreen() {
     setSelectedId(id);
   }
 
-  // Fetch the device location, drop the puck, centre the map, and sort by
-  // distance. Always re-centres (never a silent toggle-off) and surfaces every
-  // failure path — denied permission or an unavailable fix — instead of dying
-  // quietly, which previously made the button look dead.
+  // Apply a position fix: enable distance sort and re-centre — but only while
+  // still following, so a user pan between the cached and fresh fix isn't undone.
+  function applyFix(pos: { coords: { latitude: number; longitude: number } }) {
+    const o = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    setOrigin(o);
+    // First fix auto-switches to distance sort so the closest places surface.
+    // The user can still toggle back to A–Z.
+    setSortMode('distance');
+    if (followingRef.current) focusCoordinate(o, 12);
+  }
+
+  // Tap = re-centre on the device and follow it. Granting permission alone lets
+  // the native puck draw right away; a cached fix centres instantly while a
+  // fresh fix refines in the background. Surfaces every failure path — denied
+  // permission or no fix at all — instead of dying quietly.
   async function locateMe() {
     logDebug('info', 'explore: locate tapped');
     try {
@@ -126,26 +149,27 @@ export function ExploreScreen() {
         Alert.alert(t('explore.locationDeniedTitle'), t('explore.locationDeniedBody'));
         return;
       }
-      // A fresh fix often never arrives on an emulator or with cold GPS, so
-      // fall back to the last known position before giving up.
-      const pos =
-        (await Location.getCurrentPositionAsync({}).catch(() => null)) ??
-        (await Location.getLastKnownPositionAsync().catch(() => null));
-      if (!pos) {
+      setLocationGranted(true);
+      setFollow(true);
+
+      // Instant: a cached fix (if any) centres without waiting on cold GPS.
+      const last = await Location.getLastKnownPositionAsync().catch(() => null);
+      if (last) applyFix(last);
+
+      // Refine with a fresh fix; emulators/cold GPS may never return one.
+      const fresh = await Location.getCurrentPositionAsync({}).catch(() => null);
+      if (fresh) {
+        applyFix(fresh);
+        logDebug('info', 'explore: centred on user location');
+      } else if (!last) {
         logDebug('warn', 'explore: no position available');
         Alert.alert(t('explore.locationErrorTitle'), t('explore.locationErrorBody'));
-        return;
+        setFollow(false);
       }
-      const o = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      setOrigin(o);
-      // First successful fix auto-switches to distance sort so the closest
-      // places surface immediately. The user can still toggle back to A-Z.
-      setSortMode('distance');
-      focusCoordinate(o, 12);
-      logDebug('info', 'explore: centred on user location');
     } catch (err) {
       logDebug('error', `explore: locate failed: ${String(err)}`);
       Alert.alert(t('explore.locationErrorTitle'), t('explore.locationErrorBody'));
+      setFollow(false);
     }
   }
 
@@ -177,14 +201,20 @@ export function ExploreScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.paper }}>
-      <ExploreMap
-        places={sorted}
-        onSelect={selectPlace}
-        selectedId={selectedId}
-        cameraRef={cameraRef}
-        mapRef={mapRef}
-        showUserLocation={nearest}
-      />
+      <View style={{ flex: 1 }} onLayout={(e) => setMapHeight(e.nativeEvent.layout.height)}>
+        <ExploreMap
+          places={sorted}
+          onSelect={selectPlace}
+          selectedId={selectedId}
+          cameraRef={cameraRef}
+          mapRef={mapRef}
+          showUserLocation={locationGranted}
+          contentInset={mapContentInset}
+          onUserPan={() => {
+            if (followingRef.current) setFollow(false);
+          }}
+        />
+      </View>
 
       {/* Add place (top-right) */}
       <Pressable
@@ -242,13 +272,14 @@ export function ExploreScreen() {
             testID="sort-nearest"
             accessibilityRole="button"
             accessibilityLabel={t('explore.nearMe')}
+            accessibilityState={{ selected: following }}
             onPress={locateMe}
             style={[
               fabCircle,
-              { backgroundColor: nearest ? theme.colors.forest : theme.colors.paper },
+              { backgroundColor: following ? theme.colors.forest : theme.colors.paper },
             ]}
           >
-            <Text variant="title" color={nearest ? theme.colors.paper : theme.colors.forest}>
+            <Text variant="title" color={following ? theme.colors.paper : theme.colors.forest}>
               ◎
             </Text>
           </Pressable>
