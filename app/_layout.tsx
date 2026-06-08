@@ -1,6 +1,3 @@
-// Polyfill crypto.getRandomValues() before anything calls uuid() (e.g. places
-// seeding on boot). Hermes has no Web Crypto, so uuid v9 throws without this.
-// Must be the first import so the global is patched before any module runs.
 import 'react-native-get-random-values';
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -18,12 +15,14 @@ import { ErrorBoundary } from '@/lib/error-boundary';
 import { initSentry } from '@/lib/sentry';
 import { useOnboardingStore } from '@/state/onboarding';
 import { Snackbar } from '@/ui/primitives/Snackbar';
+import { AppSplashScreen } from '@/ui/screens/AppSplashScreen';
 import { OnboardingScreen } from '@/ui/screens/OnboardingScreen';
 import { Text } from '@/ui/primitives/Text';
 import { ThemeProvider } from '@/ui/theme/ThemeProvider';
 
 export default function RootLayout() {
   const [migrated, setMigrated] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   // E1: Onboarding gate — must be called before any early returns (Rules of Hooks)
@@ -73,36 +72,34 @@ export default function RootLayout() {
       </ThemeProvider>
     );
   }
-  if (!migrated) {
-    return (
-      <ThemeProvider>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text variant="caption">Loading…</Text>
-        </View>
-      </ThemeProvider>
-    );
-  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ErrorBoundary>
         <ThemeProvider>
-          <QueryProvider>
-            <RepoProvider>
-              <BottomSheetModalProvider>
-                <StatusBar style="dark" />
-                {onboardingCompleted ? (
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-                  </Stack>
-                ) : (
-                  <OnboardingScreen />
-                )}
-                <Snackbar />
-              </BottomSheetModalProvider>
-            </RepoProvider>
-          </QueryProvider>
+          {migrated ? (
+            <QueryProvider>
+              <RepoProvider>
+                <BottomSheetModalProvider>
+                  <StatusBar style="dark" />
+                  {onboardingCompleted ? (
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="(tabs)" />
+                      <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                    </Stack>
+                  ) : (
+                    <OnboardingScreen />
+                  )}
+                  <Snackbar />
+                </BottomSheetModalProvider>
+              </RepoProvider>
+            </QueryProvider>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+          {splashVisible ? (
+            <AppSplashScreen isReady={migrated} onHidden={() => setSplashVisible(false)} />
+          ) : null}
         </ThemeProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Storage } from 'expo-sqlite/kv-store';
 
 type OnboardingState = {
   completed: boolean;
@@ -12,7 +13,7 @@ const STORAGE_KEY = 'drop_onboarding_completed';
 
 function readStored(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
+    return Storage.getItemSync(STORAGE_KEY) === 'true';
   } catch {
     return false;
   }
@@ -20,9 +21,9 @@ function readStored(): boolean {
 
 function writeStored(completed: boolean): void {
   try {
-    localStorage.setItem(STORAGE_KEY, String(completed));
+    Storage.setItemSync(STORAGE_KEY, String(completed));
   } catch {
-    // React Native: will use AsyncStorage via a persist middleware later
+    // ignore storage errors
   }
 }
 
