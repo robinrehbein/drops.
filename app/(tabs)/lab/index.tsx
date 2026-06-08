@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
@@ -14,7 +14,6 @@ import { useRecipeForBean } from '@/features/recipes/hooks';
 import { useDialingAdvice } from '@/features/dialing/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
-import { extractionPercent } from '@/domain/extraction';
 import { nudgeGrind } from '@/domain/dialing';
 import { Icon } from '@/ui/icons/line';
 import { CoachCard } from '@/ui/primitives/CoachCard';
@@ -82,6 +81,20 @@ export default function LabIndex() {
   const selectedBean = beans?.find((b) => b.id === draft.beanId) ?? null;
 
   const { advice } = useDialingAdvice(draft.beanId);
+
+  // Live shot clock driving the progress ring — ticks only while pulling. No
+  // scale is connected, so the ring tracks elapsed time toward the target shot
+  // time (recipe's target, else a 30s default) rather than a measured yield.
+  const TARGET_SHOT_S = 30;
+  const targetShotS = recipe?.durationTargetS ?? TARGET_SHOT_S;
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (status !== 'Pulling') return undefined;
+    const id = setInterval(() => setNowMs(Date.now()), 100);
+    return () => clearInterval(id);
+  }, [status]);
+  const elapsedS = session ? Math.max(0, (nowMs - session.startedAt.getTime()) / 1000) : 0;
+  const shotProgress = targetShotS > 0 ? Math.min(1, elapsedS / targetShotS) : 0;
 
   const repeatLastShot = () => {
     if (!lastShot) return;
@@ -213,9 +226,10 @@ export default function LabIndex() {
             <TimerDisplay startedAtMs={session.startedAt.getTime()} />
             <ExtractionRing
               size={220}
-              progress={extractionPercent(session.doseG, draft.targetYieldG) ?? 0}
-              centerLabel={`${Math.round((extractionPercent(session.doseG, draft.targetYieldG) ?? 0) * 100)}%`}
-              caption="EXTRACTION"
+              progress={shotProgress}
+              centerLabel={`${Math.round(shotProgress * 100)}%`}
+              caption={`OF ${Math.round(targetShotS)}s`}
+              band={elapsedS > targetShotS ? 'over' : 'balanced'}
             />
             <View style={{ flexDirection: 'row', gap: t.space.md }}>
               <MetricTile label="DOSE" value={`${session.doseG.toFixed(1)} g`} />
@@ -223,11 +237,25 @@ export default function LabIndex() {
             </View>
             <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.lg }}>
               <Pill
-                variant="ghost"
-                label="Pre-infusion end"
+                variant={session.preInfusionS != null ? 'primary' : 'ghost'}
+                label={
+                  session.preInfusionS != null
+                    ? `Pre-infusion ${session.preInfusionS.toFixed(1)}s`
+                    : 'Pre-infusion end'
+                }
                 onPress={() => onMilestone('pre_infusion_end')}
+                disabled={session.preInfusionS != null}
               />
-              <Pill variant="ghost" label="First drop" onPress={() => onMilestone('first_drop')} />
+              <Pill
+                variant={session.firstDropS != null ? 'primary' : 'ghost'}
+                label={
+                  session.firstDropS != null
+                    ? `First drop ${session.firstDropS.toFixed(1)}s`
+                    : 'First drop'
+                }
+                onPress={() => onMilestone('first_drop')}
+                disabled={session.firstDropS != null}
+              />
             </View>
             <Pill variant="danger" size="lg" label="Stop Pull" onPress={onStop} />
           </View>
