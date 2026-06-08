@@ -1,13 +1,18 @@
-# Drops — Android Closed Alpha Release Runbook
+# Drops — Release Runbook
 
-Goal: ship **Drops** to a **Google Play closed testing ("alpha") track** for a closed
-group of invited testers. This is a closed alpha — not public, not production.
+Goal: ship **Drops** to the **Google Play closed testing ("alpha") track** and **App Store Connect TestFlight** for a closed group of invited testers.
 
 App identity: package `de.birneklub.drop`, Expo owner `birneklub`,
-EAS projectId `c4d1539b-70ea-4412-8ea0-d3fbbdb99900`, version `0.1.0`.
+EAS projectId `c4d1539b-70ea-4412-8ea0-d3fbbdb99900`.
 
-The build pipeline (this repo) is ready. The Play Console side (account, store
-listing, testers) is manual and must be done by the account owner.
+---
+
+## Version history
+
+| Version | Key changes |
+|---------|-------------|
+| 0.2.0   | Paid Cloud Sync (self-hosted Coolify VPS), tablet split-pane layout, NavRail sidebar, two-column Daily tab, `supportsTablet: true` |
+| 0.1.0   | Initial closed alpha — brew lab, bean library, explore map, care/maintenance |
 
 ---
 
@@ -33,19 +38,26 @@ listing, testers) is manual and must be done by the account owner.
 
 ---
 
-## 1. Build the release AAB (no Google account needed yet)
+## 1. Build for both platforms
 
 ```bash
-eas build --platform android --profile production
+# Build Android (AAB) and iOS (IPA) in parallel
+eas build --platform all --profile production
 ```
-- The `production` profile outputs an **AAB** (`buildType: app-bundle`) — the format
-  Play requires. `autoIncrement.versionCode` is on, so EAS bumps the versionCode.
-- On first run EAS will offer to **generate a new Android keystore** (upload key) and
-  store it remotely — accept it. Play App Signing manages the final signing key.
-- When it finishes, EAS gives you a build URL + a downloadable `.aab`.
 
-Smoke-test first (optional but recommended): `--profile preview` builds an installable
-APK you can sideload before committing to a store upload.
+- **Android**: outputs AAB (`buildType: app-bundle`). `autoIncrement: true` bumps versionCode automatically.
+- **iOS**: outputs `.ipa` at `build/Drops.ipa`. Credentials sourced from EAS remote (`credentialsSource: remote`).
+- On first run EAS offers to generate/store the Android keystore — accept it.
+- When builds finish, EAS gives you build URLs + downloadable artifacts.
+
+Smoke-test first (optional but recommended):
+```bash
+eas build --platform all --profile preview   # APK + ad-hoc IPA, no store upload
+```
+
+> **Tablet note (v0.2.0+):** `supportsTablet: true` is now set and `orientation: "default"` 
+> allows rotation. The first build after this change will mark the iOS binary as 
+> iPad-compatible. Verify the tablet layout on an iPad simulator before submitting.
 
 ---
 
@@ -57,8 +69,11 @@ In https://play.google.com/console → **Create app**:
   - **App access** (any login required? no → all functionality available).
   - **Content rating** (IARC questionnaire).
   - **Target audience & content** (age groups).
-  - **Data safety** — DISCLOSE: **Location** (used to find nearby coffee; not shared)
-    and **Crash logs / diagnostics** (via Sentry). Be accurate here.
+  - **Data safety** — DISCLOSE: **Location** (used to find nearby coffee; not shared),
+    **Crash logs / diagnostics** (via Sentry), and (if Cloud Sync is offered)
+    **User-generated content / brew data** (synced to user's own server — not collected
+    by the developer). Be accurate here; Cloud Sync data goes to the user's own
+    Coolify VPS, not to any third party.
   - **Privacy policy URL** — REQUIRED. You need a hosted privacy policy that covers
     location use and Sentry crash/telemetry.
   - **Store listing** — short + full description, app icon (512×512), feature graphic

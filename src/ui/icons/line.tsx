@@ -5,10 +5,13 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  Cloud,
+  CloudOff,
   Coffee,
   FlaskConical,
   type LucideProps,
   MapPin,
+  RefreshCw,
   Star,
   TrendingDown,
   TrendingUp,
@@ -32,7 +35,10 @@ export type IconName =
   | 'arrowLeft'
   | 'arrowRight'
   | 'trendUp'
-  | 'trendDown';
+  | 'trendDown'
+  | 'cloud'
+  | 'cloudOff'
+  | 'refresh';
 
 const MAP: Record<IconName, ComponentType<LucideProps>> = {
   cup: Coffee,
@@ -49,6 +55,9 @@ const MAP: Record<IconName, ComponentType<LucideProps>> = {
   arrowRight: ArrowRight,
   trendUp: TrendingUp,
   trendDown: TrendingDown,
+  cloud: Cloud,
+  cloudOff: CloudOff,
+  refresh: RefreshCw,
 };
 
 export function Icon({

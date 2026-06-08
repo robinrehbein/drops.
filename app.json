@@ -3,14 +3,14 @@
     "name": "Drops",
     "slug": "brewlog",
     "scheme": "drop",
-    "version": "0.1.0",
-    "orientation": "portrait",
+    "version": "0.2.0",
+    "orientation": "default",
     "icon": "./assets/drop-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "de.birneklub.drop",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Drops uses your location to find specialty coffee near you.",
