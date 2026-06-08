@@ -40,7 +40,7 @@ export default function CareScreen() {
           cta={{ label: '+ Add machine', onPress: () => router.push('/(tabs)/care/new' as never) }}
         />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
           {machines.map((m) => (
             <MachineRow key={m.id} id={m.id} />
           ))}

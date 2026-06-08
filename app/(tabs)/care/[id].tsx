@@ -55,7 +55,7 @@ export default function MachineDetailScreen() {
         title={machine.name}
         onBack={() => router.back()}
       />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <Text variant="caption" color={t.colors.inkSoft}>
           {machine.kind.replace('_', ' ')} {machine.model ? `· ${machine.model}` : ''}
         </Text>

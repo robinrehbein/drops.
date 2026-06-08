@@ -37,7 +37,7 @@ export default function SessionDetail() {
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title="Shot" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <Text variant="title">{bean?.name ?? '—'}</Text>
         <View style={{ flexDirection: 'row', gap: t.space.md }}>
           <MetricTile label="DOSE" value={`${session.doseG.toFixed(1)} g`} />

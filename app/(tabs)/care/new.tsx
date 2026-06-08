@@ -65,7 +65,7 @@ export default function NewMachineScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title="Add machine" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <View>
           <Text variant="label">NAME *</Text>
           <TextInput

@@ -80,7 +80,7 @@ export default function AddTaskScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title="Add task" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <View>
           <Text variant="label">TASK TYPE</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, marginTop: t.space.xs }}>

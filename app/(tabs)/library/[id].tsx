@@ -153,7 +153,7 @@ export default function BeanDetail() {
         rightLabel={editing ? 'Cancel' : 'Edit'}
         onRightPress={() => editing ? setEditing(false) : startEdit()}
       />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <BeanCard
           name={bean.name}
           subtitle={[bean.origin, bean.process].filter(Boolean).join(' · ')}

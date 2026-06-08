@@ -55,7 +55,7 @@ export default function LibraryIndex() {
           />
         ))}
       </View>
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         {isLoading ? (
           <Text variant="caption">Loading…</Text>
         ) : error ? (

@@ -50,7 +50,7 @@ export default function DialingScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.paper }}>
       <Header title={`Dialing: ${bean?.name ?? 'Bean'}`} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: t.space.lg, gap: t.space.md }}>
         <CoachCard advice={advice} />
         <Text variant="caption">{shots.length} shots · newest on right</Text>
 
