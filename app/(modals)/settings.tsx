@@ -5,6 +5,10 @@ import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { useIsCloudSyncActive } from '@/state/subscription';
+import { getLastSyncDate } from '@/features/sync/service';
+import { Icon } from '@/ui/icons/line';
+
 import appJson from '../../app.json';
 import { formatVolume } from '@/domain/water';
 import { usePreferences, useUpdatePreferences } from '@/features/preferences/hooks';
@@ -35,6 +39,8 @@ export default function Settings() {
   const tankTopOffMl = Math.max(0, tankCapacityMl - (water?.tankBalanceMl ?? 0));
   const filterProgress = (water?.consumedSinceFilterMl ?? 0) / filterThresholdMl;
   const waterDifferenceMl = (water?.refilledSinceFilterMl ?? 0) - (water?.consumedSinceFilterMl ?? 0);
+  const isSyncActive = useIsCloudSyncActive();
+  const lastSyncAt = getLastSyncDate();
 
   const sendReport = async () => {
     const text = exportDebugLog();
@@ -229,6 +235,39 @@ export default function Settings() {
           value={prefs?.dialTimeMaxS ?? 30}
           onChange={(dialTimeMaxS) => updatePrefs.mutate({ dialTimeMaxS })}
         />
+
+        <Text variant="label" style={{ marginTop: t.space.md }}>CLOUD SYNC</Text>
+        <Pressable
+          onPress={() => router.push('/cloud-sync' as never)}
+          accessibilityRole="button"
+          accessibilityLabel="Cloud Sync settings"
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: t.space.md,
+            paddingHorizontal: t.space.md,
+            backgroundColor: t.colors.paperDeep,
+            borderRadius: t.radii.md,
+            borderWidth: 1,
+            borderColor: t.colors.paperEdge,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.sm }}>
+            <Icon name={isSyncActive ? 'cloud' : 'cloudOff'} color={isSyncActive ? t.colors.forest : t.colors.inkFaint} size={18} />
+            <View>
+              <Text variant="body">{isSyncActive ? 'Cloud Sync' : 'Cloud Sync — off'}</Text>
+              <Text variant="caption">
+                {isSyncActive
+                  ? lastSyncAt
+                    ? `Last synced ${formatDistanceToNow(lastSyncAt, { addSuffix: true })}`
+                    : 'Tap to sync'
+                  : 'Offline mode — free forever'}
+              </Text>
+            </View>
+          </View>
+          <Text variant="caption" color={t.colors.forest}>›</Text>
+        </Pressable>
 
         <Text variant="label" style={{ marginTop: t.space.md }}>APP</Text>
         <Row label="Weight unit" value={prefs?.weightUnit ?? 'g'} onPress={cycleWeightUnit} />

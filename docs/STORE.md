@@ -17,4 +17,4 @@ coffee, espresso, brew tracker, barista, specialty coffee, brewing, tasting note
 5. History — past shots
 
 ## Privacy
-Drops stores all data locally on your device. No accounts, no tracking, no analytics. Crash reports via Sentry are anonymous and do not include personal data.
+Drops stores all data locally on your device by default. Offline use is free forever. Optional paid Cloud Sync can connect multiple devices through a self-hosted sync server, but local data remains available even without it. Crash reports via Sentry are anonymous and do not include personal data.
