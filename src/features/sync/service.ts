@@ -1,4 +1,4 @@
-import { gte } from 'drizzle-orm';
+import { eq, gte } from 'drizzle-orm';
 import { Storage } from 'expo-sqlite/kv-store';
 
 import { getDb } from '@/db/client';
@@ -97,195 +97,59 @@ async function collectLocalChanges(cursor: Date): Promise<Omit<SyncPayload, 'dev
 async function applyRemoteChanges(changes: SyncResult['changes']): Promise<void> {
   const db = getDb();
 
-  async function upsertRows<TRow extends Record<string, unknown>>(
-    table: Parameters<typeof db.insert>[0],
+  /**
+   * Generic select-then-upsert for tables with id + updatedAt.
+   * Uses eq(table.idCol, id) for exact match — never gte.
+   */
+  async function upsertWithTimestamp(
+    table: any,
     rows: unknown[],
-    getLocalRow: (id: string) => Promise<TRow | null>,
-    getUpdatedAt: (row: TRow) => Date | null,
   ): Promise<void> {
-    for (const rawRow of rows) {
-      const row = rawRow as TRow & { id: string; updatedAt?: Date | null };
+    for (const rawRow of rows as { id: string; updatedAt?: Date | null }[]) {
       try {
-        const local = await getLocalRow(row.id);
+        const [local] = await (db.select() as any)
+          .from(table)
+          .where(eq(table.id, rawRow.id))
+          .limit(1);
         if (!local) {
-          await (db.insert(table) as any).values(row);
-        } else {
-          const localTs = getUpdatedAt(local);
-          const remoteTs = row.updatedAt ?? null;
-          // Apply only if remote is strictly newer
-          if (remoteTs && (!localTs || remoteTs > localTs)) {
-            const { id: _id, ...fields } = row as any;
-            await (db.update(table) as any)
-              .set(fields)
-              .where((t: any) => t.id === row.id);
-          }
+          await (db.insert(table) as any).values(rawRow);
+        } else if (
+          !local.updatedAt ||
+          (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)
+        ) {
+          const { id: _id, ...fields } = rawRow as any;
+          await (db.update(table) as any)
+            .set(fields)
+            .where(eq(table.id, rawRow.id));
         }
       } catch {
-        // Skip rows that violate FK constraints — e.g. remote session
-        // references a bean not yet applied in this batch.
+        // Skip FK violations (e.g. session before its bean is applied).
       }
     }
   }
 
-  // Beans first — referenced by sessions and recipes via FK
-  for (const rawRow of changes.beans as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(beans)
-        .where(gte(beans.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(beans).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(beans).set(fields).where(gte(beans.id as any, rawRow.id));
+  /** Append-only insert — ignore if row already exists. */
+  async function appendOnly(table: any, rows: unknown[]): Promise<void> {
+    for (const rawRow of rows) {
+      try {
+        await (db.insert(table) as any).values(rawRow);
+      } catch {
+        // already exists — ignore
       }
-    } catch {
-      // skip
     }
   }
 
-  for (const rawRow of changes.brewSessions as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(brewSessions)
-        .where(gte(brewSessions.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(brewSessions).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(brewSessions).set(fields).where(gte(brewSessions.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
-
-  // Milestones are append-only — just insert, ignore conflicts
-  for (const rawRow of changes.brewMilestones as any[]) {
-    try {
-      await db.insert(brewMilestones).values(rawRow);
-    } catch {
-      // already exists — ignore
-    }
-  }
-
-  for (const rawRow of changes.tastingNotes as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(tastingNotes)
-        .where(gte(tastingNotes.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(tastingNotes).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(tastingNotes).set(fields).where(gte(tastingNotes.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
-
-  for (const rawRow of changes.recipes as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(recipes)
-        .where(gte(recipes.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(recipes).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(recipes).set(fields).where(gte(recipes.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
-
-  for (const rawRow of changes.machines as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(machines)
-        .where(gte(machines.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(machines).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(machines).set(fields).where(gte(machines.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
-
-  for (const rawRow of changes.maintenanceTasks as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(maintenanceTasks)
-        .where(gte(maintenanceTasks.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(maintenanceTasks).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(maintenanceTasks).set(fields).where(gte(maintenanceTasks.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
-
-  // Logs and water events are append-only
-  for (const rawRow of changes.maintenanceLogs as any[]) {
-    try {
-      await db.insert(maintenanceLogs).values(rawRow);
-    } catch {
-      // already exists — ignore
-    }
-  }
-
-  for (const rawRow of changes.waterEvents as any[]) {
-    try {
-      await db.insert(waterEvents).values(rawRow);
-    } catch {
-      // already exists — ignore
-    }
-  }
-
-  for (const rawRow of changes.placeUserData as any[]) {
-    try {
-      const existing = await db
-        .select()
-        .from(placeUserData)
-        .where(gte(placeUserData.id as any, rawRow.id))
-        .limit(1);
-      const local = existing.find((r) => r.id === rawRow.id) ?? null;
-      if (!local) {
-        await db.insert(placeUserData).values(rawRow);
-      } else if (!local.updatedAt || (rawRow.updatedAt && rawRow.updatedAt > local.updatedAt)) {
-        const { id: _id, ...fields } = rawRow;
-        await db.update(placeUserData).set(fields).where(gte(placeUserData.id as any, rawRow.id));
-      }
-    } catch {
-      // skip
-    }
-  }
+  // Apply beans first — sessions and recipes have FK references to them.
+  await upsertWithTimestamp(beans, changes.beans);
+  await upsertWithTimestamp(brewSessions, changes.brewSessions);
+  await appendOnly(brewMilestones, changes.brewMilestones);
+  await upsertWithTimestamp(tastingNotes, changes.tastingNotes);
+  await upsertWithTimestamp(recipes, changes.recipes);
+  await upsertWithTimestamp(machines, changes.machines);
+  await upsertWithTimestamp(maintenanceTasks, changes.maintenanceTasks);
+  await appendOnly(maintenanceLogs, changes.maintenanceLogs);
+  await appendOnly(waterEvents, changes.waterEvents);
+  await upsertWithTimestamp(placeUserData, changes.placeUserData);
 }
 
 /**
