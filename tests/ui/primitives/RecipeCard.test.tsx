@@ -8,6 +8,7 @@ const now = new Date();
 const recipe: RecipeRow = {
   id: 'r1',
   beanId: 'b1',
+  name: null,
   sourceSessionId: null,
   doseG: 18,
   targetYieldG: 36,
@@ -42,6 +43,16 @@ describe('RecipeCard', () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId('recipe-card-empty')).toBeTruthy();
-    expect(screen.getByText(/No recipe yet/)).toBeTruthy();
+    expect(screen.getByText(/No recipes yet/)).toBeTruthy();
+  });
+
+  it('shows the name as title and a default badge', () => {
+    render(
+      <ThemeProvider>
+        <RecipeCard recipe={{ ...recipe, name: 'Morning' }} isDefault />
+      </ThemeProvider>,
+    );
+    expect(screen.getByText('Morning')).toBeTruthy();
+    expect(screen.getByText('Default')).toBeTruthy();
   });
 });

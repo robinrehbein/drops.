@@ -23,7 +23,7 @@ export const beans = sqliteTable(
     status: text('status').notNull().default('active'), // 'active' | 'finished' | 'archived'
     wouldBuyAgain: integer('would_buy_again', { mode: 'boolean' }),
     finishedAt: integer('finished_at', { mode: 'timestamp' }),
-    recipeId: text('recipe_id'), // FK → recipes.id, set when a canonical recipe is locked in
+    recipeId: text('recipe_id'), // FK → recipes.id: the bean's DEFAULT recipe (auto-applied when brewing)
     sourcePlaceId: text('source_place_id'), // FK → places.id; null = no source recorded
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
@@ -152,6 +152,7 @@ export const recipes = sqliteTable(
     beanId: text('bean_id')
       .notNull()
       .references(() => beans.id, { onDelete: 'cascade' }),
+    name: text('name'), // optional label; UI falls back to an auto-label from params + date
     sourceSessionId: text('source_session_id').references(() => brewSessions.id, {
       onDelete: 'set null',
     }),
@@ -169,7 +170,8 @@ export const recipes = sqliteTable(
     deletedAt: integer('deleted_at', { mode: 'timestamp' }),
   },
   (t) => ({
-    byBean: uniqueIndex('recipes_bean_unique').on(t.beanId),
+    // A bean can have many recipes; the default is tracked by beans.recipeId.
+    byBean: index('recipes_bean').on(t.beanId, t.deletedAt),
   }),
 );
 

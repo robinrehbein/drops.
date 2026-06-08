@@ -10,11 +10,13 @@ import {
   useAddMilestone,
   useLastShotForBean,
 } from '@/features/brew/hooks';
-import { useRecipeForBean } from '@/features/recipes/hooks';
+import { useRecipeForBean, useRecipesForBean } from '@/features/recipes/hooks';
+import type { RecipeRow } from '@/features/recipes/types';
 import { useDialingAdvice } from '@/features/dialing/hooks';
 import { RecoveryBanner } from '@/features/brew/RecoveryBanner';
 import { useBrewStore } from '@/features/brew/store';
 import { nudgeGrind } from '@/domain/dialing';
+import { recipeLabel } from '@/domain/recipe-label';
 import { Icon } from '@/ui/icons/line';
 import { CoachCard } from '@/ui/primitives/CoachCard';
 import { ExtractionRing } from '@/ui/primitives/ExtractionRing';
@@ -40,21 +42,30 @@ export default function LabIndex() {
   const addMilestone = useAddMilestone();
   const endSession = useEndSession();
 
-  // Recipe pre-fill: prefer saved recipe, fall back to last shot recall
+  // Recipe pre-fill: prefer the bean's default recipe, fall back to last shot.
+  // The full list powers the recipe picker chips so a non-default can be chosen.
   const { data: recipe } = useRecipeForBean(draft.beanId ?? null);
+  const { data: beanRecipes = [] } = useRecipesForBean(draft.beanId ?? null);
   const { data: lastShot } = useLastShotForBean(draft.beanId);
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+
+  const applyRecipe = (r: RecipeRow) => {
+    send({
+      type: 'configure',
+      doseG: r.doseG ?? draft.doseG,
+      targetYieldG: r.targetYieldG ?? draft.targetYieldG,
+      grindSetting: r.grindSetting,
+      grinderLabel: r.grinderLabel,
+      waterTempC: r.waterTempC,
+    });
+    setSelectedRecipeId(r.id);
+  };
+
   const prevBeanId = useRef(draft.beanId);
   useEffect(() => {
     if (draft.beanId && draft.beanId !== prevBeanId.current) {
       if (recipe) {
-        send({
-          type: 'configure',
-          doseG: recipe.doseG ?? draft.doseG,
-          targetYieldG: recipe.targetYieldG ?? draft.targetYieldG,
-          grindSetting: recipe.grindSetting,
-          grinderLabel: recipe.grinderLabel,
-          waterTempC: recipe.waterTempC,
-        });
+        applyRecipe(recipe);
       } else if (lastShot) {
         send({
           type: 'configure',
@@ -64,9 +75,11 @@ export default function LabIndex() {
           grinderLabel: lastShot.grinderLabel,
           waterTempC: lastShot.waterTempC,
         });
+        setSelectedRecipeId(null);
       }
     }
     prevBeanId.current = draft.beanId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.beanId, recipe]);
 
   // Keep screen awake while pulling (imperative API — a hook must not be called conditionally)
@@ -178,10 +191,28 @@ export default function LabIndex() {
             </View>
           </View>
         </Pressable>
-        {recipe && selectedBean ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.xs, marginTop: t.space.xs }}>
-            <Icon name="star" size={14} color={t.colors.forest} fill={t.colors.forest} />
-            <Text variant="caption" color={t.colors.forest}>Recipe locked</Text>
+        {status === 'IdleSetup' && selectedBean && beanRecipes.length > 0 ? (
+          <View style={{ marginTop: t.space.md }}>
+            <Text variant="label">RECIPE</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, marginTop: t.space.xs }}>
+              {beanRecipes.map((r) => (
+                <Pill
+                  key={r.id}
+                  label={r.name?.trim() ? r.name.trim() : recipeLabel(r)}
+                  variant={selectedRecipeId === r.id ? 'primary' : 'ghost'}
+                  onPress={() => applyRecipe(r)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: selectedRecipeId === r.id }}
+                />
+              ))}
+              <Pill
+                label="None"
+                variant={selectedRecipeId === null ? 'primary' : 'ghost'}
+                onPress={() => setSelectedRecipeId(null)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedRecipeId === null }}
+              />
+            </View>
           </View>
         ) : null}
 

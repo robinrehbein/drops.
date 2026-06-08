@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { differenceInDays, format } from 'date-fns';
 
 import type { BeanInput } from '@/domain/validators/bean';
 import { useBean, useRestoreBean, useSetBeanStatus, useSetWouldBuyAgain, useSoftDeleteBean, useUpdateBean } from '@/features/beans/hooks';
 import { useSessions, useTastingNotesForBean } from '@/features/brew/hooks';
 import { useLinkBeanSource, usePlaces } from '@/features/places/hooks';
-import { useRecipeForBean, useClearRecipe } from '@/features/recipes/hooks';
+import { useRecipesForBean, useSetDefaultRecipe, useDeleteRecipe } from '@/features/recipes/hooks';
 import { Icon } from '@/ui/icons/line';
 import { StarRating } from '@/ui/primitives/StarRating';
 import { brewRatio, formatRatio } from '@/domain/ratio';
@@ -32,7 +32,7 @@ export default function BeanDetail() {
   const { data: bean } = useBean(id ?? '');
   const { data: sessions } = useSessions(id);
   const { data: places = [] } = usePlaces();
-  const { data: recipe } = useRecipeForBean(id ?? null);
+  const { data: beanRecipes = [] } = useRecipesForBean(id ?? null);
   const { data: tastingNoteRows } = useTastingNotesForBean(id ?? null);
   const softDelete = useSoftDeleteBean();
   const restore = useRestoreBean();
@@ -40,7 +40,8 @@ export default function BeanDetail() {
   const setStatus = useSetBeanStatus();
   const setWouldBuy = useSetWouldBuyAgain();
   const linkBeanSource = useLinkBeanSource();
-  const clearRecipe = useClearRecipe();
+  const setDefaultRecipe = useSetDefaultRecipe();
+  const deleteRecipe = useDeleteRecipe();
   const show = useSnackbarStore((s) => s.show);
 
   const [editing, setEditing] = useState(false);
@@ -188,15 +189,42 @@ export default function BeanDetail() {
           </View>
         ) : (
           <>
-            {/* Recipe section */}
+            {/* Recipes */}
             <View>
-              <Text variant="heading">Recipe</Text>
-              <View style={{ marginTop: t.space.sm }}>
-                <RecipeCard
-                  recipe={recipe ?? null}
-                  {...(recipe?.savedAt ? { savedFromCaption: `saved ${recipe.savedAt.toLocaleDateString()}` } : {})}
-                  onEdit={() => router.push({ pathname: '/(modals)/recipe-save', params: { beanId: id, sessionId: recipe?.sourceSessionId ?? '' } } as never)}
-                  {...(recipe ? { onClear: () => { clearRecipe.mutate(id ?? ''); show('Recipe cleared'); } } : {})}
+              <Text variant="heading">Recipes</Text>
+              <View style={{ marginTop: t.space.sm, gap: t.space.sm }}>
+                {beanRecipes.length === 0 ? (
+                  <RecipeCard recipe={null} />
+                ) : (
+                  beanRecipes.map((r) => (
+                    <RecipeCard
+                      key={r.id}
+                      recipe={r}
+                      isDefault={r.id === bean.recipeId}
+                      onSetDefault={() => {
+                        setDefaultRecipe.mutate({ beanId: bean.id, recipeId: r.id });
+                        show('Default recipe set');
+                      }}
+                      onEdit={() =>
+                        router.push({
+                          pathname: '/(modals)/recipe-save',
+                          params: { beanId: bean.id, recipeId: r.id },
+                        } as never)
+                      }
+                      onDelete={() => {
+                        deleteRecipe.mutate({ id: r.id, beanId: bean.id });
+                        show('Recipe deleted');
+                      }}
+                    />
+                  ))
+                )}
+                <Pill
+                  label="+ Add recipe manually"
+                  variant="ghost"
+                  onPress={() =>
+                    router.push({ pathname: '/(modals)/recipe-save', params: { beanId: bean.id } } as never)
+                  }
+                  style={{ alignSelf: 'flex-start' }}
                 />
               </View>
             </View>
@@ -316,6 +344,48 @@ export default function BeanDetail() {
                   variant="ghost"
                   onPress={() => router.push(`/lab/dialing?beanId=${bean.id}` as never)}
                 />
+              </View>
+            ) : null}
+
+            {/* Individual shots — tap to open, or save one as a recipe */}
+            {sessions && sessions.length > 0 ? (
+              <View style={{ gap: t.space.sm }}>
+                {[...sessions]
+                  .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
+                  .slice(0, 10)
+                  .map((s) => (
+                    <Surface key={s.id} bg="paperDeep" padding="md" radius="md" bordered>
+                      <Pressable
+                        onPress={() => router.push(`/lab/session/${s.id}` as never)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open shot from ${format(s.startedAt, 'MMM d, yyyy')}`}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: t.space.sm }}>
+                          <View style={{ flex: 1 }}>
+                            <Text variant="bodyStrong">{format(s.startedAt, 'MMM d, HH:mm')}</Text>
+                            <Text variant="caption" color={t.colors.inkSoft} style={{ marginTop: 2 }}>
+                              {s.doseG.toFixed(1)}→{(s.yieldG ?? 0).toFixed(1)} g · {formatRatio(brewRatio(s.doseG, s.yieldG ?? 0))}
+                              {s.durationS != null ? ` · ${s.durationS.toFixed(0)}s` : ''}
+                            </Text>
+                          </View>
+                          {s.rating ? <StarRating value={s.rating} size={14} /> : null}
+                        </View>
+                      </Pressable>
+                      <View style={{ flexDirection: 'row', marginTop: t.space.sm }}>
+                        <Pill
+                          label="Save as recipe"
+                          variant="ghost"
+                          onPress={() =>
+                            router.push({
+                              pathname: '/(modals)/recipe-save',
+                              params: { sessionId: s.id, beanId: bean.id },
+                            } as never)
+                          }
+                          style={{ alignSelf: 'flex-start' }}
+                        />
+                      </View>
+                    </Surface>
+                  ))}
               </View>
             ) : null}
 

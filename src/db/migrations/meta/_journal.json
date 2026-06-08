@@ -50,6 +50,13 @@
       "when": 1780310400000,
       "tag": "0006_places_image_url",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1780930399415,
+      "tag": "0007_cheerful_mac_gargan",
+      "breakpoints": true
     }
   ]
 }

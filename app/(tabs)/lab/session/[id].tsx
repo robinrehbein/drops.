@@ -3,7 +3,6 @@ import { ScrollView, View } from 'react-native';
 
 import { useMilestones, useSession, useTastingNotes } from '@/features/brew/hooks';
 import { useBean } from '@/features/beans/hooks';
-import { useRecipeForBean } from '@/features/recipes/hooks';
 import { shareShotCard } from '@/features/export/shot-card';
 import { brewRatio, formatRatio } from '@/domain/ratio';
 import { format } from 'date-fns';
@@ -24,7 +23,6 @@ export default function SessionDetail() {
   const { data: bean } = useBean(session?.beanId ?? '');
   const { data: milestones } = useMilestones(id ?? '');
   const { data: tastingNote } = useTastingNotes(id ?? '');
-  const { data: recipe } = useRecipeForBean(session?.beanId ?? null);
 
   if (!session) {
     return (
@@ -144,7 +142,7 @@ export default function SessionDetail() {
           style={{ marginTop: t.space.sm }}
         />
         <Pill
-          label={recipe ? 'Replace recipe for this bean' : `Save as recipe for ${bean?.name ?? 'this bean'}`}
+          label={`Save as recipe for ${bean?.name ?? 'this bean'}`}
           variant="ghost"
           onPress={() =>
             router.push({

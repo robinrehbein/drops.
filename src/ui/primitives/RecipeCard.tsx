@@ -1,6 +1,7 @@
 import { TouchableOpacity, View } from 'react-native';
 
 import type { RecipeRow } from '@/features/recipes/types';
+import { recipeLabel } from '@/domain/recipe-label';
 import { useTheme } from '@/ui/theme/useTheme';
 import { Surface } from './Surface';
 import { Text } from './Text';
@@ -12,14 +13,19 @@ function fmt(val: number | null | undefined, unit: string) {
 
 export function RecipeCard({
   recipe,
+  isDefault = false,
   savedFromCaption,
   onEdit,
-  onClear,
+  onSetDefault,
+  onDelete,
 }: {
   recipe: RecipeRow | null;
+  /** Show the "Default" badge (this is the bean's auto-applied recipe). */
+  isDefault?: boolean;
   savedFromCaption?: string;
   onEdit?: () => void;
-  onClear?: () => void;
+  onSetDefault?: () => void;
+  onDelete?: () => void;
 }) {
   const t = useTheme();
 
@@ -37,7 +43,7 @@ export function RecipeCard({
         }}
       >
         <Text variant="body" color={t.colors.inkSoft}>
-          No recipe yet. Pull a great shot, then save it as the recipe from its session detail.
+          No recipes yet. Save a shot as a recipe, or add one manually.
         </Text>
       </View>
     );
@@ -50,24 +56,54 @@ export function RecipeCard({
     recipe.grindSetting != null ? `Grind ${recipe.grindSetting}` : null,
     recipe.waterTempC != null ? `${recipe.waterTempC.toFixed(0)} °C` : null,
   ].filter(Boolean);
+  // Show a friendly name when present; otherwise the params double as the title.
+  const title = recipe.name?.trim() ? recipe.name.trim() : recipeLabel(recipe);
 
   return (
     <Surface testID="recipe-card" bg="paperDeep" padding="md" radius="md" bordered>
-      <Text variant="bodyStrong">{parts.join(' · ')}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space.sm }}>
+        <Text variant="bodyStrong" style={{ flex: 1 }}>
+          {title}
+        </Text>
+        {isDefault ? (
+          <View
+            style={{
+              backgroundColor: t.colors.forestPale,
+              paddingHorizontal: t.space.sm,
+              paddingVertical: 2,
+              borderRadius: t.radii.pill,
+            }}
+          >
+            <Text variant="caption" color={t.colors.forest}>
+              Default
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {parts.length > 0 ? (
+        <Text variant="caption" color={t.colors.inkSoft} style={{ marginTop: t.space.xs }}>
+          {parts.join(' · ')}
+        </Text>
+      ) : null}
       {savedFromCaption ? (
         <Text variant="caption" color={t.colors.inkSoft} style={{ marginTop: t.space.xs }}>
           {savedFromCaption}
         </Text>
       ) : null}
-      <View style={{ flexDirection: 'row', gap: t.space.sm, marginTop: t.space.sm }}>
+      <View style={{ flexDirection: 'row', gap: t.space.md, marginTop: t.space.sm }}>
+        {onSetDefault && !isDefault ? (
+          <TouchableOpacity onPress={onSetDefault} accessibilityLabel="Set as default recipe">
+            <Text variant="caption" color={t.colors.forest}>Set default</Text>
+          </TouchableOpacity>
+        ) : null}
         {onEdit ? (
           <TouchableOpacity onPress={onEdit} accessibilityLabel="Edit recipe">
             <Text variant="caption" color={t.colors.forest}>Edit</Text>
           </TouchableOpacity>
         ) : null}
-        {onClear ? (
-          <TouchableOpacity onPress={onClear} accessibilityLabel="Clear recipe">
-            <Text variant="caption" color={t.colors.amber}>Clear</Text>
+        {onDelete ? (
+          <TouchableOpacity onPress={onDelete} accessibilityLabel="Delete recipe">
+            <Text variant="caption" color={t.colors.danger}>Delete</Text>
           </TouchableOpacity>
         ) : null}
       </View>

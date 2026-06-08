@@ -99,20 +99,20 @@ describe('schema', () => {
     expect(db.select().from(beans).where(eq(beans.id, id)).all()[0]?.wouldBuyAgain).toBe(false);
   });
 
-  it('enforces one recipe per bean and cascades on bean delete', () => {
+  it('allows multiple recipes per bean and cascades on bean delete', () => {
     const db = makeTestDb();
     const beanId = uuid();
     db.insert(beans).values({ id: beanId, name: 'X', createdAt: new Date(), updatedAt: new Date() }).run();
+    // A bean can now hold several recipes; the default is tracked by beans.recipeId.
+    db.insert(recipes).values({
+      id: uuid(), beanId, name: 'Morning', savedAt: new Date(), createdAt: new Date(), updatedAt: new Date(),
+    }).run();
     db.insert(recipes).values({
       id: uuid(), beanId, savedAt: new Date(), createdAt: new Date(), updatedAt: new Date(),
     }).run();
-    expect(() => {
-      db.insert(recipes).values({
-        id: uuid(), beanId, savedAt: new Date(), createdAt: new Date(), updatedAt: new Date(),
-      }).run();
-    }).toThrow();
+    expect(db.select().from(recipes).all()).toHaveLength(2);
 
-    // bean has no sessions, so delete is allowed and cascades the recipe
+    // bean has no sessions, so delete is allowed and cascades the recipes
     db.delete(beans).where(eq(beans.id, beanId)).run();
     expect(db.select().from(recipes).all()).toHaveLength(0);
   });

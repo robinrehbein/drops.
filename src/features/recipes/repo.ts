@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 
@@ -13,6 +13,7 @@ type Db = BetterSQLite3Database<typeof schema> | ExpoSQLiteDatabase<typeof schem
 
 export type SaveRecipeArgs = {
   beanId: string;
+  name?: string | null;
   sourceSessionId?: string | null;
   doseG?: number | null;
   targetYieldG?: number | null;
@@ -25,57 +26,63 @@ export type SaveRecipeArgs = {
 };
 
 export type RecipesRepo = {
+  /** The bean's default recipe (beans.recipeId), falling back to its newest. */
   getForBean: (beanId: string) => Promise<RecipeRow | null>;
-  saveForBean: (args: SaveRecipeArgs) => Promise<RecipeRow>;
-  saveFromSession: (sessionId: string, notes?: string) => Promise<RecipeRow>;
-  clearForBean: (beanId: string) => Promise<void>;
+  /** All live recipes for a bean, newest first. */
+  listForBean: (beanId: string) => Promise<RecipeRow[]>;
+  getRecipe: (id: string) => Promise<RecipeRow | null>;
+  /** Insert a new recipe; becomes the bean's default if it had none. */
+  create: (args: SaveRecipeArgs) => Promise<RecipeRow>;
+  /** Insert a new recipe copied from a finished session. */
+  createFromSession: (
+    sessionId: string,
+    opts?: { name?: string | null; notes?: string | null },
+  ) => Promise<RecipeRow>;
+  updateRecipe: (id: string, patch: Partial<SaveRecipeArgs>) => Promise<RecipeRow>;
+  setDefault: (beanId: string, recipeId: string) => Promise<void>;
+  /** Soft-delete one recipe; re-points the bean default if it was the default. */
+  deleteRecipe: (id: string) => Promise<void>;
 };
 
 export function makeRecipesRepo(db: Db): RecipesRepo {
   return {
-    async getForBean(beanId) {
+    async listForBean(beanId) {
+      return db
+        .select()
+        .from(recipes)
+        .where(and(eq(recipes.beanId, beanId), isNull(recipes.deletedAt)))
+        .orderBy(desc(recipes.savedAt));
+    },
+
+    async getRecipe(id) {
       const rows = await db
         .select()
         .from(recipes)
-        .where(and(eq(recipes.beanId, beanId), isNull(recipes.deletedAt)));
+        .where(and(eq(recipes.id, id), isNull(recipes.deletedAt)));
       return rows[0] ?? null;
     },
 
-    async saveForBean(args) {
-      const v = validateRecipe({ beanId: args.beanId });
+    async getForBean(beanId) {
+      const beanRows = await db.select().from(beans).where(eq(beans.id, beanId));
+      const defaultId = beanRows[0]?.recipeId ?? null;
+      if (defaultId) {
+        const preferred = await this.getRecipe(defaultId);
+        if (preferred) return preferred;
+      }
+      // No (live) default → fall back to the newest recipe.
+      const all = await this.listForBean(beanId);
+      return all[0] ?? null;
+    },
+
+    async create(args) {
+      const v = validateRecipe(args);
       if (!v.ok) throw new Error(v.error.map((i) => i.message).join('; '));
       const now = new Date();
-      const existing = await this.getForBean(args.beanId);
-
-      if (existing) {
-        const updated: RecipeRow = {
-          ...existing,
-          sourceSessionId: args.sourceSessionId ?? existing.sourceSessionId,
-          doseG: args.doseG !== undefined ? args.doseG : existing.doseG,
-          targetYieldG: args.targetYieldG !== undefined ? args.targetYieldG : existing.targetYieldG,
-          durationTargetS:
-            args.durationTargetS !== undefined ? args.durationTargetS : existing.durationTargetS,
-          grinderLabel:
-            args.grinderLabel !== undefined ? args.grinderLabel : existing.grinderLabel,
-          grindSetting: args.grindSetting !== undefined ? args.grindSetting : existing.grindSetting,
-          waterTempC: args.waterTempC !== undefined ? args.waterTempC : existing.waterTempC,
-          ratioTarget: args.ratioTarget !== undefined ? args.ratioTarget : existing.ratioTarget,
-          notes: args.notes !== undefined ? args.notes : existing.notes,
-          savedAt: now,
-          updatedAt: now,
-        };
-        await db.update(recipes).set(updated).where(eq(recipes.id, existing.id));
-        await db
-          .update(beans)
-          .set({ recipeId: existing.id, updatedAt: now })
-          .where(eq(beans.id, args.beanId));
-        return updated;
-      }
-
       const id = uuid();
       const row: RecipeRow = {
         id,
         beanId: args.beanId,
+        name: args.name ?? null,
         sourceSessionId: args.sourceSessionId ?? null,
         doseG: args.doseG ?? null,
         targetYieldG: args.targetYieldG ?? null,
@@ -91,14 +98,18 @@ export function makeRecipesRepo(db: Db): RecipesRepo {
         deletedAt: null,
       };
       await db.insert(recipes).values(row);
-      await db
-        .update(beans)
-        .set({ recipeId: id, updatedAt: now })
-        .where(eq(beans.id, args.beanId));
+      // First recipe for the bean becomes its default.
+      const beanRows = await db.select().from(beans).where(eq(beans.id, args.beanId));
+      if (!beanRows[0]?.recipeId) {
+        await db
+          .update(beans)
+          .set({ recipeId: id, updatedAt: now })
+          .where(eq(beans.id, args.beanId));
+      }
       return row;
     },
 
-    async saveFromSession(sessionId, notes) {
+    async createFromSession(sessionId, opts) {
       const sessions = await db
         .select()
         .from(brewSessions)
@@ -111,8 +122,9 @@ export function makeRecipesRepo(db: Db): RecipesRepo {
           ? brewRatio(session.doseG, session.yieldG)
           : null;
 
-      return this.saveForBean({
+      return this.create({
         beanId: session.beanId,
+        name: opts?.name ?? null,
         sourceSessionId: sessionId,
         doseG: session.doseG,
         targetYieldG: session.yieldG,
@@ -121,20 +133,57 @@ export function makeRecipesRepo(db: Db): RecipesRepo {
         grindSetting: session.grindSetting,
         waterTempC: session.waterTempC,
         ratioTarget: ratio,
-        notes: notes ?? null,
+        notes: opts?.notes ?? null,
       });
     },
 
-    async clearForBean(beanId) {
+    async updateRecipe(id, patch) {
+      const existing = await this.getRecipe(id);
+      if (!existing) throw new Error('recipe not found');
+      const now = new Date();
+      const updated: RecipeRow = {
+        ...existing,
+        name: patch.name !== undefined ? patch.name : existing.name,
+        doseG: patch.doseG !== undefined ? patch.doseG : existing.doseG,
+        targetYieldG: patch.targetYieldG !== undefined ? patch.targetYieldG : existing.targetYieldG,
+        durationTargetS:
+          patch.durationTargetS !== undefined ? patch.durationTargetS : existing.durationTargetS,
+        grinderLabel: patch.grinderLabel !== undefined ? patch.grinderLabel : existing.grinderLabel,
+        grindSetting: patch.grindSetting !== undefined ? patch.grindSetting : existing.grindSetting,
+        waterTempC: patch.waterTempC !== undefined ? patch.waterTempC : existing.waterTempC,
+        ratioTarget: patch.ratioTarget !== undefined ? patch.ratioTarget : existing.ratioTarget,
+        notes: patch.notes !== undefined ? patch.notes : existing.notes,
+        updatedAt: now,
+      };
+      await db.update(recipes).set(updated).where(eq(recipes.id, id));
+      return updated;
+    },
+
+    async setDefault(beanId, recipeId) {
+      await db
+        .update(beans)
+        .set({ recipeId, updatedAt: new Date() })
+        .where(eq(beans.id, beanId));
+    },
+
+    async deleteRecipe(id) {
+      const existing = await this.getRecipe(id);
+      if (!existing) return;
       const now = new Date();
       await db
         .update(recipes)
         .set({ deletedAt: now, updatedAt: now })
-        .where(and(eq(recipes.beanId, beanId), isNull(recipes.deletedAt)));
-      await db
-        .update(beans)
-        .set({ recipeId: null, updatedAt: now })
-        .where(eq(beans.id, beanId));
+        .where(eq(recipes.id, id));
+
+      // If this was the bean's default, re-point to the newest survivor (or null).
+      const beanRows = await db.select().from(beans).where(eq(beans.id, existing.beanId));
+      if (beanRows[0]?.recipeId === id) {
+        const survivors = await this.listForBean(existing.beanId);
+        await db
+          .update(beans)
+          .set({ recipeId: survivors[0]?.id ?? null, updatedAt: now })
+          .where(eq(beans.id, existing.beanId));
+      }
     },
   };
 }

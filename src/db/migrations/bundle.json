@@ -26,5 +26,9 @@
   {
     "tag": "0006_places_image_url",
     "sql": "ALTER TABLE `places` ADD `image_url` text;\n"
+  },
+  {
+    "tag": "0007_cheerful_mac_gargan",
+    "sql": "DROP INDEX `recipes_bean_unique`;--> statement-breakpoint\nALTER TABLE `recipes` ADD `name` text;--> statement-breakpoint\nCREATE INDEX `recipes_bean` ON `recipes` (`bean_id`,`deleted_at`);"
   }
 ]
