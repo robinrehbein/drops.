@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Kaffeetropfen -->
+    <path
+        android:fillColor="#F6EBDD"
+        android:pathData="M54,26 C54,26 36,48 36,62 C36,72.5 44,80 54,80 C64,80 72,72.5 72,62 C72,48 54,26 54,26 Z" />
+    <path
+        android:fillColor="#B07B4F"
+        android:pathData="M54,40 C54,40 44,53 44,62 C44,68 48.5,72.5 54,72.5 C59.5,72.5 64,68 64,62 C64,53 54,40 54,40 Z" />
+</vector>

@@ -1,30 +1,29 @@
 # Drops
 
-A high-fidelity coffee brewing companion for specialty coffee enthusiasts. Local-first, privacy-respecting, designed around the daily ritual of pulling a clean espresso shot.
+Ein Bohnen-Gedächtnis mit Eindial-Hilfe für den Siebträger zuhause. Nativ für Android, lokal und offline — kein Konto, kein Sync, keine Cloud.
 
-## Quick start
+**Der Kern-Moment:** Eine Bohne von vor einem Jahr wieder gekauft → App öffnen → suchen → Rezept und Mahlgrad stehen da → Mühle einstellen. Fertig.
 
-```bash
-npm install
-npm run db:prepare
-npx expo start
-```
+## Features
 
-## Scripts
-
-- `npm test` — unit + DB + state-machine tests
-- `npm run test:coverage` — coverage report (`src/domain/**` enforced at 100%)
-- `npm run typecheck` — TypeScript strict check
-- `npm run lint` — ESLint
-- `npm run e2e:ios` / `npm run e2e:android` — Maestro flows (release build required)
-- `npm run db:generate` — regenerate Drizzle migration from `src/db/schema.ts`
-- `npm run db:bundle` — combine generated migrations into `src/db/migrations/bundle.json` for the runtime
-- `npm run db:prepare` — `db:generate && db:bundle`
+- **Bohnen-Bibliothek** mit Suche, Tütenfoto, Röster, Röstdatum und Frische-Anzeige
+- **Eindialen**: Versuche loggen (Mahlgrad, Gramm rein/raus, Zeit, Urteil Sauer/Bitter/Gut) — der gute Versuch wird per Tap zum eingefrorenen Rezept
+- **Mahlgrad-Rad**: drehbarer Einstellring wie an der Mühle, Skala (Min/Max/Schritt) einmalig konfigurierbar
+- **Kauf-Gedächtnis**: „Würde ich wieder kaufen?" plus Wiederkauf-Flow, der die Bohne samt Rezept reaktiviert
 
 ## Stack
 
-Expo SDK 54 · Expo Router · TypeScript strict · Drizzle ORM + expo-sqlite · Zustand · TanStack Query · react-native-reanimated · @shopify/react-native-skia · zod · date-fns · react-i18next · @sentry/react-native · jest@^29 + @testing-library/react-native · Maestro.
+Kotlin · Jetpack Compose (Material 3) · Room · DataStore · Navigation Compose · Coil — ein Modul, keine DI-Frameworks.
 
-## Design
+## Bauen
 
-See [`docs/superpowers/specs/2026-05-08-drop-design.md`](docs/superpowers/specs/2026-05-08-drop-design.md) for the v1 design spec, and [`docs/superpowers/plans/2026-05-08-drop-v1.md`](docs/superpowers/plans/2026-05-08-drop-v1.md) for the implementation plan.
+```bash
+./gradlew assembleDebug        # Debug-APK: app/build/outputs/apk/debug/
+./gradlew installDebug         # direkt aufs angeschlossene Gerät
+```
+
+Benötigt JDK 17+ und ein Android SDK (`ANDROID_HOME` oder `local.properties` mit `sdk.dir`).
+
+## Konzept
+
+Siehe [`docs/drops-v2-konzept.md`](docs/drops-v2-konzept.md) — Produktdefinition, Datenmodell und bewusste Nicht-Ziele.
