@@ -1,9 +1,0 @@
-appId: de.birneklub.drop
----
-- launchApp
-- tapOn: "Explore"
-- assertVisible: "Explore"
-- tapOn:
-    id: "mode-map"
-- tapOn:
-    id: "mode-list"

@@ -1,1 +1,0 @@
-ALTER TABLE `places` ADD `image_url` text;

@@ -1,6 +1,6 @@
 # Drops v2 — Konzept (Neuanfang, Kotlin + Jetpack Compose)
 
-Stand: 2026-08-09 · Status: **Entwurf zur Freigabe** — es wird erst gebaut, wenn dieses Dokument abgesegnet ist.
+Stand: 2026-08-09 · Status: **freigegeben und umgesetzt** — die App liegt im Repo-Root als natives Kotlin/Compose-Projekt.
 
 ## Warum Neuanfang
 
@@ -117,8 +117,8 @@ Alte Bohne suchen → Detail zeigt Rezept → Button „Wieder gekauft": Status 
 3. **M3 — Kern-Moment**: Suche, Wiederkauf-Flow, Tütenfoto, Frische-Anzeige, Feinschliff
 4. **M4 (optional)**: JSON-Export per Share-Sheet — einziges „Backup", damit die Daten einen Handywechsel überleben
 
-## Offene Fragen
+## Entschiedene Fragen
 
-1. **Restgewicht** („noch 180 g in der Tüte")? Vorschlag: **weglassen** — Pflege-Aufwand bei jedem Bezug, und die Tüte in der Hand beantwortet die Frage schneller.
-2. **Repo-Strategie beim Baustart**: Clean Slate auf diesem Branch (Expo-Code fliegt raus, Kotlin-Projekt wird Repo-Wurzel) oder Unterordner? Entscheidung fällig bei Freigabe.
-3. **Mühlen-Skala**: reicht ein Freitextfeld für den Mahlgrad (z. B. „2.4", „14 Klicks"), oder soll die Skala der Mühle einmal konfigurierbar sein (min/max/Schrittweite) für Plausibilität?
+1. **Restgewicht**: weggelassen — Pflege-Aufwand bei jedem Bezug lohnt nicht.
+2. **Repo-Strategie**: Clean Slate — der Expo-Code wurde vom Branch entfernt (bleibt in der Git-History und auf `main`), das Kotlin-Projekt ist die neue Repo-Wurzel.
+3. **Mahlgrad**: **drehbares Rad** als Eingabe (wie der Einstellring an der Mühle), gespeichert als Zahl. Die Skala der Mühle (Min/Max/Schrittweite) ist einmalig in den Einstellungen konfigurierbar.

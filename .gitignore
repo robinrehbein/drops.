@@ -1,73 +1,10 @@
-# Superpowers brainstorming artifacts (mockups + state)
-.superpowers/
-
-# IDE
+*.iml
+.gradle/
+/local.properties
 .idea/
-.vscode/
-
-# Node / Expo (anticipated for the app)
-node_modules/
-# This repo uses npm (package-lock.json + .npmrc legacy-peer-deps). Keep bun's
-# lockfile out so EAS Build doesn't pick bun and break the install phase.
-bun.lock
-bun.lockb
-.expo/
-.expo-shared/
-dist/
-web-build/
-coverage/
-
-# Native
-*.orig
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# EAS credentials (kept local, never committed)
-.eas/
-
-# Env
-.env*.local
-.env
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# macOS
 .DS_Store
-
-# Project-local agent/plugin tooling (Pi)
-.pi/
-
-# Kilo Code tooling (local agent workspace with its own node_modules)
-.kilo/
-
-# Web build output
-public/
-
-# Store asset intermediates (large embedded-font SVG; PNGs are committed)
-store-assets/_*.svg
-
-# Large local research artifacts (kept out of git)
-docs/places-enrichment-research.json
-docs/places-image-search-report.json
-
-# Expo (additional from create-expo-app template)
-expo-env.d.ts
-.metro-health-check*
-*.tsbuildinfo
-
-# Native (additional)
-.kotlin/
-*.orig.*
-*.pem
-
-# Generated native folders
-/ios
-/android
-coverage/
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
