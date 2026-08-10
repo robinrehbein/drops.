@@ -17,11 +17,31 @@ android {
         versionName = "2.1.0"
     }
 
+    // Release-Signierung aus der CI-Umgebung (GitHub-Secrets); ohne gesetzte
+    // Variablen wird mit dem Debug-Key signiert, damit lokale Builds und
+    // CI-Läufe ohne Secrets weiterhin installierbare APKs liefern.
+    val releaseKeystorePath: String? = System.getenv("RELEASE_KEYSTORE_FILE")
+    signingConfigs {
+        create("release") {
+            if (releaseKeystorePath != null) {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = if (releaseKeystorePath != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 
