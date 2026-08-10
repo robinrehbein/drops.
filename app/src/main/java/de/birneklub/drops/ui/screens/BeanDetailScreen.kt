@@ -60,7 +60,9 @@ import de.birneklub.drops.data.Bean
 import de.birneklub.drops.data.BeanRepository
 import de.birneklub.drops.data.BeanStatus
 import de.birneklub.drops.data.DialInAttempt
+import de.birneklub.drops.data.RoastLevel
 import de.birneklub.drops.data.Verdict
+import de.birneklub.drops.domain.suggestStartRecipe
 import de.birneklub.drops.ui.AppViewModelProvider
 import de.birneklub.drops.ui.formatDate
 import de.birneklub.drops.ui.formatGrams
@@ -170,6 +172,24 @@ fun BeanDetailScreen(
                     if (bean.roaster != null) {
                         Text(bean.roaster, style = MaterialTheme.typography.titleMedium)
                     }
+                    val meta = listOfNotNull(
+                        bean.origin,
+                        bean.process,
+                        bean.roastLevel?.let {
+                            when (it) {
+                                RoastLevel.HELL -> "helle Röstung"
+                                RoastLevel.MITTEL -> "mittlere Röstung"
+                                RoastLevel.DUNKEL -> "dunkle Röstung"
+                            }
+                        },
+                    )
+                    if (meta.isNotEmpty()) {
+                        Text(
+                            meta.joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     bean.roastDate?.let { date ->
                         Text(
                             "Geröstet am ${formatDate(date)}",
@@ -182,6 +202,13 @@ fun BeanDetailScreen(
                             label,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                    bean.boughtAt?.let { source ->
+                        Text(
+                            "Gekauft bei $source",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -224,6 +251,7 @@ fun BeanDetailScreen(
                     }
                 }
             } else {
+                val suggestion = suggestStartRecipe(bean.roastLevel)
                 Card {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -232,6 +260,18 @@ fun BeanDetailScreen(
                         Text(
                             "Noch kein Rezept — Zeit zum Eindialen!",
                             style = MaterialTheme.typography.bodyLarge,
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            "Startvorschlag: ${formatGrams(suggestion.doseG)} g → " +
+                                "${formatGrams(suggestion.yieldG)} g · ${suggestion.tempRange} · ${suggestion.timeTarget}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            suggestion.hint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

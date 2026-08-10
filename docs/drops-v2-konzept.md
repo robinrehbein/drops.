@@ -2,6 +2,8 @@
 
 Stand: 2026-08-09 · Status: **freigegeben und umgesetzt** — die App liegt im Repo-Root als natives Kotlin/Compose-Projekt.
 
+> **Hinweis (2026-08-10):** Mit v2.1 wurde der Scope auf Robins neues Ziel erweitert (Pflege, Entdecken, Guide-Modus, Rezeptvorschläge) — recherche-getrieben, siehe [`marktanalyse-kriterien.md`](marktanalyse-kriterien.md). Die Nicht-Ziele unten beschreiben den v2.0-MVP-Stand.
+
 ## Warum Neuanfang
 
 Die bestehende Expo/React-Native-App ist zu einem Store-Produkt gewachsen (Karte, Cloud-Sync-Abo, Wasserchemie, Koffein, Wartung, Dashboard), das am eigentlichen Bedarf vorbeigeht und sich schlecht anfühlt. Drops v2 ist bewusst das Gegenteil: **eine persönliche App für einen Nutzer, eine Siebträgermaschine, eine Mühle. Lokal, offline, ohne Konto.**

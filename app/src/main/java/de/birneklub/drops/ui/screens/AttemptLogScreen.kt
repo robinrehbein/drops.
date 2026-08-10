@@ -40,6 +40,7 @@ import de.birneklub.drops.data.GrinderSettingsStore
 import de.birneklub.drops.data.Verdict
 import de.birneklub.drops.ui.AppViewModelProvider
 import de.birneklub.drops.ui.components.GrindDial
+import de.birneklub.drops.ui.components.ShotStopwatch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -189,6 +190,17 @@ fun AttemptLogScreen(
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
+            }
+
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    "Shot-Timer:",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f),
+                )
+                ShotStopwatch(onResult = { seconds ->
+                    viewModel.update { it.copy(timeText = seconds.toString()) }
+                })
             }
 
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {

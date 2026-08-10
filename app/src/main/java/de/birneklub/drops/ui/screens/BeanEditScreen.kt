@@ -49,7 +49,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import androidx.compose.material3.FilterChip
 import de.birneklub.drops.data.BeanRepository
+import de.birneklub.drops.data.RoastLevel
 import de.birneklub.drops.ui.AppViewModelProvider
 import de.birneklub.drops.ui.formatDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,6 +68,10 @@ data class BeanEditState(
     val roastDate: LocalDate? = null,
     val notes: String = "",
     val photoPath: String? = null,
+    val origin: String = "",
+    val process: String = "",
+    val roastLevel: RoastLevel? = null,
+    val boughtAt: String = "",
     val loaded: Boolean = false,
 )
 
@@ -88,6 +94,10 @@ class BeanEditViewModel(
                         roastDate = bean.roastDate,
                         notes = bean.notes.orEmpty(),
                         photoPath = bean.photoUri,
+                        origin = bean.origin.orEmpty(),
+                        process = bean.process.orEmpty(),
+                        roastLevel = bean.roastLevel,
+                        boughtAt = bean.boughtAt.orEmpty(),
                         loaded = true,
                     )
                 }
@@ -112,6 +122,10 @@ class BeanEditViewModel(
                     roastDate = s.roastDate,
                     photoUri = s.photoPath,
                     notes = s.notes.trim().ifBlank { null },
+                    origin = s.origin.trim().ifBlank { null },
+                    process = s.process.trim().ifBlank { null },
+                    roastLevel = s.roastLevel,
+                    boughtAt = s.boughtAt.trim().ifBlank { null },
                 )
                 onDone(id)
             } else {
@@ -123,6 +137,10 @@ class BeanEditViewModel(
                             roastDate = s.roastDate,
                             photoUri = s.photoPath,
                             notes = s.notes.trim().ifBlank { null },
+                            origin = s.origin.trim().ifBlank { null },
+                            process = s.process.trim().ifBlank { null },
+                            roastLevel = s.roastLevel,
+                            boughtAt = s.boughtAt.trim().ifBlank { null },
                         )
                     )
                 }
@@ -231,6 +249,54 @@ fun BeanEditScreen(
                     modifier = Modifier.padding(start = 4.dp),
                 )
             }
+
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Röstgrad:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                listOf(
+                    RoastLevel.HELL to "Hell",
+                    RoastLevel.MITTEL to "Mittel",
+                    RoastLevel.DUNKEL to "Dunkel",
+                ).forEach { (level, label) ->
+                    FilterChip(
+                        selected = state.roastLevel == level,
+                        onClick = {
+                            viewModel.update {
+                                it.copy(roastLevel = if (it.roastLevel == level) null else level)
+                            }
+                        },
+                        label = { Text(label) },
+                    )
+                }
+            }
+
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = state.origin,
+                    onValueChange = { v -> viewModel.update { it.copy(origin = v) } },
+                    label = { Text("Herkunft") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = state.process,
+                    onValueChange = { v -> viewModel.update { it.copy(process = v) } },
+                    label = { Text("Prozess") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            OutlinedTextField(
+                value = state.boughtAt,
+                onValueChange = { v -> viewModel.update { it.copy(boughtAt = v) } },
+                label = { Text("Gekauft bei") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             OutlinedTextField(
                 value = state.notes,
