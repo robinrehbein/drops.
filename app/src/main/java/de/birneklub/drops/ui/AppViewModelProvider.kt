@@ -10,6 +10,8 @@ import de.birneklub.drops.ui.screens.AttemptLogViewModel
 import de.birneklub.drops.ui.screens.BeanDetailViewModel
 import de.birneklub.drops.ui.screens.BeanEditViewModel
 import de.birneklub.drops.ui.screens.BeanListViewModel
+import de.birneklub.drops.ui.screens.CareViewModel
+import de.birneklub.drops.ui.screens.DiscoverViewModel
 import de.birneklub.drops.ui.screens.SettingsViewModel
 
 fun CreationExtras.dropsApp(): DropsApp = this[APPLICATION_KEY] as DropsApp
@@ -33,7 +35,13 @@ object AppViewModelProvider {
             )
         }
         initializer {
-            SettingsViewModel(dropsApp().container.grinderSettings)
+            SettingsViewModel(dropsApp().container.grinderSettings, dropsApp().container.dataExporter)
+        }
+        initializer {
+            CareViewModel(dropsApp().container.careRepository)
+        }
+        initializer {
+            DiscoverViewModel(dropsApp().container.placeRepository)
         }
     }
 }

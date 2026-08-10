@@ -30,9 +30,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.Intent
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import de.birneklub.drops.data.DataExporter
 import de.birneklub.drops.data.GrinderScale
 import de.birneklub.drops.data.GrinderSettingsStore
 import de.birneklub.drops.ui.AppViewModelProvider
+import java.io.File
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -40,6 +47,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val grinderSettings: GrinderSettingsStore,
+    private val dataExporter: DataExporter,
 ) : ViewModel() {
     val scale: StateFlow<GrinderScale> = grinderSettings.scale
         .stateIn(viewModelScope, SharingStarted.Eagerly, GrinderScale())
@@ -48,6 +56,12 @@ class SettingsViewModel(
         viewModelScope.launch {
             grinderSettings.save(GrinderScale(min = min, max = max, step = step))
             onDone()
+        }
+    }
+
+    fun export(onJson: (String) -> Unit) {
+        viewModelScope.launch {
+            onJson(dataExporter.buildJson())
         }
     }
 }
@@ -136,6 +150,40 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Speichern")
+            }
+
+            HorizontalDivider()
+
+            Text("Daten", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Alle Bohnen, Versuche, Orte und Wartungsaufgaben als JSON sichern — " +
+                    "z. B. in deine Cloud oder per Mail an dich selbst.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val context = LocalContext.current
+            OutlinedButton(
+                onClick = {
+                    viewModel.export { json ->
+                        val dir = File(context.cacheDir, "exports").apply { mkdirs() }
+                        val file = File(dir, "drops-backup.json")
+                        file.writeText(json)
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file,
+                        )
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/json"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Backup teilen"))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Daten exportieren (JSON)")
             }
         }
     }

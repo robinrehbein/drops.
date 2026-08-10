@@ -27,6 +27,10 @@ class BeanRepository(
         roastDate: LocalDate?,
         photoUri: String?,
         notes: String?,
+        origin: String? = null,
+        process: String? = null,
+        roastLevel: RoastLevel? = null,
+        boughtAt: String? = null,
     ): String {
         val now = System.currentTimeMillis()
         val id = UUID.randomUUID().toString()
@@ -38,6 +42,10 @@ class BeanRepository(
                 roastDate = roastDate,
                 photoUri = photoUri,
                 notes = notes,
+                origin = origin,
+                process = process,
+                roastLevel = roastLevel,
+                boughtAt = boughtAt,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -85,7 +93,16 @@ class BeanRepository(
 
     suspend fun setStatus(beanId: String, status: BeanStatus) {
         val bean = beanDao.getById(beanId) ?: return
-        beanDao.upsert(bean.copy(status = status, updatedAt = System.currentTimeMillis()))
+        // Wiederkauf: Röstdatum zurücksetzen, damit die Frische-Anzeige nicht
+        // die alte Tüte beschreibt — die neue Röstung trägt ihr eigenes Datum.
+        val reactivated = bean.status == BeanStatus.FINISHED && status == BeanStatus.ACTIVE
+        beanDao.upsert(
+            bean.copy(
+                status = status,
+                roastDate = if (reactivated) null else bean.roastDate,
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
     }
 
     suspend fun setWouldBuyAgain(beanId: String, value: Boolean?) {
