@@ -8,3 +8,7 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Signierschlüssel niemals committen
+*.jks
+*.keystore
