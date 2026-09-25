@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drops. – Espresso-Tagebuch für Siebträger</title>
+<meta name="description" content="drops. merkt sich Mahlgrad und Rezept pro Bohne, erinnert an Rückspülen und Filterwechsel und sagt dir, wann du nachbestellen solltest. Für Android, ohne Konto.">
+<meta property="og:title" content="drops. – Espresso-Tagebuch für Siebträger">
+<meta property="og:description" content="Mahlgrad pro Bohne, Pflege mit Erinnerung, Nachkauf zur richtigen Zeit. Jetzt auf die Warteliste für die Android-Beta.">
+<meta property="og:image" content="/icon.png">
+<meta name="theme-color" content="#2A211B">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <a class="logo" href="/">drops<span>.</span></a>
+    <nav aria-label="Seitenbereiche">
+      <a href="#funktionen">Funktionen</a>
+      <a href="#roester">Für Röster</a>
+      <a class="nav-cta" href="#warteliste">Warteliste</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" id="warteliste">
+    <div class="hero-copy">
+      <p class="eyebrow">Für Siebträger zu Hause · Android-Beta</p>
+      <h1>Jede Bohne. Jeder Shot. Eingestellt.</h1>
+      <p class="lede">drops. merkt sich Mahlgrad und Rezept pro Bohne, erinnert dich ans Rückspülen und an den Filterwechsel und sagt dir, wann du nachbestellen solltest. Ohne Konto, ohne Werbung.</p>
+
+      <form class="waitlist" id="waitlist" action="/api/waitlist" method="post" novalidate>
+        <label class="sr" for="email">E-Mail-Adresse</label>
+        <div class="field-row">
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="deine@mail.de" required>
+          <button type="submit">Auf die Warteliste</button>
+        </div>
+        <label class="consent" for="consent">
+          <input id="consent" name="consent" type="checkbox" value="yes" required>
+          <span>Ja, schreibt mir, wenn die Beta startet. Ich bestätige das per Mail und kann mich jederzeit austragen (<a href="/datenschutz">Datenschutz</a>).</span>
+        </label>
+        <input type="hidden" name="source" id="source" value="web">
+        <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <figure class="shot" aria-label="Beispiel aus der App: ein gespeicherter Shot">
+      <div class="shot-head">
+        <span class="chip">Im Trichter</span>
+        <span class="mono muted-on-dark">Tag 11 nach Röstung</span>
+      </div>
+      <p class="shot-bean">Guji Hambela</p>
+      <p class="shot-roaster">Äthiopien · Natural · Beispielrösterei</p>
+      <div class="ring" role="img" aria-label="Laufzeit 28,4 Sekunden, Ziel 26 bis 30 Sekunden">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" class="ring-track"/>
+          <circle cx="60" cy="60" r="52" class="ring-zone" pathLength="40" stroke-dasharray="4 36" stroke-dashoffset="-26" transform="rotate(-90 60 60)"/>
+          <circle cx="60" cy="60" r="52" class="ring-run" pathLength="40" stroke-dasharray="28.4 40" transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="ring-label"><span class="mono big">28,4</span><span class="small">Ziel 26–30 s</span></div>
+      </div>
+      <dl class="shot-data">
+        <div><dt>Dosis</dt><dd class="mono">18,0 g</dd></div>
+        <div><dt>Ertrag</dt><dd class="mono">38,4 g</dd></div>
+        <div><dt>Mahlgrad</dt><dd class="mono">14,5 <small>Niche</small></dd></div>
+        <div><dt>Temp.</dt><dd class="mono">93 °C</dd></div>
+      </dl>
+      <p class="advice">Treffer. Als Rezept für diese Bohne übernehmen.</p>
+      <p class="care"><span class="dot" aria-hidden="true"></span>Rückspülen mit Reiniger · fällig in 2 Tagen</p>
+      <figcaption class="sr">Beispielwerte, keine echten Nutzerdaten.</figcaption>
+    </figure>
+  </section>
+
+  <section class="features wrap" id="funktionen" aria-labelledby="f-title">
+    <h2 id="f-title">Was drops. für dich mitdenkt</h2>
+    <div class="feature-grid">
+      <article class="feature">
+        <p class="kicker mono">0–50 · 1–40 · Klicks</p>
+        <h3>Mahlgrad in der Sprache deiner Mühle</h3>
+        <p>Du wählst deine Maschine und Mühle aus über 35 vorbelegten Modellen. Die Tipps nach jedem Shot landen auf Stellungen, die deine Mühle wirklich hat: halbe Schritte an der Niche, ganze Klicks an der Comandante.</p>
+      </article>
+      <article class="feature">
+        <p class="kicker mono">7 Tage · 200 Shots · 90 Tage</p>
+        <h3>Pflege, bevor du sie schmeckst</h3>
+        <p>Rückspülen nur, wenn deine Maschine ein Dreiwegeventil hat. Filterwechsel und Entkalken nach den Intervallen des Herstellers. drops. erinnert dich per Benachrichtigung und zählt Shots und Kilos selbst mit.</p>
+      </article>
+      <article class="feature">
+        <p class="kicker mono">noch 3 Shots</p>
+        <h3>Nachkaufen, bevor die Tüte leer ist</h3>
+        <p>drops. rechnet mit jeder Dosis mit und meldet sich rechtzeitig, damit die nächste Tüte schon ausgeruht ist. Dein Rezept für die Bohne wartet beim Nachkauf auf dich.</p>
+      </article>
+    </div>
+    <ul class="also">
+      <li>Karte deiner Kaffees: nach Anbauregion oder Ort des Kaufs</li>
+      <li>Umzug von Beanconqueror mit einem Export</li>
+      <li>Funktioniert komplett offline, Konto nur für Sync</li>
+      <li>Backup als Datei, jederzeit exportierbar</li>
+    </ul>
+  </section>
+
+  <section class="roaster" id="roester" aria-labelledby="r-title">
+    <div class="wrap roaster-inner">
+      <div>
+        <p class="eyebrow on-dark">Für Röstereien</p>
+        <h2 id="r-title">Dein Startrezept, direkt in der Tüte</h2>
+        <p>Du trägst Dosis, Ertrag, Zeit und Temperatur für deinen Kaffee ein und druckst eine Karte mit QR-Code. Wer sie mit drops. scannt, hat Bohne, Rezept und den Link zu deinem Shop sofort in der App. Beim Nachkauf landet man wieder bei dir.</p>
+        <p class="small on-dark">In der Beta kostenlos. Wir speichern dabei nichts: Das Rezept steckt im Code selbst.</p>
+        <a class="btn-light" href="/roaster">Rezeptkarte erstellen</a>
+      </div>
+      <div class="card-sample" aria-hidden="true">
+        <div class="qr-fake"></div>
+        <div>
+          <p class="mono tiny">Beispielrösterei</p>
+          <p class="card-title">Guji Hambela</p>
+          <p class="mono tiny">18 g → 40 g · 26–30 s · 94 °C</p>
+          <p class="tiny">Scannen und in drops. übernehmen</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="founding wrap" aria-labelledby="fm-title">
+    <h2 id="fm-title">Founding Member</h2>
+    <p>drops. bleibt ohne Konto und ohne Werbung nutzbar. Wer uns in der Beta mit einer Einmalzahlung unterstützt, bekommt alle späteren Pro-Funktionen dauerhaft ohne Abo. Kaufen kannst du das in der App, sobald die Beta läuft.</p>
+  </section>
+
+  <section class="faq wrap" aria-labelledby="faq-title">
+    <h2 id="faq-title">Häufige Fragen</h2>
+    <details>
+      <summary>Wann und wo gibt es drops.?</summary>
+      <p>Zuerst als geschlossene Beta für Android über Google Play. Wer auf der Warteliste steht, bekommt die Einladung per Mail. Eine iPhone-Version ist geplant, aber noch nicht in Arbeit.</p>
+    </details>
+    <details>
+      <summary>Brauche ich ein Konto?</summary>
+      <p>Nein. Alles liegt auf deinem Handy und funktioniert offline. Ein Konto brauchst du nur, wenn du zwischen mehreren Geräten synchronisieren willst.</p>
+    </details>
+    <details>
+      <summary>Welche Maschinen und Mühlen kennt drops.?</summary>
+      <p>Zum Start 24 Maschinen (z. B. Sage, Rancilio Silvia, Gaggia Classic, Lelit, Rocket, ECM, Profitec, La Marzocco) und 15 Mühlen (z. B. Niche Zero, DF64, Eureka Mignon, Baratza, Fellow Opus, Comandante). Fehlt deine, gibst du den Namen ein und arbeitest mit deiner eigenen Skala.</p>
+    </details>
+    <details>
+      <summary>Was kostet drops.?</summary>
+      <p>Die Beta ist kostenlos. Die Grundfunktionen bleiben kostenlos. Founding Member zahlen einmalig und bekommen spätere Pro-Funktionen ohne Abo.</p>
+    </details>
+    <details>
+      <summary>Was passiert mit meinen Daten?</summary>
+      <p>Deine Bohnen und Shots bleiben auf dem Gerät. Eine anonyme Nutzungsstatistik schickt die App nur, wenn du ausdrücklich zustimmst. Details stehen in der <a href="/datenschutz">Datenschutzerklärung</a>.</p>
+    </details>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap bar">
+    <span>drops.</span>
+    <nav aria-label="Rechtliches"><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var form = document.getElementById('waitlist');
+  var msg = document.getElementById('form-msg');
+  try {
+    var src = new URLSearchParams(location.search).get('ref');
+    if (src) document.getElementById('source').value = src.slice(0, 32);
+  } catch (e) {}
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = form.email.value.trim();
+    msg.className = 'form-msg';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.'; msg.classList.add('err'); form.email.focus(); return; }
+    if (!form.consent.checked) { msg.textContent = 'Bitte setz den Haken, damit wir dir schreiben dürfen.'; msg.classList.add('err'); form.consent.focus(); return; }
+    var button = form.querySelector('button');
+    button.disabled = true;
+    fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, consent: true, source: form.source.value })
+    }).then(function (r) {
+      if (r.ok) { msg.textContent = 'Fast geschafft: Bitte bestätige die Mail, die wir dir gerade geschickt haben.'; msg.classList.add('ok'); form.reset(); }
+      else if (r.status === 429) { msg.textContent = 'Zu viele Versuche. Bitte probier es in einer Minute noch einmal.'; msg.classList.add('err'); }
+      else { return r.json().then(function (e) { msg.textContent = e.message || 'Das hat nicht geklappt. Bitte versuch es noch einmal.'; msg.classList.add('err'); }); }
+    }).catch(function () {
+      msg.textContent = 'Keine Verbindung. Bitte versuch es gleich noch einmal.'; msg.classList.add('err');
+    }).then(function () { button.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>

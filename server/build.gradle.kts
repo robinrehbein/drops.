@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.sqlite.jdbc)
     implementation(libs.logback)
     implementation(libs.zxing.core)
+    implementation(libs.angus.mail)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.test.host)

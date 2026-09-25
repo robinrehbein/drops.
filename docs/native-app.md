@@ -40,12 +40,29 @@ From the Android emulator the local server is reachable at `http://10.0.2.2:8080
 | `BEHIND_PROXY` | `true` | Trust `X-Forwarded-For` from Coolify's proxy for rate limiting |
 | `PUBLIC_URL` | request host | Base URL printed into roaster QR codes, e.g. `https://sync.example.com` |
 | `ANDROID_CERT_SHA256` | unset | Comma-separated SHA-256 fingerprints of the app signing key (Play Console → App integrity); served as `/.well-known/assetlinks.json` so `/r/` links open the app directly |
+| `SMTP_HOST`, `SMTP_PORT` (587), `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | unset | Mail server for waitlist confirmations (double opt-in). Without it sign-ups stay unconfirmed. |
 | `STATS_TOKEN` | unset | At least 16 characters; enables `GET /api/stats/report` with `Authorization: Bearer <token>` |
 
 Endpoints: `GET /healthz`, `POST /api/auth/register`, `POST /api/auth/login`,
 `POST /api/auth/logout`, `GET /api/me`, `DELETE /api/me` (deletes account and
 all server data), `POST /api/sync`, `POST /api/stats/events` (anonymous beta
 counts, no login), `GET /api/stats/report` (needs `STATS_TOKEN`).
+
+## Website and waitlist
+
+The server image also serves the marketing site from
+`server/src/main/resources/website/` (landing page, `/impressum`,
+`/datenschutz`). In Coolify add the main domain (e.g. `drops-app.de`) to the
+same resource as the sync subdomain; both show the site, the app talks to
+`/api`. Fill in the marked placeholders in the two legal pages before going
+live.
+
+The waitlist uses double opt-in: `POST /api/waitlist` sends a confirmation
+mail, only confirmed addresses count, unconfirmed ones are deleted after seven
+days and every mail has a removal link. `?ref=instagram` on any link to the
+site is stored as the source. Export confirmed addresses with
+`curl -H "Authorization: Bearer $STATS_TOKEN" https://<server>/api/waitlist/export`;
+the report shows `waitlistConfirmed`.
 
 ## Beta: what the app measures and sells
 
