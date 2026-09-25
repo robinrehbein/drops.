@@ -13,6 +13,8 @@ data class User(val id: String, val email: String, val passwordHash: String)
 
 data class Session(val userId: String, val deviceId: String, val email: String)
 
+data class StatRow(val installId: String, val day: String, val event: String, val count: Int)
+
 /**
  * SQLite-backed storage. The server is small and personal-scale, so a single
  * connection guarded by a lock is plenty and keeps SQLite writes serialized.
@@ -61,6 +63,53 @@ class Store(path: String) : AutoCloseable {
                     PRIMARY KEY(user_id, collection, id))""",
             )
             st.execute("CREATE INDEX IF NOT EXISTS records_by_time ON records(user_id, server_time)")
+            // Anonymous beta statistics: daily event counts per random install id.
+            st.execute(
+                """CREATE TABLE IF NOT EXISTS stat_counts(
+                    install_id TEXT NOT NULL,
+                    day TEXT NOT NULL,
+                    event TEXT NOT NULL,
+                    count INTEGER NOT NULL,
+                    PRIMARY KEY(install_id, day, event))""",
+            )
+            st.execute(
+                """CREATE TABLE IF NOT EXISTS stat_installs(
+                    install_id TEXT PRIMARY KEY,
+                    platform TEXT NOT NULL,
+                    app_version TEXT NOT NULL)""",
+            )
+        }
+    }
+
+    // --- beta statistics -------------------------------------------------------
+
+    fun addStats(installId: String, platform: String, appVersion: String, counts: List<Triple<String, String, Int>>) = synchronized(lock) {
+        conn.autoCommit = false
+        try {
+            conn.prepareStatement("INSERT INTO stat_installs(install_id, platform, app_version) VALUES(?,?,?) ON CONFLICT(install_id) DO UPDATE SET platform = excluded.platform, app_version = excluded.app_version").use { ps ->
+                ps.setString(1, installId); ps.setString(2, platform); ps.setString(3, appVersion); ps.executeUpdate()
+            }
+            conn.prepareStatement("INSERT INTO stat_counts(install_id, day, event, count) VALUES(?,?,?,?) ON CONFLICT(install_id, day, event) DO UPDATE SET count = min(count + excluded.count, 1000000)").use { ps ->
+                counts.forEach { (day, event, count) ->
+                    ps.setString(1, installId); ps.setString(2, day); ps.setString(3, event); ps.setInt(4, count); ps.addBatch()
+                }
+                ps.executeBatch()
+            }
+            conn.commit()
+        } catch (e: Exception) {
+            conn.rollback()
+            throw e
+        } finally {
+            conn.autoCommit = true
+        }
+    }
+
+    /** (install id, day, event, count) for the report. */
+    fun statRows(): List<StatRow> = synchronized(lock) {
+        conn.createStatement().use { st ->
+            st.executeQuery("SELECT install_id, day, event, count FROM stat_counts").use { rs ->
+                buildList { while (rs.next()) add(StatRow(rs.getString(1), rs.getString(2), rs.getString(3), rs.getInt(4))) }
+            }
         }
     }
 

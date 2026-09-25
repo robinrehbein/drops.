@@ -10,6 +10,7 @@ import de.birneklub.drop.android.AppContainer
 import de.birneklub.drop.core.backup.BackupException
 import de.birneklub.drop.core.backup.DropsBackup
 import de.birneklub.drop.core.catalog.EquipmentCatalog
+import de.birneklub.drop.core.stats.StatEvents
 import de.birneklub.drop.core.catalog.GrinderModel
 import de.birneklub.drop.core.catalog.MachineModel
 import de.birneklub.drop.core.domain.Maintenance
@@ -71,6 +72,12 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     val messages: StateFlow<String?> = _messages.asStateFlow()
 
     /** null while loading; false shows onboarding on a fresh install. */
+    private val stats = container.stats
+
+    /** Anonymous beta statistics: null = not asked yet. */
+    private val _statsOptIn = MutableStateFlow<Boolean?>(null)
+    val statsOptIn: StateFlow<Boolean?> = _statsOptIn.asStateFlow()
+
     private val _setupDone = MutableStateFlow<Boolean?>(null)
     val setupDone: StateFlow<Boolean?> = _setupDone.asStateFlow()
 
@@ -79,7 +86,10 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     init {
         viewModelScope.launch {
             _setupDone.value = repo.isSetupDone()
+            _statsOptIn.value = stats.optedIn()
             if (sync.session.value != null) syncNow(silent = true)
+            stats.countDaily(StatEvents.APP_OPEN)
+            stats.flush(container.statsServerUrl)
         }
         viewModelScope.launch { sync.session.collect { s -> _account.value = _account.value.copy(session = s) } }
     }
@@ -88,6 +98,17 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     fun newId() = repo.newId()
     fun consumeMessage() { _messages.value = null }
     private fun say(text: String) { _messages.value = text }
+    private fun count(event: String) { viewModelScope.launch { stats.count(event) } }
+
+    fun setStatsOptIn(enabled: Boolean) = viewModelScope.launch {
+        stats.setOptIn(enabled)
+        _statsOptIn.value = enabled
+        if (enabled) {
+            stats.countDaily(StatEvents.APP_OPEN)
+            // Only a real setup counts, not "look around with sample data".
+            if (library.value.equipment.any { !it.id.startsWith(de.birneklub.drop.data.SampleData.PREFIX) }) stats.count(StatEvents.SETUP_DONE)
+        }
+    }
 
     /** Runs a local write, then schedules a background sync when an account is connected. */
     private fun write(message: String? = null, block: suspend () -> Unit) {
@@ -119,11 +140,12 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     fun saveRecipe(recipe: Recipe, message: String? = null) = write(message) { repo.saveRecipe(recipe) }
 
     // --- shots -----------------------------------------------------------------
-    fun logShot(shot: Shot) = write("Shot gespeichert") { repo.logShot(shot) }
+    fun logShot(shot: Shot) = write("Shot gespeichert") { repo.logShot(shot); stats.count(StatEvents.SHOT_LOGGED) }
+    fun addBean(bean: Bean) = write("${bean.name} angelegt") { repo.saveBean(bean); stats.count(StatEvents.BEAN_ADDED) }
     fun adoptShot(shot: Shot) = write("Rezept aktualisiert") { repo.adoptShotAsRecipe(shot) }
 
     // --- care ------------------------------------------------------------------
-    fun completeTask(status: TaskStatus) = write("${status.task.name}: erledigt") { repo.completeTask(status.task.id) }
+    fun completeTask(status: TaskStatus) = write("${status.task.name}: erledigt") { repo.completeTask(status.task.id); stats.count(StatEvents.TASK_DONE) }
     fun saveEquipment(e: Equipment) = write { repo.saveEquipment(e) }
     fun removeSampleData() = write("Beispieldaten entfernt") { repo.removeSampleData() }
 
@@ -150,6 +172,7 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun finishSetup() = viewModelScope.launch {
         repo.markSetupDone()
+        stats.count(StatEvents.SETUP_DONE)
         _setupDone.value = true
     }
 
@@ -166,9 +189,7 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun supplyLink(supply: String): String = de.birneklub.drop.core.reminders.Links.supply(supply).also { linkOpened("supply") }
 
-    private fun linkOpened(kind: String) {
-        // Counted by the beta statistics once the user has opted in.
-    }
+    private fun linkOpened(kind: String) = count(if (kind == "reorder") StatEvents.LINK_REORDER else StatEvents.LINK_SUPPLY)
 
     // --- backup ------------------------------------------------------------------
     /** Writes a complete backup to a file the user picked (Downloads, Drive, …). */

@@ -211,4 +211,34 @@ class DataTest {
         assertTrue(first.isNotEmpty(), "sample data has overdue care and a bag running low")
         assertTrue(repo.takeNewReminders().isEmpty())
     }
+
+    @Test
+    fun betaStatsCountOnlyAfterOptInAndClearOnOptOut() = runTest {
+        val db = createDatabase()
+        var uploaded: de.birneklub.drop.core.stats.StatsUpload? = null
+        val engine = MockEngine { request ->
+            uploaded = DropsJson.decodeFromString(de.birneklub.drop.core.stats.StatsUpload.serializer(), request.body.toByteArray().decodeToString())
+            respond("", HttpStatusCode.NoContent)
+        }
+        val stats = BetaStats(db, engine, "android", "0.1.0", clock, kotlinx.datetime.TimeZone.UTC, Dispatchers.Unconfined)
+
+        assertNull(stats.optedIn())
+        stats.count("shot_logged")
+        assertTrue(stats.pending().isEmpty(), "nothing is counted before opt-in")
+
+        stats.setOptIn(true)
+        stats.count("shot_logged")
+        stats.count("shot_logged")
+        stats.countDaily("app_open")
+        stats.countDaily("app_open")
+        assertTrue(stats.flush("https://drops.example.com"))
+        val sent = assertNotNull(uploaded)
+        assertEquals(mapOf("shot_logged" to 2, "app_open" to 1), sent.counts.associate { it.event to it.count })
+        assertTrue(stats.pending().isEmpty())
+
+        stats.count("task_done")
+        stats.setOptIn(false)
+        assertTrue(stats.pending().isEmpty())
+        assertEquals(false, stats.flush("https://drops.example.com"))
+    }
 }

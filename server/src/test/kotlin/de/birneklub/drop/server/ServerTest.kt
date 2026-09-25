@@ -24,6 +24,8 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.datetime.minus
+import kotlinx.datetime.todayIn
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -154,5 +156,53 @@ class ServerTest {
         val h = Passwords.hash("sehrgeheim")
         assertTrue(Passwords.verify("sehrgeheim", h))
         assertTrue(!Passwords.verify("anders", h))
+    }
+
+    @Test
+    fun statsAreStoredAndReportedOnlyWithToken() = withServer(ServerConfig(authRateLimit = 100, statsToken = "0123456789abcdef-secret")) { client ->
+        val today = kotlinx.datetime.Clock.System.todayIn(kotlinx.datetime.TimeZone.UTC)
+        val upload = de.birneklub.drop.core.stats.StatsUpload(
+            "install-0123456789abcdef", "android", "0.1.0",
+            listOf(
+                de.birneklub.drop.core.stats.StatCount(today, "app_open", 1),
+                de.birneklub.drop.core.stats.StatCount(today, "setup_done", 1),
+                de.birneklub.drop.core.stats.StatCount(today, "shot_logged", 3),
+            ),
+        )
+        val sent = client.post("/api/stats/events") { contentType(ContentType.Application.Json); setBody(upload) }
+        assertEquals(HttpStatusCode.NoContent, sent.status)
+
+        val bad = client.post("/api/stats/events") { contentType(ContentType.Application.Json); setBody(upload.copy(counts = listOf(de.birneklub.drop.core.stats.StatCount(today, "email", 1)))) }
+        assertEquals(HttpStatusCode.BadRequest, bad.status)
+
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/stats/report").status)
+        val report: de.birneklub.drop.core.stats.BetaReport = client.get("/api/stats/report") { bearerAuth("0123456789abcdef-secret") }.body()
+        assertEquals(1, report.installs)
+        assertEquals(1.0, report.setupCompletedShare)
+        assertEquals(3.0, report.shotsPerActiveWeek)
+    }
+
+    @Test
+    fun reportIsDisabledWithoutToken() = withServer { client ->
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/stats/report").status)
+    }
+
+    @Test
+    fun retentionCountsDays28To35() {
+        val today = kotlinx.datetime.LocalDate(2026, 12, 31)
+        fun day(offset: Int) = today.minus(kotlinx.datetime.DatePeriod(days = offset)).toString()
+        val rows = listOf(
+            StatRow("a", day(40), "app_open", 1), StatRow("a", day(10), "app_open", 1), // first seen 40 days ago, back on day 30
+            StatRow("b", day(40), "app_open", 1), // never came back
+            StatRow("c", day(5), "app_open", 1), // too new for the cohort
+            StatRow("c", day(5), "founding_buy", 1),
+            StatRow("c", day(5), "link_reorder", 1),
+        )
+        val r = BetaReports.compute(rows, today)
+        assertEquals(2, r.day30Cohort)
+        assertEquals(0.5, r.day30RetentionShare)
+        assertEquals(2, r.activeLast30Days)
+        assertEquals(0.5, r.foundingBuyerShare)
+        assertEquals(0.5, r.linkClickShare)
     }
 }

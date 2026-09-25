@@ -117,7 +117,7 @@ fun AddBeanScreen(vm: DropsViewModel, nav: NavController) {
                             url = shopUrl.trim().takeIf { it.startsWith("https://") || it.startsWith("http://") }),
                         updatedAt = vm.now(),
                     )
-                    vm.saveBean(bean, "${bean.name} angelegt")
+                    vm.addBean(bean)
                     nav.popBackStack()
                     nav.navigate(Routes.bean(bean.id))
                 }

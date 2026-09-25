@@ -39,7 +39,17 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.slf4j.LoggerFactory
+import de.birneklub.drop.core.stats.StatEvents
+import de.birneklub.drop.core.stats.StatsLimits
+import de.birneklub.drop.core.stats.StatsUpload
+import io.ktor.http.HttpHeaders
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.todayIn
 import java.io.File
+import java.security.MessageDigest
 import kotlin.time.Duration.Companion.minutes
 
 data class ServerConfig(
@@ -49,6 +59,8 @@ data class ServerConfig(
     /** Requests per minute and client IP on the auth endpoints. */
     val authRateLimit: Int = 10,
     val behindProxy: Boolean = true,
+    /** Bearer token for GET /api/stats/report; the report is disabled without one. */
+    val statsToken: String? = null,
 ) {
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()) = ServerConfig(
@@ -57,6 +69,7 @@ data class ServerConfig(
             allowSignup = env["ALLOW_SIGNUP"]?.lowercase() != "false",
             authRateLimit = env["AUTH_RATE_LIMIT_PER_MINUTE"]?.toIntOrNull() ?: 10,
             behindProxy = env["BEHIND_PROXY"]?.lowercase() != "false",
+            statsToken = env["STATS_TOKEN"]?.takeIf { it.length >= 16 },
         )
     }
 }
@@ -64,6 +77,8 @@ data class ServerConfig(
 private const val MAX_BODY_BYTES = 10L * 1024 * 1024
 private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
 private val AUTH_LIMIT = RateLimitName("auth")
+private val STATS_LIMIT = RateLimitName("stats")
+private val INSTALL_ID = Regex("^[A-Za-z0-9-]{16,64}$")
 
 class ApiException(val status: HttpStatusCode, val code: String, message: String) : RuntimeException(message)
 
@@ -91,6 +106,10 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
     install(RateLimit) {
         register(AUTH_LIMIT) {
             rateLimiter(limit = config.authRateLimit, refillPeriod = 1.minutes)
+            requestKey { it.request.origin.remoteAddress }
+        }
+        register(STATS_LIMIT) {
+            rateLimiter(limit = 30, refillPeriod = 1.minutes)
             requestKey { it.request.origin.remoteAddress }
         }
     }
@@ -128,6 +147,22 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
                 }
             }
 
+            rateLimit(STATS_LIMIT) {
+                post("/stats/events") {
+                    val upload = call.receiveLimited<StatsUpload>()
+                    store.addStats(upload.installId, upload.platform.take(16), upload.appVersion.take(32), validateStats(upload, Clock.System.todayIn(TimeZone.UTC)))
+                    call.respond(HttpStatusCode.NoContent)
+                }
+            }
+            get("/stats/report") {
+                val expected = config.statsToken ?: throw ApiException(HttpStatusCode.NotFound, "not_found", "Nicht gefunden")
+                val given = call.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")?.trim().orEmpty()
+                if (!MessageDigest.isEqual(given.toByteArray(), expected.toByteArray())) {
+                    throw ApiException(HttpStatusCode.Unauthorized, "unauthorized", "Nicht angemeldet")
+                }
+                call.respond(BetaReports.compute(store.statRows(), Clock.System.todayIn(TimeZone.UTC)))
+            }
+
             authenticate("token") {
                 post("/auth/logout") {
                     store.revoke(call.session())
@@ -150,6 +185,20 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
                 }
             }
         }
+    }
+}
+
+/** Rejects malformed uploads; returns (day, event, count) triples to store. */
+internal fun validateStats(upload: StatsUpload, today: LocalDate): List<Triple<String, String, Int>> {
+    fun bad(msg: String): Nothing = throw ApiException(HttpStatusCode.BadRequest, "bad_stats", msg)
+    if (!INSTALL_ID.matches(upload.installId)) bad("Ungültige Installations-ID")
+    if (upload.counts.size > StatsLimits.MAX_COUNTS_PER_UPLOAD) bad("Zu viele Einträge")
+    return upload.counts.map { c ->
+        if (c.event !in StatEvents.all) bad("Unbekanntes Ereignis")
+        if (c.count !in 1..StatsLimits.MAX_COUNT) bad("Ungültige Anzahl")
+        val age = c.day.daysUntil(today)
+        if (age !in -1..StatsLimits.MAX_AGE_DAYS) bad("Ungültiges Datum")
+        Triple(c.day.toString(), c.event, c.count)
     }
 }
 

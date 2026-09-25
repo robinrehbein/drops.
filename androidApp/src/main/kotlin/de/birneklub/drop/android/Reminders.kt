@@ -81,6 +81,7 @@ object ReminderNotifications {
 class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val app = applicationContext as DropsApp
+        app.container.stats.flush(app.container.statsServerUrl)
         // Without permission the reminders stay "unseen" and appear once it is granted.
         if (!ReminderNotifications.allowed(app)) return Result.success()
         ReminderNotifications.show(app, app.container.repository.takeNewReminders())

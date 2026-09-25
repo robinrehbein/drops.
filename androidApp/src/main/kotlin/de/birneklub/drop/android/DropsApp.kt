@@ -2,6 +2,7 @@ package de.birneklub.drop.android
 
 import android.app.Application
 import android.os.Build
+import de.birneklub.drop.data.BetaStats
 import de.birneklub.drop.data.DropsRepository
 import de.birneklub.drop.data.SyncClient
 import de.birneklub.drop.data.createDatabase
@@ -17,6 +18,10 @@ class AppContainer(val app: Application) {
         deviceName = "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
         platform = "android",
     )
+    val stats = BetaStats(database, defaultHttpEngine(), platform = "android", appVersion = BuildConfig.VERSION_NAME)
+
+    /** Where anonymous beta statistics go: the hosted drops. server, if this build has one. */
+    val statsServerUrl: String = BuildConfig.DEFAULT_SYNC_URL
 }
 
 class DropsApp : Application() {

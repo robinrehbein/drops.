@@ -159,6 +159,11 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
             TextAction("Von Beanconqueror umziehen (Export-ZIP wählen)", { bcImporter.launch(arrayOf("application/zip", "application/json", "application/octet-stream")) })
         }
 
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SectionHeader("Beta")
+            StatsConsentCard(vm)
+        }
+
         if (lib.beans.any { it.id.startsWith(de.birneklub.drop.data.SampleData.PREFIX) }) {
             PillButton("Beispielbohnen entfernen", { vm.removeSampleData() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
         }

@@ -99,6 +99,7 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
                         style = DropsType.small, color = c.muted, modifier = Modifier.padding(top = 6.dp),
                     )
                 }
+                StatsConsentCard(vm)
                 PillButton("Bohne anlegen", { leave(Routes.ADD_BEAN) }, Modifier.fillMaxWidth(), kind = ButtonKind.Ink, height = 56.dp)
                 val bcImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) { vm.importBeanconqueror(uri); leave(null) }
