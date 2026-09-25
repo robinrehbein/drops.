@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.Drops" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/paper</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+    <color name="paper">#F3EEE5</color>
+    <color name="espresso">#2A211B</color>
+    <color name="crema">#E08A4F</color>
+</resources>

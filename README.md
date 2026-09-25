@@ -1,5 +1,7 @@
 # Drops
 
+> **Native apps in progress:** the Kotlin Multiplatform apps (Android now, iOS next) and the optional sync server live in `core/`, `data/`, `androidApp/` and `server/`. See [`docs/native-app.md`](docs/native-app.md). The React Native app below is being replaced.
+
 A high-fidelity coffee brewing companion for specialty coffee enthusiasts. Local-first, privacy-respecting, designed around the daily ritual of pulling a clean espresso shot.
 
 ## Quick start

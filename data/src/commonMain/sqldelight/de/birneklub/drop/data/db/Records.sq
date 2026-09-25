@@ -1,0 +1,53 @@
+-- Every entity is stored as JSON in one table. Personal-scale data volumes make
+-- this fast enough, and it keeps local storage and sync in the same shape.
+CREATE TABLE record (
+    collection TEXT NOT NULL,
+    id TEXT NOT NULL,
+    json TEXT,
+    updated_at INTEGER NOT NULL,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    -- 1 = changed locally and not yet accepted by the sync server
+    dirty INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (collection, id)
+);
+
+CREATE INDEX record_dirty ON record(dirty);
+
+CREATE TABLE kv (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+liveByCollection:
+SELECT json FROM record WHERE collection = ? AND deleted = 0;
+
+byId:
+SELECT * FROM record WHERE collection = ? AND id = ?;
+
+upsert:
+INSERT OR REPLACE INTO record(collection, id, json, updated_at, deleted, dirty)
+VALUES (?, ?, ?, ?, ?, ?);
+
+dirty:
+SELECT * FROM record WHERE dirty = 1;
+
+markClean:
+UPDATE record SET dirty = 0 WHERE collection = ? AND id = ? AND updated_at = ?;
+
+markAllDirty:
+UPDATE record SET dirty = 1;
+
+countAll:
+SELECT count(*) FROM record;
+
+getValue:
+SELECT value FROM kv WHERE key = ?;
+
+setValue:
+INSERT OR REPLACE INTO kv(key, value) VALUES (?, ?);
+
+removeValue:
+DELETE FROM kv WHERE key = ?;
+
+liveIds:
+SELECT id FROM record WHERE collection = ? AND deleted = 0;

@@ -1,0 +1,11 @@
+# Only core/, server/ and the Gradle wrapper are needed for the server image.
+*
+!gradlew
+!settings.gradle.kts
+!build.gradle.kts
+!gradle.properties
+!gradle/
+!core/
+!server/
+**/build/
+**/.gradle/
