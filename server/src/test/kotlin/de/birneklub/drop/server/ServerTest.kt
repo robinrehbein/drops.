@@ -34,12 +34,15 @@ import kotlin.test.assertTrue
 
 class ServerTest {
     private val sentMails = mutableListOf<Pair<String, String>>()
+    private var playVerifier: PlayVerifier? = null
 
     private fun withServer(config: ServerConfig = ServerConfig(authRateLimit = 100), block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) {
         val db = File.createTempFile("drops", ".db").apply { deleteOnExit() }
         val store = Store(db.absolutePath)
         testApplication {
-            application { dropsModule(store, config) { to, _, text -> sentMails += to to text } }
+            application {
+                dropsModule(store, config, mailer = { to, _, text -> sentMails += to to text }, playVerifier = playVerifier)
+            }
             val client = createClient { install(ContentNegotiation) { json(DropsJson) } }
             block(client)
         }
@@ -264,5 +267,42 @@ class ServerTest {
         assertEquals(HttpStatusCode.OK, client.get("/healthz").status)
         assertEquals(HttpStatusCode.OK, client.get("/roaster").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/gibt-es-nicht").status)
+    }
+
+    @Test
+    fun purchasesAreCheckedWithGoogleWhenConfigured() {
+        val verifyUrl = "/api/purchases/verify"
+        fun req(product: String = "founding_member", token: String = "token-0123456789") =
+            de.birneklub.drop.core.stats.PurchaseVerifyRequest(product, token)
+
+        withServer { client ->
+            val r: de.birneklub.drop.core.stats.PurchaseVerifyResponse = client.post(verifyUrl) { contentType(ContentType.Application.Json); setBody(req()) }.body()
+            assertEquals("unverified", r.state, "without a service account the app keeps Play's local result")
+        }
+
+        playVerifier = PlayVerifier { _, token -> if (token.endsWith("refunded")) PlayPurchase("canceled", "GPA.2") else PlayPurchase("purchased", "GPA.1") }
+        withServer(ServerConfig(authRateLimit = 100, statsToken = "0123456789abcdef-secret")) { client ->
+            suspend fun state(r: de.birneklub.drop.core.stats.PurchaseVerifyRequest) =
+                client.post(verifyUrl) { contentType(ContentType.Application.Json); setBody(r) }
+            assertEquals("purchased", state(req()).body<de.birneklub.drop.core.stats.PurchaseVerifyResponse>().state)
+            assertEquals("canceled", state(req(token = "token-0123456789-refunded")).body<de.birneklub.drop.core.stats.PurchaseVerifyResponse>().state)
+            assertEquals(HttpStatusCode.BadRequest, state(req(product = "something_else")).status)
+            val report: de.birneklub.drop.core.stats.BetaReport = client.get("/api/stats/report") { bearerAuth("0123456789abcdef-secret") }.body()
+            assertEquals(1, report.verifiedPurchases)
+        }
+        playVerifier = null
+    }
+
+    @Test
+    fun serviceAccountKeyIsParsed() {
+        val key = java.security.KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair().private
+        val pem = "-----BEGIN PRIVATE KEY-----\n" + java.util.Base64.getMimeEncoder(64, "\n".toByteArray()).encodeToString(key.encoded) + "\n-----END PRIVATE KEY-----\n"
+        val json = kotlinx.serialization.json.buildJsonObject {
+            put("client_email", JsonPrimitive("ci@drops.iam.gserviceaccount.com"))
+            put("private_key", JsonPrimitive(pem))
+            put("token_uri", JsonPrimitive("http://127.0.0.1:9/token"))
+        }.toString()
+        // Parsing works; the unreachable token endpoint makes the check return null instead of throwing.
+        assertEquals(null, GooglePlayVerifier(json, "de.birneklub.drops").check("founding_member", "token-0123456789"))
     }
 }

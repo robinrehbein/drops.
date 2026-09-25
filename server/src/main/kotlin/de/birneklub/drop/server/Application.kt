@@ -67,6 +67,9 @@ data class ServerConfig(
     val androidCertSha256: List<String> = emptyList(),
     /** Outgoing mail for the waitlist; without it sign-ups cannot be confirmed. */
     val smtp: SmtpConfig? = null,
+    /** Service account JSON for the Play Developer API; enables purchase checks. */
+    val playServiceAccountJson: String? = null,
+    val playPackageName: String = "de.birneklub.drops",
 ) {
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()) = ServerConfig(
@@ -78,6 +81,8 @@ data class ServerConfig(
             statsToken = env["STATS_TOKEN"]?.takeIf { it.length >= 16 },
             publicUrl = env["PUBLIC_URL"]?.trimEnd('/')?.takeIf { it.startsWith("https://") || it.startsWith("http://") },
             androidCertSha256 = env["ANDROID_CERT_SHA256"].orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() },
+            playServiceAccountJson = env["PLAY_SERVICE_ACCOUNT_JSON"]?.takeIf { it.contains("private_key") },
+            playPackageName = env["PLAY_PACKAGE_NAME"] ?: "de.birneklub.drops",
             smtp = env["SMTP_HOST"]?.takeIf { it.isNotBlank() }?.let { host ->
                 SmtpConfig(
                     host = host,
@@ -91,7 +96,7 @@ data class ServerConfig(
     }
 }
 
-private const val MAX_BODY_BYTES = 10L * 1024 * 1024
+internal const val MAX_BODY_BYTES = 10L * 1024 * 1024
 private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
 private val AUTH_LIMIT = RateLimitName("auth")
 private val STATS_LIMIT = RateLimitName("stats")
@@ -107,7 +112,12 @@ fun main() {
     embeddedServer(Netty, port = config.port) { dropsModule(store, config) }.start(wait = true)
 }
 
-fun Application.dropsModule(store: Store, config: ServerConfig, mailer: Mailer = config.smtp?.let(::SmtpMailer) ?: LogMailer) {
+fun Application.dropsModule(
+    store: Store,
+    config: ServerConfig,
+    mailer: Mailer = config.smtp?.let(::SmtpMailer) ?: LogMailer,
+    playVerifier: PlayVerifier? = config.playServiceAccountJson?.let { GooglePlayVerifier(it, config.playPackageName) },
+) {
     install(CallLogging)
     // Coolify puts Traefik/Caddy in front; use the client IP it forwards for rate limiting.
     if (config.behindProxy) install(XForwardedHeaders)
@@ -143,7 +153,10 @@ fun Application.dropsModule(store: Store, config: ServerConfig, mailer: Mailer =
 
         roasterPages(config)
         website()
-        rateLimit(AUTH_LIMIT) { waitlistRoutes(store, config, mailer) }
+        rateLimit(AUTH_LIMIT) {
+            waitlistRoutes(store, config, mailer)
+            purchaseRoutes(store, playVerifier)
+        }
 
         route("/api") {
             rateLimit(AUTH_LIMIT) {
@@ -178,7 +191,12 @@ fun Application.dropsModule(store: Store, config: ServerConfig, mailer: Mailer =
             get("/stats/report") {
                 call.requireStatsToken(config)
                 val report = BetaReports.compute(store.statRows(), Clock.System.todayIn(TimeZone.UTC))
-                call.respond(report.copy(waitlistConfirmed = store.waitlistConfirmed().size))
+                call.respond(
+                    report.copy(
+                        waitlistConfirmed = store.waitlistConfirmed().size,
+                        verifiedPurchases = store.purchaseCounts()[de.birneklub.drop.core.stats.PurchaseVerifyResponse.PURCHASED] ?: 0,
+                    ),
+                )
             }
 
             authenticate("token") {
@@ -223,7 +241,7 @@ internal fun validateStats(upload: StatsUpload, today: LocalDate): List<Triple<S
 private fun ApplicationCall.session(): Session = principal<Session>()
     ?: throw ApiException(HttpStatusCode.Unauthorized, "unauthorized", "Nicht angemeldet")
 
-private suspend inline fun <reified T : Any> ApplicationCall.receiveLimited(): T {
+internal suspend inline fun <reified T : Any> ApplicationCall.receiveLimited(): T {
     val length = request.contentLength()
     if (length != null && length > MAX_BODY_BYTES) {
         throw ApiException(HttpStatusCode.PayloadTooLarge, "too_large", "Anfrage zu groß")

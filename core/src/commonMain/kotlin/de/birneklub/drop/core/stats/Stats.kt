@@ -69,8 +69,28 @@ data class BetaReport(
     val roasterRecipes: Int = 0,
     /** Confirmed waitlist sign-ups (double opt-in). */
     val waitlistConfirmed: Int = 0,
+    /** Founding-member purchases confirmed with Google Play (server-side check). */
+    val verifiedPurchases: Int = 0,
     val weekly: List<WeekRow>,
 )
 
 @Serializable
 data class WeekRow(val weekStart: LocalDate, val newInstalls: Int, val activeInstalls: Int, val shots: Int)
+
+/** The app asks the server to confirm a Play purchase with Google. */
+@Serializable
+data class PurchaseVerifyRequest(val productId: String, val purchaseToken: String)
+
+@Serializable
+data class PurchaseVerifyResponse(
+    /** purchased, pending, canceled, invalid, or unverified when the server cannot ask Google. */
+    val state: String,
+) {
+    companion object {
+        const val PURCHASED = "purchased"
+        const val PENDING = "pending"
+        const val CANCELED = "canceled"
+        const val INVALID = "invalid"
+        const val UNVERIFIED = "unverified"
+    }
+}

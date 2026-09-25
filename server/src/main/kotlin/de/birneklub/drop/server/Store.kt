@@ -72,6 +72,15 @@ class Store(path: String) : AutoCloseable {
                     count INTEGER NOT NULL,
                     PRIMARY KEY(install_id, day, event))""",
             )
+            // Verified Play purchases; the token is stored hashed.
+            st.execute(
+                """CREATE TABLE IF NOT EXISTS purchases(
+                    token_hash TEXT PRIMARY KEY,
+                    product_id TEXT NOT NULL,
+                    order_id TEXT,
+                    state TEXT NOT NULL,
+                    checked_at INTEGER NOT NULL)""",
+            )
             // Waitlist with double opt-in: an address counts only once confirmed.
             st.execute(
                 """CREATE TABLE IF NOT EXISTS waitlist(
@@ -89,6 +98,30 @@ class Store(path: String) : AutoCloseable {
             )
         }
     }
+
+    // --- purchases -------------------------------------------------------------
+
+    fun recordPurchase(token: String, productId: String, orderId: String?, state: String, now: Long) = synchronized(lock) {
+        conn.prepareStatement(
+            "INSERT INTO purchases(token_hash, product_id, order_id, state, checked_at) VALUES(?,?,?,?,?) " +
+                "ON CONFLICT(token_hash) DO UPDATE SET state = excluded.state, order_id = coalesce(excluded.order_id, order_id), checked_at = excluded.checked_at",
+        ).use { ps ->
+            ps.setString(1, sha256(token)); ps.setString(2, productId); ps.setString(3, orderId); ps.setString(4, state); ps.setLong(5, now)
+            ps.executeUpdate()
+        }
+    }
+
+    /** Verified purchases by state, e.g. {purchased=12, canceled=1}. */
+    fun purchaseCounts(): Map<String, Int> = synchronized(lock) {
+        conn.createStatement().use { st ->
+            st.executeQuery("SELECT state, count(*) FROM purchases GROUP BY state").use { rs ->
+                buildMap { while (rs.next()) put(rs.getString(1), rs.getInt(2)) }
+            }
+        }
+    }
+
+    private fun sha256(s: String): String =
+        MessageDigest.getInstance("SHA-256").digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
 
     // --- waitlist ----------------------------------------------------------------
 
