@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.birneklub.drop.android.R
 import de.birneklub.drop.android.ui.Chip
@@ -85,7 +86,16 @@ data class MapPin(
     val beans: List<Bean> = emptyList(),
 )
 
-private class MapPaths(val world: Path, val europeLand: Path, val europeBorders: Path)
+private class MapPaths(
+    val world: Path,
+    val europeLand: Path,
+    val europeBorders: Path,
+    // Street-level layer for the example city (OpenStreetMap, ODbL).
+    val cityWater: Path,
+    val cityParks: Path,
+    val cityMinorRoads: Path,
+    val cityMajorRoads: Path,
+)
 
 @Composable
 private fun rememberMapPaths(): MapPaths? {
@@ -93,7 +103,11 @@ private fun rememberMapPaths(): MapPaths? {
     val state = produceState<MapPaths?>(null) {
         value = withContext(Dispatchers.Default) {
             fun load(id: Int) = PathParser().parsePathString(context.resources.openRawResource(id).bufferedReader().use { it.readText() }).toPath()
-            MapPaths(load(R.raw.map_world), load(R.raw.map_europe_land), load(R.raw.map_europe_borders))
+            MapPaths(
+                load(R.raw.map_world), load(R.raw.map_europe_land), load(R.raw.map_europe_borders),
+                load(R.raw.map_city_water).apply { fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd },
+                load(R.raw.map_city_parks), load(R.raw.map_city_minor), load(R.raw.map_city_major),
+            )
         }
     }
     return state.value
@@ -240,6 +254,11 @@ fun MapScreen(vm: DropsViewModel) {
                     } else {
                         paths?.let {
                             drawPath(it.europeLand, c.land)
+                            drawPath(it.cityParks, c.okSoft.copy(alpha = 0.6f))
+                            drawPath(it.cityWater, c.sea)
+                            val round = androidx.compose.ui.graphics.StrokeCap.Round
+                            drawPath(it.cityMinorRoads, c.line, style = Stroke(1.5f * unit, cap = round))
+                            drawPath(it.cityMajorRoads, c.landLine, style = Stroke(3f * unit, cap = round))
                             drawPath(it.europeBorders, c.landLine, style = Stroke(2f * unit))
                         }
                     }
@@ -281,6 +300,12 @@ fun MapScreen(vm: DropsViewModel) {
                         }
                     }
                 }
+            }
+            if (mode != MapMode.ORIGIN) {
+                Text(
+                    "© OpenStreetMap-Mitwirkende", style = DropsType.caption.copy(fontSize = 10.sp), color = c.muted,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp).background(c.surface.copy(alpha = 0.8f)).padding(horizontal = 4.dp),
+                )
             }
             if (paths == null) Text("Karte wird geladen …", style = DropsType.small, color = c.muted, modifier = Modifier.align(Alignment.Center))
         }
