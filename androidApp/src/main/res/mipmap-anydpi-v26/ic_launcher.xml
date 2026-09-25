@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The app icon: coffee-bean drop on a light cream ground (from assets/drop-icon.png).
+     The artwork is one bitmap layer; the vector drop serves themed (monochrome) icons. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/espresso" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@android:color/transparent" />
     <monochrome android:drawable="@drawable/ic_launcher_foreground" />
 </adaptive-icon>
