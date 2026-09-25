@@ -12,7 +12,10 @@ import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
+import de.birneklub.drop.core.stats.PurchaseVerifyResponse
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -22,7 +25,13 @@ import kotlinx.coroutines.flow.asStateFlow
  * then (or without Play) the state stays [State.Unavailable] and the app shows
  * the offer without a buy button.
  */
-class FoundingMember(context: Context, private val onNewPurchase: () -> Unit) {
+class FoundingMember(
+    context: Context,
+    private val scope: CoroutineScope,
+    /** Asks our server to confirm the purchase with Google; null = not possible right now. */
+    private val verify: suspend (productId: String, token: String) -> String?,
+    private val onNewPurchase: () -> Unit,
+) {
     sealed interface State {
         data object Loading : State
         data object Unavailable : State
@@ -57,12 +66,16 @@ class FoundingMember(context: Context, private val onNewPurchase: () -> Unit) {
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()) { _, purchases ->
             handle(purchases, fresh = false)
             if (_state.value == State.Owned || _state.value == State.Pending) return@queryPurchasesAsync
-            val product = QueryProductDetailsParams.Product.newBuilder().setProductId(PRODUCT_ID).setProductType(BillingClient.ProductType.INAPP).build()
-            client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product)).build()) { result, found ->
-                details = found.productDetailsList.firstOrNull()
-                val price = details?.oneTimePurchaseOfferDetails?.formattedPrice
-                _state.value = if (result.responseCode == BillingClient.BillingResponseCode.OK && price != null) State.Available(price) else State.Unavailable
-            }
+            refreshOffer()
+        }
+    }
+
+    private fun refreshOffer() {
+        val product = QueryProductDetailsParams.Product.newBuilder().setProductId(PRODUCT_ID).setProductType(BillingClient.ProductType.INAPP).build()
+        client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product)).build()) { result, found ->
+            details = found.productDetailsList.firstOrNull()
+            val price = details?.oneTimePurchaseOfferDetails?.formattedPrice
+            _state.value = if (result.responseCode == BillingClient.BillingResponseCode.OK && price != null) State.Available(price) else State.Unavailable
         }
     }
 
@@ -83,8 +96,14 @@ class FoundingMember(context: Context, private val onNewPurchase: () -> Unit) {
                 if (!bought.isAcknowledged) {
                     client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(bought.purchaseToken).build()) {}
                 }
-                if (fresh) onNewPurchase()
                 _state.value = State.Owned
+                // The server double-checks with Google; a refund or a forged token takes the status back.
+                scope.launch {
+                    when (verify(PRODUCT_ID, bought.purchaseToken)) {
+                        PurchaseVerifyResponse.CANCELED, PurchaseVerifyResponse.INVALID -> refreshOffer()
+                        else -> if (fresh) onNewPurchase()
+                    }
+                }
             }
             ours.any { it.purchaseState == Purchase.PurchaseState.PENDING } -> _state.value = State.Pending
         }

@@ -41,6 +41,8 @@ From the Android emulator the local server is reachable at `http://10.0.2.2:8080
 | `PUBLIC_URL` | request host | Base URL printed into roaster QR codes, e.g. `https://sync.example.com` |
 | `ANDROID_CERT_SHA256` | unset | Comma-separated SHA-256 fingerprints of the app signing key (Play Console → App integrity); served as `/.well-known/assetlinks.json` so `/r/` links open the app directly |
 | `SMTP_HOST`, `SMTP_PORT` (587), `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | unset | Mail server for waitlist confirmations (double opt-in). Without it sign-ups stay unconfirmed. |
+| `PLAY_SERVICE_ACCOUNT_JSON` | unset | Same service account JSON as in GitHub; lets the server confirm purchases with Google (`POST /api/purchases/verify`). In the Play Console the account needs *View financial data*. |
+| `PLAY_PACKAGE_NAME` | `de.birneklub.drops` | App id for purchase checks |
 | `STATS_TOKEN` | unset | At least 16 characters; enables `GET /api/stats/report` with `Authorization: Bearer <token>` |
 
 Endpoints: `GET /healthz`, `POST /api/auth/register`, `POST /api/auth/login`,
@@ -81,17 +83,27 @@ without tracking people:
   retention for installs first seen at least 35 days ago (KR2), shots per
   active week and care tasks per active install (KR3), founding-member share
   of the last 30 days' active installs (KR4), link click share (KR5) and weekly
-  rows. Roaster pilots (KR6) are tracked outside the app.
+  rows, plus adopted roaster cards (`roasterRecipes`, KR6) and confirmed
+  waitlist sign-ups.
 - **Founding Member.** One-time in-app product via Google Play Billing. Create
   an in-app product with id `founding_member` in the Play Console (price
   29–39 €) and activate it; until then the Setup tab shows the offer without a
-  buy button. Purchases are acknowledged in the app, no server check yet. The
-  card promises that later Pro features stay unlocked for founding members.
+  buy button. Purchases are acknowledged in the app and confirmed by the
+  server with Google when `PLAY_SERVICE_ACCOUNT_JSON` is set there; refunded
+  or invalid purchases lose the status. Without it the app trusts Play's
+  local result. The report shows `verifiedPurchases`. The card promises that
+  later Pro features stay unlocked for founding members.
 - **Reminders.** A WorkManager job checks twice a day and notifies once per
   cycle about overdue care and bags with three shots or fewer left. Links for
   consumables and reordering open a shop search or the bean's saved shop page.
-  They are not affiliate links yet; once partner links are added they must be
-  labelled as advertising ("Anzeige").
+  Partner (affiliate) links come from two GitHub variables used at build time:
+  `REORDER_LINK_TEMPLATE` for beans without a saved shop page and
+  `SUPPLY_LINK_TEMPLATE` for consumables. `{q}` is the URL-encoded search
+  text, `{qq}` the same encoded twice for deep links that wrap a destination
+  (AWIN `ued=`). Examples: `https://www.amazon.de/s?k={q}&tag=<partner-tag>`,
+  `https://www.awin1.com/cread.php?awinmid=<mid>&awinaffid=<id>&ued=<encoded shop search URL ending in {qq}>`.
+  As soon as a template is set, those links carry an "Anzeige" label; saved
+  shop pages stay unlabelled.
 - **Roaster QR cards (KR6).** Roasters open `https://<server>/roaster`, enter
   a starting recipe and print the card. The QR code holds the whole recipe in
   the link `https://<server>/r/<card>`; nothing is stored on the server.
@@ -191,7 +203,6 @@ from Play Console → *Test and release → App integrity*, plus the upload key'
 
 ## Open points
 
-- Server-side verification of Play purchases (Play Developer API) before Pro features depend on it.
 - Affiliate IDs for supply and reorder links, with an "Anzeige" label.
 - The machine and grinder catalog (`core/.../catalog/EquipmentCatalog.kt`) is a start; grind ranges are typical starting points and should be checked with beta users.
 

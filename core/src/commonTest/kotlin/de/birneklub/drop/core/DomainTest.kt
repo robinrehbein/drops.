@@ -162,10 +162,24 @@ class DomainTest {
     fun reorderLinksPreferTheSavedShop() {
         val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
         val bean = Bean("b", "Guji Hambela", "Nordbahnhof", "Äthiopien", updatedAt = now)
-        assertEquals("https://www.google.com/search?tbm=shop&q=Nordbahnhof+Guji+Hambela+Kaffee", de.birneklub.drop.core.reminders.Links.reorder(bean))
+        assertEquals(
+            de.birneklub.drop.core.reminders.OutboundLink("https://www.google.com/search?tbm=shop&q=Nordbahnhof+Guji+Hambela+Kaffee", sponsored = false),
+            de.birneklub.drop.core.reminders.Links.reorder(bean),
+        )
         val withShop = bean.copy(purchase = de.birneklub.drop.core.model.Purchase("Nordbahnhof", "Hamburg", url = "https://example.com/guji"))
-        assertEquals("https://example.com/guji", de.birneklub.drop.core.reminders.Links.reorder(withShop))
-        assertEquals("https://www.google.com/search?tbm=shop&q=Br%C3%BChgruppendichtung", de.birneklub.drop.core.reminders.Links.supply("Brühgruppendichtung"))
+        assertEquals("https://example.com/guji", de.birneklub.drop.core.reminders.Links.reorder(withShop).url)
+        assertEquals("https://www.google.com/search?tbm=shop&q=Br%C3%BChgruppendichtung", de.birneklub.drop.core.reminders.Links.supply("Brühgruppendichtung").url)
+
+        // Partner templates make the link sponsored; a saved shop page stays a plain link.
+        val partner = de.birneklub.drop.core.reminders.LinkConfig(
+            reorderTemplate = "https://www.awin1.com/cread.php?awinmid=1&awinaffid=2&ued=https%3A%2F%2Fshop.example%2Fsearch%3Fq%3D{qq}",
+            supplyTemplate = "https://www.amazon.de/s?k={q}&tag=drops-21",
+        )
+        val sponsored = de.birneklub.drop.core.reminders.Links.reorder(bean, partner)
+        assertTrue(sponsored.sponsored)
+        assertEquals("https://www.awin1.com/cread.php?awinmid=1&awinaffid=2&ued=https%3A%2F%2Fshop.example%2Fsearch%3Fq%3DNordbahnhof%2BGuji%2BHambela%2BKaffee", sponsored.url)
+        assertEquals("https://www.amazon.de/s?k=Entkalker&tag=drops-21", de.birneklub.drop.core.reminders.Links.supply("Entkalker", partner).url)
+        assertFalse(de.birneklub.drop.core.reminders.Links.reorder(withShop, partner).sponsored)
     }
 
     @Test

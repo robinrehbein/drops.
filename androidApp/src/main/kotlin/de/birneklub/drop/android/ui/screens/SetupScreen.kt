@@ -120,7 +120,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader("Pflegeplan", trailing = "nach Dringlichkeit")
-            plan.forEach { s -> DropsCard(Modifier.fillMaxWidth(), padding = PaddingValues(0.dp)) { TaskRow(s, compact = false, onBuy = { uri.openUri(vm.supplyLink(it)) }) { vm.completeTask(s) } } }
+            plan.forEach { s -> DropsCard(Modifier.fillMaxWidth(), padding = PaddingValues(0.dp)) { TaskRow(s, compact = false, onBuy = { uri.openUri(vm.open(vm.supplyLink(it), reorder = false)) }, buySponsored = vm.supplyLinksSponsored) { vm.completeTask(s) } } }
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

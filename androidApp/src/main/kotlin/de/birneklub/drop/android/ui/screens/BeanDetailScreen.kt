@@ -169,9 +169,11 @@ fun BeanDetailScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
                     }
                     if (bean.wouldRebuy != false) {
                         val uri = LocalUriHandler.current
+                        val link = vm.reorderLink(bean)
+                        if (link.sponsored) Row(Modifier.padding(top = 12.dp)) { de.birneklub.drop.android.ui.AdLabel() }
                         PillButton(
                             if (bean.purchase?.url != null) "Beim Röster nachkaufen" else "Nachkaufen suchen",
-                            { uri.openUri(vm.reorderLink(bean)) },
+                            { uri.openUri(vm.open(link, reorder = true)) },
                             Modifier.fillMaxWidth().padding(top = 12.dp), kind = ButtonKind.Ghost, height = 44.dp, icon = DropsIcons.Cart,
                         )
                     }

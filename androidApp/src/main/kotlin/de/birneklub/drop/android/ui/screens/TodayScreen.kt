@@ -122,7 +122,11 @@ fun TodayScreen(vm: DropsViewModel, nav: NavController) {
                                 Text(b.name, style = DropsType.bodyStrong, color = Drops.colors.ink)
                                 Text(if (left == 0) "leer" else "noch $left Shots · ${b.roaster}", style = DropsType.caption, color = Drops.colors.warn)
                             }
-                            PillButton("Nachkaufen", { uri.openUri(vm.reorderLink(b)) }, kind = ButtonKind.Ink, height = 40.dp)
+                            val link = vm.reorderLink(b)
+                            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                PillButton("Nachkaufen", { uri.openUri(vm.open(link, reorder = true)) }, kind = ButtonKind.Ink, height = 40.dp)
+                                if (link.sponsored) de.birneklub.drop.android.ui.AdLabel()
+                            }
                         }
                     }
                 }
@@ -138,7 +142,7 @@ fun TodayScreen(vm: DropsViewModel, nav: NavController) {
                 DropsCard(padding = PaddingValues(0.dp)) {
                     due.forEachIndexed { i, s ->
                         if (i > 0) de.birneklub.drop.android.ui.Divider()
-                        TaskRow(s, compact = true, onBuy = { uri.openUri(vm.supplyLink(it)) }) { vm.completeTask(s) }
+                        TaskRow(s, compact = true, onBuy = { uri.openUri(vm.open(vm.supplyLink(it), reorder = false)) }, buySponsored = vm.supplyLinksSponsored) { vm.completeTask(s) }
                     }
                 }
             }
