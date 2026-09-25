@@ -506,7 +506,8 @@ function vMap(){
   var roasters={};S.beans.forEach(function(b){roasters[b.shop.name]=1;});
   var h='<div style="display:flex;flex-direction:column;gap:16px;padding-top:28px;padding-bottom:24px"><div style="padding:0 20px;display:flex;flex-direction:column;gap:14px"><div class="between" style="align-items:flex-end"><h1 class="title">Karte</h1><span class="mono small muted">'+(disc?{near:'Beispiel: Hamburg',recs:RECS.length+' Vorschläge',travel:CITIES.length+' Städte'}[UI.discFilter]:origin?nC+' Länder · '+nB+' Röstungen':nC+' Städte · '+Object.keys(roasters).length+' Röstereien')+'</span></div>'+
     '<div class="seg" role="group" aria-label="Kartenansicht"><button data-act="mapmode" data-v="origin" aria-pressed="'+origin+'">Anbauregion</button><button data-act="mapmode" data-v="shop" aria-pressed="'+(UI.mapMode==='shop')+'">Gekauft bei</button><button data-act="mapmode" data-v="discover" aria-pressed="'+disc+'">Entdecken</button></div>'+
-    (disc?'<div class="chips">'+[['near','In der Nähe'],['recs','Empfehlungen'],['travel','Reiseziele']].map(function(c){return '<button class="chip" data-act="discfilter" data-v="'+c[0]+'" aria-pressed="'+(UI.discFilter===c[0])+'">'+c[1]+'</button>';}).join('')+'</div>':'')+'</div>';
+    '</div>';
+  var layerChips='<div class="chips" role="group" aria-label="Was die Karte zeigt">'+[['near','In der Nähe'],['recs','Empfehlungen'],['travel','Reiseziele']].map(function(c){return '<button class="chip" data-act="discfilter" data-v="'+c[0]+'" aria-pressed="'+(UI.discFilter===c[0])+'">'+c[1]+'</button>';}).join('')+'</div>';
   var vb=UI.vb,sc=vb.w/390;
   h+='<div class="mapwrap" id="mapwrap"><svg id="mapsvg" viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+vb.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+(origin?'Weltkarte mit den Anbauregionen deiner Bohnen':disc?'Karte mit Cafés, empfohlenen Kaffees und Reisezielen':'Karte Europas mit den Orten, an denen du Kaffee gekauft hast')+'">'+
     '<rect x="-400" y="-400" width="1400" height="1200" fill="var(--sea)"/>';
@@ -521,7 +522,7 @@ function vMap(){
     return '<g class="pin" data-act="pin" data-v="'+esc(p.id)+'" style="cursor:pointer"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+22*sc+'" fill="transparent"/>'+(p.kind==='me'?'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+12*sc+'" data-r="12" fill="var(--inv)" fill-opacity=".12" stroke="none"/>':'')+'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+base*sc+'" data-r="'+base+'" fill="'+fill+'" stroke="var(--surface)" stroke-width="'+2*sc+'"/></g>';}).join('')+'</g></svg>'+
     '<div class="mapctl"><button data-act="zoom" data-v="0.7" aria-label="Hineinzoomen">+</button><button data-act="zoom" data-v="1.4" aria-label="Herauszoomen">−</button><button data-act="fit" aria-label="Alle zeigen" style="font-size:12px">'+ic('ring',16)+'</button></div>'+
     (disc?'<div class="maplegend">'+legend()+'</div>':'')+'</div>';
-  if(disc) return h+'<div class="pad" style="padding-top:4px">'+discoverContent(pins)+'</div></div>';
+  if(disc) return h+'<div class="pad" style="padding-top:0">'+layerChips+discoverContent(pins)+'</div></div>';
   h+='<div style="padding:0 10px;display:flex;flex-direction:column">'+pins.map(function(p){
     return '<button class="pinrow" data-act="pin" data-v="'+esc(p.id)+'" aria-pressed="'+(p.id===UI.mapSel)+'"><span class="dot"></span><span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">'+esc(p.title)+'</span><span class="small muted">'+esc(Object.keys(p.places).join(', '))+'</span></span><span class="mono small muted">'+p.beans.length+' '+(p.beans.length===1?'Röstung':'Röstungen')+'</span></button>';}).join('')+'</div></div>';
   return h;

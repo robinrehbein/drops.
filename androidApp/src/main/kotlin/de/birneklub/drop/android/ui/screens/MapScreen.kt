@@ -189,11 +189,6 @@ fun MapScreen(vm: DropsViewModel) {
                 },
             )
             Segmented(MapMode.entries.map { it.label }, mode.ordinal, { mode = MapMode.entries[it]; selected = null }, Modifier.fillMaxWidth())
-            if (mode == MapMode.DISCOVER) {
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    DiscoverLayer.entries.forEach { l -> Chip(l.label, l == layer) { layer = l; selected = null } }
-                }
-            }
         }
 
         Box(
@@ -291,6 +286,10 @@ fun MapScreen(vm: DropsViewModel) {
         }
 
         if (mode == MapMode.DISCOVER) {
+            // What the map shows sits right under it, next to the content it filters.
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                DiscoverLayer.entries.forEach { l -> Chip(l.label, l == layer) { layer = l; selected = null } }
+            }
             DiscoverContent(
                 lib = lib,
                 selectedKey = selected,
