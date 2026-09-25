@@ -12,6 +12,9 @@ val ciVersionName = providers.environmentVariable("DROPS_VERSION_NAME").orElse("
 val keystorePath = providers.environmentVariable("DROPS_KEYSTORE_PATH")
 // Pre-filled server address on the account screen; users can change it.
 val defaultSyncUrl = providers.environmentVariable("DROPS_SYNC_URL").orElse("https://")
+// Partner link templates (affiliate); empty = neutral search links. See docs/native-app.md.
+val reorderLinkTemplate = providers.environmentVariable("DROPS_REORDER_LINK_TEMPLATE").orElse("")
+val supplyLinkTemplate = providers.environmentVariable("DROPS_SUPPLY_LINK_TEMPLATE").orElse("")
 
 android {
     namespace = "de.birneklub.drop.android"
@@ -25,6 +28,8 @@ android {
         versionCode = ciVersionCode.get()
         versionName = ciVersionName.get()
         buildConfigField("String", "DEFAULT_SYNC_URL", "\"${defaultSyncUrl.get()}\"")
+        buildConfigField("String", "REORDER_LINK_TEMPLATE", "\"${reorderLinkTemplate.get()}\"")
+        buildConfigField("String", "SUPPLY_LINK_TEMPLATE", "\"${supplyLinkTemplate.get()}\"")
         // Roaster QR cards link to <sync server>/r/…; the app claims those links.
         manifestPlaceholders["linkHost"] = defaultSyncUrl.get().removePrefix("https://").substringBefore('/').ifBlank { "drops.invalid" }
     }

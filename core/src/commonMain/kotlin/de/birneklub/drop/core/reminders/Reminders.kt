@@ -69,16 +69,34 @@ object Reminders {
     }
 }
 
+/** A link that leaves the app. [sponsored] links earn us a commission and must be labelled as advertising. */
+data class OutboundLink(val url: String, val sponsored: Boolean)
+
+/**
+ * Partner link templates, set per build (see docs). `{q}` is replaced by the
+ * URL-encoded search text, `{qq}` by it encoded twice, for deep links that
+ * carry a destination URL as a parameter (e.g. AWIN's `ued=`). A template means
+ * a partner link, so its links count as sponsored.
+ */
+data class LinkConfig(val reorderTemplate: String? = null, val supplyTemplate: String? = null)
+
 /** Outbound links for reordering beans and consumables. */
 object Links {
-    /** The product page if the user saved one, otherwise a search for roaster and coffee. */
-    fun reorder(bean: Bean): String =
-        bean.purchase?.url?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
-            ?: search("${bean.roaster} ${bean.name} Kaffee")
+    /** The shop page the user saved, else a partner search if configured, else a neutral search. */
+    fun reorder(bean: Bean, config: LinkConfig = LinkConfig()): OutboundLink {
+        bean.purchase?.url?.takeIf { it.startsWith("https://") || it.startsWith("http://") }?.let { return OutboundLink(it, sponsored = false) }
+        return search("${bean.roaster} ${bean.name} Kaffee".trim(), config.reorderTemplate)
+    }
 
-    fun supply(supply: String): String = search(supply)
+    fun supply(supply: String, config: LinkConfig = LinkConfig()): OutboundLink = search(supply, config.supplyTemplate)
 
-    private fun search(query: String): String = "https://www.google.com/search?tbm=shop&q=" + encode(query.trim())
+    private fun search(query: String, template: String?): OutboundLink {
+        val q = encode(query.trim())
+        if (!template.isNullOrBlank() && template.startsWith("https://")) {
+            return OutboundLink(template.replace("{qq}", encode(q)).replace("{q}", q), sponsored = true)
+        }
+        return OutboundLink("https://www.google.com/search?tbm=shop&q=$q", sponsored = false)
+    }
 
     private fun encode(s: String): String = buildString {
         s.encodeToByteArray().forEach { b ->

@@ -90,8 +90,14 @@ without tracking people:
 - **Reminders.** A WorkManager job checks twice a day and notifies once per
   cycle about overdue care and bags with three shots or fewer left. Links for
   consumables and reordering open a shop search or the bean's saved shop page.
-  They are not affiliate links yet; once partner links are added they must be
-  labelled as advertising ("Anzeige").
+  Partner (affiliate) links come from two GitHub variables used at build time:
+  `REORDER_LINK_TEMPLATE` for beans without a saved shop page and
+  `SUPPLY_LINK_TEMPLATE` for consumables. `{q}` is the URL-encoded search
+  text, `{qq}` the same encoded twice for deep links that wrap a destination
+  (AWIN `ued=`). Examples: `https://www.amazon.de/s?k={q}&tag=<partner-tag>`,
+  `https://www.awin1.com/cread.php?awinmid=<mid>&awinaffid=<id>&ued=<encoded shop search URL ending in {qq}>`.
+  As soon as a template is set, those links carry an "Anzeige" label; saved
+  shop pages stay unlabelled.
 - **Roaster QR cards (KR6).** Roasters open `https://<server>/roaster`, enter
   a starting recipe and print the card. The QR code holds the whole recipe in
   the link `https://<server>/r/<card>`; nothing is stored on the server.

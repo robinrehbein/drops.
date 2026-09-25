@@ -225,7 +225,7 @@ fun stateColors(state: TaskState, c: DropsColors): Pair<Color, Color> = when (st
 }
 
 @Composable
-fun TaskRow(status: TaskStatus, compact: Boolean, onBuy: ((String) -> Unit)? = null, onDone: () -> Unit) {
+fun TaskRow(status: TaskStatus, compact: Boolean, onBuy: ((String) -> Unit)? = null, buySponsored: Boolean = false, onDone: () -> Unit) {
     val c = Drops.colors
     val (fg, soft) = stateColors(status.state, c)
     Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -245,7 +245,10 @@ fun TaskRow(status: TaskStatus, compact: Boolean, onBuy: ((String) -> Unit)? = n
         }
         val supply = status.task.supply
         if (supply != null && onBuy != null && status.state != TaskState.OK) {
-            TextAction("$supply nachkaufen ↗", { onBuy(supply) })
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextAction("$supply nachkaufen ↗", { onBuy(supply) })
+                if (buySponsored) AdLabel()
+            }
         }
     }
 }
@@ -254,6 +257,18 @@ fun intervalText(s: TaskStatus): String = when (s.task.intervalUnit) {
     IntervalUnit.DAYS -> "alle ${s.task.intervalValue.roundToInt()} Tage"
     IntervalUnit.KILOGRAMS -> "alle ${s.task.intervalValue.fmtDe(0)} kg"
     IntervalUnit.SHOTS -> "alle ${s.task.intervalValue.roundToInt()} Shots"
+}
+
+/** Required next to every partner (affiliate) link. */
+@Composable
+fun AdLabel() {
+    val c = Drops.colors
+    Text(
+        "Anzeige",
+        style = DropsType.caption.copy(fontSize = 11.sp),
+        color = c.muted,
+        modifier = Modifier.border(1.dp, c.line, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 1.dp),
+    )
 }
 
 @Composable

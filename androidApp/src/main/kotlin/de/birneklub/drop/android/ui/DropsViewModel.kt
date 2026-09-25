@@ -11,6 +11,10 @@ import de.birneklub.drop.core.backup.BackupException
 import de.birneklub.drop.core.backup.DropsBackup
 import de.birneklub.drop.core.catalog.EquipmentCatalog
 import de.birneklub.drop.core.stats.StatEvents
+import de.birneklub.drop.core.reminders.LinkConfig
+import de.birneklub.drop.core.reminders.Links
+import de.birneklub.drop.core.reminders.OutboundLink
+import de.birneklub.drop.android.BuildConfig
 import de.birneklub.drop.core.catalog.GrinderModel
 import de.birneklub.drop.core.catalog.MachineModel
 import de.birneklub.drop.core.domain.Maintenance
@@ -201,11 +205,24 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
 
     // --- outbound links -----------------------------------------------------------
     /** Link for reordering a bean; the tap is counted for the beta metrics. */
-    fun reorderLink(bean: Bean): String = de.birneklub.drop.core.reminders.Links.reorder(bean).also { linkOpened("reorder") }
+    private val linkConfig = LinkConfig(
+        reorderTemplate = BuildConfig.REORDER_LINK_TEMPLATE.ifBlank { null },
+        supplyTemplate = BuildConfig.SUPPLY_LINK_TEMPLATE.ifBlank { null },
+    )
 
-    fun supplyLink(supply: String): String = de.birneklub.drop.core.reminders.Links.supply(supply).also { linkOpened("supply") }
+    /** Where "Nachkaufen" leads; partner links are shown with an "Anzeige" label. */
+    fun reorderLink(bean: Bean): OutboundLink = Links.reorder(bean, linkConfig)
 
-    private fun linkOpened(kind: String) = count(if (kind == "reorder") StatEvents.LINK_REORDER else StatEvents.LINK_SUPPLY)
+    fun supplyLink(supply: String): OutboundLink = Links.supply(supply, linkConfig)
+
+    /** Consumable links are partner links as soon as a supply template is configured. */
+    val supplyLinksSponsored: Boolean get() = linkConfig.supplyTemplate != null
+
+    /** Counts the tap for the beta metrics and returns the URL to open. */
+    fun open(link: OutboundLink, reorder: Boolean): String {
+        count(if (reorder) StatEvents.LINK_REORDER else StatEvents.LINK_SUPPLY)
+        return link.url
+    }
 
     // --- backup ------------------------------------------------------------------
     /** Writes a complete backup to a file the user picked (Downloads, Drive, …). */
