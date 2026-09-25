@@ -161,6 +161,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader("Beta")
+            FoundingCard(vm)
             StatsConsentCard(vm)
         }
 

@@ -38,10 +38,44 @@ From the Android emulator the local server is reachable at `http://10.0.2.2:8080
 | `ALLOW_SIGNUP` | `true` | `false` closes registration (existing accounts keep working) |
 | `AUTH_RATE_LIMIT_PER_MINUTE` | `10` | Login/register attempts per client IP |
 | `BEHIND_PROXY` | `true` | Trust `X-Forwarded-For` from Coolify's proxy for rate limiting |
+| `STATS_TOKEN` | unset | At least 16 characters; enables `GET /api/stats/report` with `Authorization: Bearer <token>` |
 
 Endpoints: `GET /healthz`, `POST /api/auth/register`, `POST /api/auth/login`,
 `POST /api/auth/logout`, `GET /api/me`, `DELETE /api/me` (deletes account and
-all server data), `POST /api/sync`.
+all server data), `POST /api/sync`, `POST /api/stats/events` (anonymous beta
+counts, no login), `GET /api/stats/report` (needs `STATS_TOKEN`).
+
+## Beta: what the app measures and sells
+
+The 90-day beta is judged by a handful of numbers. The app can deliver them
+without tracking people:
+
+- **Anonymous statistics, opt-in.** Asked on the last onboarding step and
+  switchable in Setup. When on, the app counts per day: app used, setup done,
+  bean added, shot logged, care task done, reorder or supply link opened,
+  founding-member offer shown and bought. Counts go to the configured sync
+  server under a random install id that is not linked to the account. Opting
+  out deletes the id and anything not yet sent. Mention this in the privacy
+  policy (legal basis: consent, Art. 6(1)(a) GDPR).
+- **Key-result report.** `curl -H "Authorization: Bearer $STATS_TOKEN"
+  https://<server>/api/stats/report` returns setup completion (KR1), day-30
+  retention for installs first seen at least 35 days ago (KR2), shots per
+  active week and care tasks per active install (KR3), founding-member share
+  of the last 30 days' active installs (KR4), link click share (KR5) and weekly
+  rows. Roaster pilots (KR6) are tracked outside the app.
+- **Founding Member.** One-time in-app product via Google Play Billing. Create
+  an in-app product with id `founding_member` in the Play Console (price
+  29–39 €) and activate it; until then the Setup tab shows the offer without a
+  buy button. Purchases are acknowledged in the app, no server check yet. The
+  card promises that later Pro features stay unlocked for founding members.
+- **Reminders.** A WorkManager job checks twice a day and notifies once per
+  cycle about overdue care and bags with three shots or fewer left. Links for
+  consumables and reordering open a shop search or the bean's saved shop page.
+  They are not affiliate links yet; once partner links are added they must be
+  labelled as advertising ("Anzeige").
+- **Backups.** Export/import as JSON in Setup; Android Auto Backup covers the
+  database. **Beanconqueror**: the export ZIP can be imported in onboarding or
+  Setup (beans and espresso brews).
 
 ## CI/CD
 
@@ -80,6 +114,10 @@ replace the current store listing. That only works with the same upload key
 that signed the existing app (Play App Signing).
 
 ## Open points
+
+- Server-side verification of Play purchases (Play Developer API) before Pro features depend on it.
+- Affiliate IDs for supply and reorder links, with an "Anzeige" label.
+- The machine and grinder catalog (`core/.../catalog/EquipmentCatalog.kt`) is a start; grind ranges are typical starting points and should be checked with beta users.
 
 - iOS app (SwiftUI on top of `DropsKit`).
 - Label scanning for new beans (CameraX + ML Kit text recognition on device).

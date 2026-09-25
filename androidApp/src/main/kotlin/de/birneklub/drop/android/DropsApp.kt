@@ -2,6 +2,7 @@ package de.birneklub.drop.android
 
 import android.app.Application
 import android.os.Build
+import kotlinx.coroutines.launch
 import de.birneklub.drop.data.BetaStats
 import de.birneklub.drop.data.DropsRepository
 import de.birneklub.drop.data.SyncClient
@@ -19,6 +20,11 @@ class AppContainer(val app: Application) {
         platform = "android",
     )
     val stats = BetaStats(database, defaultHttpEngine(), platform = "android", appVersion = BuildConfig.VERSION_NAME)
+
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    val founding = FoundingMember(app) {
+        scope.launch { stats.count(de.birneklub.drop.core.stats.StatEvents.FOUNDING_BUY); stats.flush(statsServerUrl) }
+    }
 
     /** Where anonymous beta statistics go: the hosted drops. server, if this build has one. */
     val statsServerUrl: String = BuildConfig.DEFAULT_SYNC_URL

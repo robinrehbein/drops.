@@ -100,6 +100,10 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     private fun say(text: String) { _messages.value = text }
     private fun count(event: String) { viewModelScope.launch { stats.count(event) } }
 
+    val founding = container.founding
+    /** The offer was shown; counted once a day for the beta conversion rate. */
+    fun foundingViewed() = viewModelScope.launch { founding.connect(); stats.countDaily(StatEvents.FOUNDING_VIEW) }
+
     fun setStatsOptIn(enabled: Boolean) = viewModelScope.launch {
         stats.setOptIn(enabled)
         _statsOptIn.value = enabled
