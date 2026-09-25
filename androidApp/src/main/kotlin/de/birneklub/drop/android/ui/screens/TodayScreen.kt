@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -108,6 +109,26 @@ fun TodayScreen(vm: DropsViewModel, nav: NavController) {
             }
         }
 
+        val uri = LocalUriHandler.current
+        val low = lib.runningLow().take(2)
+        if (low.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SectionHeader("Geht zur Neige")
+                DropsCard(padding = PaddingValues(0.dp)) {
+                    low.forEachIndexed { i, (b, left) ->
+                        if (i > 0) de.birneklub.drop.android.ui.Divider()
+                        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(Modifier.weight(1f)) {
+                                Text(b.name, style = DropsType.bodyStrong, color = Drops.colors.ink)
+                                Text(if (left == 0) "leer" else "noch $left Shots · ${b.roaster}", style = DropsType.caption, color = Drops.colors.warn)
+                            }
+                            PillButton("Nachkaufen", { uri.openUri(vm.reorderLink(b)) }, kind = ButtonKind.Ink, height = 40.dp)
+                        }
+                    }
+                }
+            }
+        }
+
         val due = lib.carePlan(now).filter { it.progress >= 0.8 }.take(3)
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader("Fällig", "Alle Pflege", { nav.navigate(Routes.SETUP) })
@@ -117,7 +138,7 @@ fun TodayScreen(vm: DropsViewModel, nav: NavController) {
                 DropsCard(padding = PaddingValues(0.dp)) {
                     due.forEachIndexed { i, s ->
                         if (i > 0) de.birneklub.drop.android.ui.Divider()
-                        TaskRow(s, compact = true) { vm.completeTask(s) }
+                        TaskRow(s, compact = true, onBuy = { uri.openUri(vm.supplyLink(it)) }) { vm.completeTask(s) }
                     }
                 }
             }

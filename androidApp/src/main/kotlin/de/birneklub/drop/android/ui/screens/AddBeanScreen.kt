@@ -65,6 +65,7 @@ fun AddBeanScreen(vm: DropsViewModel, nav: NavController) {
     var weight by rememberSaveable { mutableStateOf("250") }
     var price by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
+    var shopUrl by rememberSaveable { mutableStateOf("") }
     var process by rememberSaveable { mutableStateOf(Process.WASHED) }
     var city by rememberSaveable { mutableStateOf("Hamburg") }
     var channel by rememberSaveable { mutableStateOf(PurchaseChannel.IN_STORE) }
@@ -88,6 +89,7 @@ fun AddBeanScreen(vm: DropsViewModel, nav: NavController) {
                 FormField("Preis (€)", price, { price = it }, Modifier.weight(1f), KeyboardType.Decimal)
                 FormField("Aromen, mit Komma", notes, { notes = it }, Modifier.weight(1f))
             }
+            FormField("Shop-Link zum Nachkaufen (optional)", shopUrl, { shopUrl = it }, type = KeyboardType.Uri)
         }
 
         ChoiceRow("Land", CoffeeCountries.keys.toList(), country) { country = it }
@@ -111,7 +113,8 @@ fun AddBeanScreen(vm: DropsViewModel, nav: NavController) {
                         id = vm.newId(), name = name.trim(), roaster = roaster.trim(), country = country, region = region.trim(),
                         origin = CoffeeCountries[country], process = process, roastDate = date, weightGrams = grams, remainingGrams = grams.toDouble(),
                         tastingNotes = notes.split(',').map { it.trim() }.filter { it.isNotEmpty() },
-                        purchase = Purchase(roaster.trim().ifBlank { "Rösterei" }, city, Cities[city], channel, price.replace(',', '.').toDoubleOrNull()?.let { (it * 100).toInt() }),
+                        purchase = Purchase(roaster.trim().ifBlank { "Rösterei" }, city, Cities[city], channel, price.replace(',', '.').toDoubleOrNull()?.let { (it * 100).toInt() },
+                            url = shopUrl.trim().takeIf { it.startsWith("https://") || it.startsWith("http://") }),
                         updatedAt = vm.now(),
                     )
                     vm.saveBean(bean, "${bean.name} angelegt")

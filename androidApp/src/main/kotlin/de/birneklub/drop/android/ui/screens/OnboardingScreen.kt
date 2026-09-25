@@ -38,6 +38,7 @@ import de.birneklub.drop.android.ui.PillButton
 import de.birneklub.drop.android.ui.Routes
 import de.birneklub.drop.android.ui.TextAction
 import de.birneklub.drop.android.ui.a11y
+import de.birneklub.drop.android.ui.rememberNotificationPermission
 import de.birneklub.drop.core.catalog.EquipmentCatalog
 import de.birneklub.drop.core.catalog.GrinderModel
 import de.birneklub.drop.core.catalog.MachineModel
@@ -50,7 +51,11 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
     var machineId by rememberSaveable { mutableStateOf<String?>(null) }
     val c = Drops.colors
 
+    val (notificationsAllowed, askNotifications) = rememberNotificationPermission()
+
     fun leave(then: String?) {
+        // Care reminders are the point of the machine step, so ask right after it.
+        if (!notificationsAllowed) askNotifications()
         vm.finishSetup()
         nav.navigate(Routes.TODAY) { popUpTo(Routes.ONBOARDING) { inclusive = true } }
         then?.let { nav.navigate(it) }

@@ -225,7 +225,7 @@ fun stateColors(state: TaskState, c: DropsColors): Pair<Color, Color> = when (st
 }
 
 @Composable
-fun TaskRow(status: TaskStatus, compact: Boolean, onDone: () -> Unit) {
+fun TaskRow(status: TaskStatus, compact: Boolean, onBuy: ((String) -> Unit)? = null, onDone: () -> Unit) {
     val c = Drops.colors
     val (fg, soft) = stateColors(status.state, c)
     Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -242,6 +242,10 @@ fun TaskRow(status: TaskStatus, compact: Boolean, onDone: () -> Unit) {
                 ProgressBar(status.progress.toFloat(), fg, Modifier.weight(1f))
                 Text(status.label(), style = DropsType.caption.copy(fontFamily = MonoFamily), color = fg)
             }
+        }
+        val supply = status.task.supply
+        if (supply != null && onBuy != null && status.state != TaskState.OK) {
+            TextAction("$supply nachkaufen ↗", { onBuy(supply) })
         }
     }
 }

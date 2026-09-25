@@ -139,4 +139,31 @@ class DomainTest {
         c.grinders.forEach { g -> assertTrue(g.scale.espressoStart in g.scale.min..g.scale.max, g.id) }
         c.grinders.mapNotNull { it.builtInto }.forEach { assertNotNull(c.machine(it)) }
     }
+
+    @Test
+    fun remindersFireOncePerCycle() {
+        val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
+        val task = MaintenanceTask("t", "m", "Wasserfilter wechseln", intervalValue = 60.0, intervalUnit = IntervalUnit.DAYS,
+            lastDoneAt = now - kotlin.time.Duration.parse("61d"), supply = "Wasserfilter", updatedAt = now)
+        val low = Bean("b", "Guji", "Röster", "Äthiopien", weightGrams = 250, remainingGrams = 40.0, updatedAt = now)
+        val plenty = low.copy(id = "c", remainingGrams = 200.0)
+        val noRebuy = low.copy(id = "d", wouldRebuy = false)
+        val r = de.birneklub.drop.core.reminders.Reminders.due(listOf(task), emptyList(), listOf(low, plenty, noRebuy), emptyList(), now)
+        assertEquals(listOf("t", "b"), r.map { it.targetId })
+        assertEquals("Guji: noch 2 Shots", r[1].title)
+
+        val done = Maintenance.markDone(task, null, now)
+        val after = de.birneklub.drop.core.reminders.Reminders.due(listOf(done), emptyList(), emptyList(), emptyList(), now + kotlin.time.Duration.parse("61d"))
+        assertTrue(after.single().key != r[0].key, "the next cycle gets a new key")
+    }
+
+    @Test
+    fun reorderLinksPreferTheSavedShop() {
+        val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
+        val bean = Bean("b", "Guji Hambela", "Nordbahnhof", "Äthiopien", updatedAt = now)
+        assertEquals("https://www.google.com/search?tbm=shop&q=Nordbahnhof+Guji+Hambela+Kaffee", de.birneklub.drop.core.reminders.Links.reorder(bean))
+        val withShop = bean.copy(purchase = de.birneklub.drop.core.model.Purchase("Nordbahnhof", "Hamburg", url = "https://example.com/guji"))
+        assertEquals("https://example.com/guji", de.birneklub.drop.core.reminders.Links.reorder(withShop))
+        assertEquals("https://www.google.com/search?tbm=shop&q=Br%C3%BChgruppendichtung", de.birneklub.drop.core.reminders.Links.supply("Brühgruppendichtung"))
+    }
 }

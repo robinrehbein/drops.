@@ -26,5 +26,7 @@ class DropsApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        ReminderNotifications.createChannels(this)
+        ReminderNotifications.schedule(this)
     }
 }

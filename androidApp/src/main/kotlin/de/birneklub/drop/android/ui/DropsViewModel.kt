@@ -46,6 +46,7 @@ data class LibraryState(
     fun shotsFor(beanId: String) = shots.filter { it.beanId == beanId }.sortedBy { it.pulledAt }
     fun bean(id: String) = beans.firstOrNull { it.id == id }
     fun carePlan(now: kotlinx.datetime.Instant): List<TaskStatus> = Maintenance.plan(tasks, equipment, now)
+    fun runningLow(): List<Pair<Bean, Int>> = de.birneklub.drop.core.reminders.Reminders.runningLow(beans, recipes)
 }
 
 data class AccountState(
@@ -157,6 +158,16 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
         repo.seedIfEmpty()
         repo.markSetupDone()
         _setupDone.value = true
+    }
+
+    // --- outbound links -----------------------------------------------------------
+    /** Link for reordering a bean; the tap is counted for the beta metrics. */
+    fun reorderLink(bean: Bean): String = de.birneklub.drop.core.reminders.Links.reorder(bean).also { linkOpened("reorder") }
+
+    fun supplyLink(supply: String): String = de.birneklub.drop.core.reminders.Links.supply(supply).also { linkOpened("supply") }
+
+    private fun linkOpened(kind: String) {
+        // Counted by the beta statistics once the user has opted in.
     }
 
     // --- backup ------------------------------------------------------------------

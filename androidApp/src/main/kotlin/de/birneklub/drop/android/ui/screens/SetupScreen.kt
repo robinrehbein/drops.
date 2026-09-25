@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +35,7 @@ import de.birneklub.drop.android.ui.SectionHeader
 import de.birneklub.drop.android.ui.TaskRow
 import de.birneklub.drop.android.ui.fmtDe
 import de.birneklub.drop.android.ui.grouped
+import de.birneklub.drop.android.ui.rememberNotificationPermission
 import de.birneklub.drop.core.domain.TaskState
 import de.birneklub.drop.core.model.EquipmentKind
 
@@ -46,6 +48,8 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
     val c = Drops.colors
     val machine = lib.equipment.firstOrNull { it.kind == EquipmentKind.MACHINE }
     val grinder = lib.equipment.firstOrNull { it.kind == EquipmentKind.GRINDER }
+    val uri = LocalUriHandler.current
+    val (notificationsAllowed, askNotifications) = rememberNotificationPermission()
 
     ScreenColumn {
         ScreenTitle("Setup", if (overdue > 0) "$overdue überfällig" else "Alles im grünen Bereich", if (overdue > 0) c.bad else c.ok)
@@ -100,9 +104,22 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
             }
         }
 
+        if (!notificationsAllowed) {
+            DropsCard(Modifier.fillMaxWidth(), onClick = { askNotifications() }) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(DropsIcons.Bulb, null, tint = c.accent, size = 22.dp)
+                    Column(Modifier.weight(1f)) {
+                        Text("Erinnerungen einschalten", style = DropsType.bodyStrong, color = c.ink)
+                        Text("Wenn Pflege fällig ist oder eine Tüte fast leer ist", style = DropsType.small, color = c.muted)
+                    }
+                    Text("›", style = DropsType.headline, color = c.muted)
+                }
+            }
+        }
+
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader("Pflegeplan", trailing = "nach Dringlichkeit")
-            plan.forEach { s -> DropsCard(Modifier.fillMaxWidth(), padding = PaddingValues(0.dp)) { TaskRow(s, compact = false) { vm.completeTask(s) } } }
+            plan.forEach { s -> DropsCard(Modifier.fillMaxWidth(), padding = PaddingValues(0.dp)) { TaskRow(s, compact = false, onBuy = { uri.openUri(vm.supplyLink(it)) }) { vm.completeTask(s) } } }
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

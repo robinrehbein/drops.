@@ -33,6 +33,8 @@ data class Purchase(
     val channel: PurchaseChannel = PurchaseChannel.IN_STORE,
     val priceCents: Int? = null,
     val purchasedOn: LocalDate? = null,
+    /** Product page at the shop, used for reordering. */
+    val url: String? = null,
 )
 
 @Serializable

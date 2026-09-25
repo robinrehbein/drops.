@@ -38,6 +38,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.birneklub.drop.android.AppContainer
+import kotlinx.coroutines.flow.MutableStateFlow
 import de.birneklub.drop.android.ui.screens.AccountScreen
 import de.birneklub.drop.android.ui.screens.AddBeanScreen
 import de.birneklub.drop.android.ui.screens.BeanDetailScreen
@@ -77,7 +78,7 @@ private val tabs = listOf(
 )
 
 @Composable
-fun DropsRoot(container: AppContainer) {
+fun DropsRoot(container: AppContainer, deepLink: MutableStateFlow<String?> = MutableStateFlow(null)) {
     val vm: DropsViewModel = viewModel(factory = DropsViewModel.factory(container))
     val nav = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
@@ -98,6 +99,13 @@ fun DropsRoot(container: AppContainer) {
         bottomBar = { if (showTabs) TabBar(route, nav) },
     ) { padding ->
         if (setupDone == null) return@Scaffold
+        val link by deepLink.collectAsStateWithLifecycle()
+        LaunchedEffect(link, setupDone) {
+            val target = link ?: return@LaunchedEffect
+            if (setupDone != true) return@LaunchedEffect
+            deepLink.value = null
+            nav.navigate(target) { launchSingleTop = true }
+        }
         NavHost(nav, startDestination = start, modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
             composable(Routes.TODAY) { TodayScreen(vm, nav) }
             composable(Routes.BEANS) { BeansScreen(vm, nav) }

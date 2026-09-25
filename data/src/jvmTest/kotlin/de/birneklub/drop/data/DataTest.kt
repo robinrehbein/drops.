@@ -202,4 +202,13 @@ class DataTest {
         assertTrue(tasks.all { it.equipmentId == "m-new" || it.equipmentId == grinderId }, "old machine tasks are gone")
         assertTrue(tasks.any { it.equipmentId == grinderId }, "grinder tasks stay")
     }
+
+    @Test
+    fun remindersAreHandedOutOnce() = runTest {
+        val repo = repo()
+        repo.seedIfEmpty()
+        val first = repo.takeNewReminders()
+        assertTrue(first.isNotEmpty(), "sample data has overdue care and a bag running low")
+        assertTrue(repo.takeNewReminders().isEmpty())
+    }
 }

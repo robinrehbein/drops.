@@ -5,6 +5,8 @@ import app.cash.sqldelight.coroutines.mapToList
 import de.birneklub.drop.core.backup.DropsBackup
 import de.birneklub.drop.core.backup.ImportResult
 import de.birneklub.drop.core.domain.Maintenance
+import de.birneklub.drop.core.reminders.Reminder
+import de.birneklub.drop.core.reminders.Reminders
 import de.birneklub.drop.core.model.Bean
 import de.birneklub.drop.core.model.BeanStatus
 import de.birneklub.drop.core.model.Entity
@@ -155,6 +157,28 @@ class DropsRepository(
         write(SyncCollections.TASKS, MaintenanceTask.serializer(), Maintenance.markDone(task, equipment, now()))
     }
 
+    // --- reminders -------------------------------------------------------------
+
+    /**
+     * Reminders that are due and have not been shown yet. Marks them as shown,
+     * so calling this from a periodic job notifies each one exactly once.
+     */
+    suspend fun takeNewReminders(): List<Reminder> = withContext(io) {
+        db.transactionWithResult {
+            val due = Reminders.due(
+                allLive(SyncCollections.TASKS, MaintenanceTask.serializer()),
+                allLive(SyncCollections.EQUIPMENT, Equipment.serializer()),
+                allLive(SyncCollections.BEANS, Bean.serializer()),
+                allLive(SyncCollections.RECIPES, Recipe.serializer()),
+                now(),
+            )
+            val shown = q.getValue(KEY_REMINDERS_SHOWN).executeAsOneOrNull()?.split('\n')?.toSet().orEmpty()
+            // Only keys that are still due are kept, so the list never grows.
+            q.setValue(KEY_REMINDERS_SHOWN, due.joinToString("\n") { it.key })
+            due.filter { it.key !in shown }
+        }
+    }
+
     // --- setup -----------------------------------------------------------------
 
     /** False only on a fresh install that has not been through onboarding yet. */
@@ -257,5 +281,6 @@ class DropsRepository(
     companion object {
         private const val KEY_SEEDED = "seeded_at"
         private const val KEY_SETUP_DONE = "setup_done_at"
+        private const val KEY_REMINDERS_SHOWN = "reminders_shown"
     }
 }

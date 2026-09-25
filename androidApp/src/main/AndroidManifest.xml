@@ -3,6 +3,8 @@
 
     <!-- Only used when the user signs in to the optional sync account. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Care and reorder reminders; the app asks once after onboarding. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".DropsApp"

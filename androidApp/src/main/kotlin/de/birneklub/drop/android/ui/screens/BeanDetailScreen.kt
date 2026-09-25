@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -165,6 +166,14 @@ fun BeanDetailScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
                     }
                     bean.purchase?.let { p ->
                         Text("Gekauft bei ${p.shopName}, ${p.city}", style = DropsType.small, color = c.muted)
+                    }
+                    if (bean.wouldRebuy != false) {
+                        val uri = LocalUriHandler.current
+                        PillButton(
+                            if (bean.purchase?.url != null) "Beim Röster nachkaufen" else "Nachkaufen suchen",
+                            { uri.openUri(vm.reorderLink(bean)) },
+                            Modifier.fillMaxWidth().padding(top = 12.dp), kind = ButtonKind.Ghost, height = 44.dp, icon = DropsIcons.Cart,
+                        )
                     }
                 }
             }
