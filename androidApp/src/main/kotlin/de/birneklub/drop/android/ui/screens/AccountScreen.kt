@@ -12,6 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import de.birneklub.drop.android.ui.Motion
+import de.birneklub.drop.android.ui.rememberReducedMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +47,7 @@ import de.birneklub.drop.android.ui.a11y
 fun AccountScreen(vm: DropsViewModel, nav: NavController) {
     val state by vm.account.collectAsStateWithLifecycle()
     val c = Drops.colors
+    val reduced = rememberReducedMotion()
     ScreenColumn {
         Row(verticalAlignment = Alignment.CenterVertically) { TextAction("‹ Zurück", { nav.popBackStack() }) }
         ScreenTitle("Konto")
@@ -66,14 +70,15 @@ fun AccountScreen(vm: DropsViewModel, nav: NavController) {
                 Text(session.email, style = DropsType.bodyStrong, color = c.ink)
                 Text(session.serverUrl, style = DropsType.small, color = c.muted)
                 state.lastSyncMessage?.let { Text(it, style = DropsType.small, color = c.ok, modifier = Modifier.padding(top = 8.dp)) }
-                state.error?.let { Text(it, style = DropsType.small, color = c.bad, modifier = Modifier.padding(top = 8.dp)) }
+                AnimatedVisibility(state.error != null, enter = Motion.expandIn(reduced), exit = Motion.collapseOut(reduced)) {
+                    Text(state.error.orEmpty(), style = DropsType.small, color = c.bad, modifier = Modifier.padding(top = 8.dp))
+                }
             }
             PillButton(if (state.busy) "Synchronisiere …" else "Jetzt synchronisieren", { vm.syncNow() }, Modifier.fillMaxWidth(), enabled = !state.busy, icon = DropsIcons.Refresh)
             PillButton("Abmelden", { vm.logout() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
             var confirm by rememberSaveable { mutableStateOf(false) }
-            if (!confirm) {
-                TextAction("Konto löschen", { confirm = true }, c.bad)
-            } else {
+            if (!confirm) TextAction("Konto löschen", { confirm = true }, c.bad)
+            AnimatedVisibility(confirm, enter = Motion.expandIn(reduced), exit = Motion.collapseOut(reduced)) {
                 DropsCard(Modifier.fillMaxWidth()) {
                     Text("Konto und alle Daten auf dem Server löschen? Die Daten auf diesem Gerät bleiben erhalten.", style = DropsType.body, color = c.ink)
                     Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -94,7 +99,9 @@ fun AccountScreen(vm: DropsViewModel, nav: NavController) {
                 Field("E-Mail", email, { email = it }, KeyboardType.Email)
                 Field("Passwort", password, { password = it }, KeyboardType.Password, secret = true)
             }
-            state.error?.let { Text(it, style = DropsType.small, color = c.bad) }
+            AnimatedVisibility(state.error != null, enter = Motion.expandIn(reduced), exit = Motion.collapseOut(reduced)) {
+                Text(state.error.orEmpty(), style = DropsType.small, color = c.bad)
+            }
             PillButton(
                 when { state.busy -> "Bitte warten …"; mode == 0 -> "Anmelden"; else -> "Konto erstellen" },
                 { vm.login(server, email, password, register = mode == 1) },

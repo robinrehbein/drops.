@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedContent
+import de.birneklub.drop.android.ui.Motion
+import de.birneklub.drop.android.ui.rememberReducedMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -54,6 +57,7 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
     val c = Drops.colors
 
     val (notificationsAllowed, askNotifications) = rememberNotificationPermission()
+    val reduced = rememberReducedMotion()
 
     fun leave(then: String?) {
         // Care reminders are the point of the machine step, so ask right after it.
@@ -68,7 +72,14 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
             Eyebrow("Schritt ${step + 1} von 3")
             if (step > 0) TextAction("‹ Zurück", { step-- })
         }
-        when (step) {
+        // Steps move forward and back along the x axis (M3 forward and backward pattern).
+        AnimatedContent(
+            targetState = step,
+            transitionSpec = { Motion.sharedAxisX(forward = targetState > initialState, reduced = reduced) },
+            label = "onboarding-step",
+        ) { shown ->
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        when (shown) {
             0 -> {
                 ScreenTitle("Deine Maschine")
                 Text("Damit stimmen Pflegeplan und Erinnerungen von Anfang an.", style = DropsType.body, color = c.muted)
@@ -107,6 +118,8 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
                 TextAction("Von Beanconqueror umziehen", { bcImporter.launch(arrayOf("application/zip", "application/json", "application/octet-stream")) })
                 TextAction("Später", { leave(null) }, c.muted)
             }
+        }
+        }
         }
     }
 }
