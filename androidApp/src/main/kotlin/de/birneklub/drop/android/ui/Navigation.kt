@@ -42,7 +42,6 @@ import de.birneklub.drop.android.ui.screens.AccountScreen
 import de.birneklub.drop.android.ui.screens.AddBeanScreen
 import de.birneklub.drop.android.ui.screens.BeanDetailScreen
 import de.birneklub.drop.android.ui.screens.BeansScreen
-import de.birneklub.drop.android.ui.screens.DiscoverScreen
 import de.birneklub.drop.android.ui.screens.MapScreen
 import de.birneklub.drop.android.ui.screens.SetupScreen
 import de.birneklub.drop.android.ui.screens.ShotScreen
@@ -52,7 +51,6 @@ object Routes {
     const val TODAY = "today"
     const val BEANS = "beans"
     const val MAP = "map"
-    const val DISCOVER = "discover"
     const val SETUP = "setup"
     const val BEAN = "bean/{id}"
     const val SHOT = "shot/{beanId}"
@@ -69,7 +67,6 @@ private val tabs = listOf(
     Tab(Routes.TODAY, "Heute", DropsIcons.Home),
     Tab(Routes.BEANS, "Bohnen", DropsIcons.Bean),
     Tab(Routes.MAP, "Karte", DropsIcons.Map),
-    Tab(Routes.DISCOVER, "Entdecken", DropsIcons.Compass),
     Tab(Routes.SETUP, "Setup", DropsIcons.Setup),
 )
 
@@ -95,7 +92,6 @@ fun DropsRoot(container: AppContainer) {
             composable(Routes.TODAY) { TodayScreen(vm, nav) }
             composable(Routes.BEANS) { BeansScreen(vm, nav) }
             composable(Routes.MAP) { MapScreen(vm) }
-            composable(Routes.DISCOVER) { DiscoverScreen(vm) }
             composable(Routes.SETUP) { SetupScreen(vm, nav) }
             composable(Routes.BEAN) { BeanDetailScreen(vm, nav, it.arguments?.getString("id").orEmpty()) }
             composable(Routes.SHOT) { ShotScreen(vm, nav, it.arguments?.getString("beanId").orEmpty()) }

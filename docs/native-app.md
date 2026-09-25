@@ -7,7 +7,7 @@ The new code lives in Gradle modules at the repository root:
 | --- | --- | --- |
 | `core/` | Models, domain logic (roast freshness, care plan, dial-in advice, palate profile, map projections), sync protocol | JVM, iOS |
 | `data/` | SQLite (SQLDelight), `DropsRepository`, optional `SyncClient`, sample data | Android, JVM (tests), iOS (`DropsKit.framework`) |
-| `androidApp/` | Jetpack Compose app | Android 8+ (API 26) |
+| `androidApp/` | Jetpack Compose app (tabs: Heute, Bohnen, Karte with Anbauregion / Gekauft bei / Entdecken, Setup) | Android 8+ (API 26) |
 | `server/` | Ktor sync server with optional accounts, SQLite | JVM 21, Docker |
 | `iosApp/` | Placeholder for the SwiftUI app | iOS |
 

@@ -82,7 +82,7 @@ h2,h3{margin:0}
 .bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden}
 .bar>i{display:block;height:100%;border-radius:3px}
 .ibox{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.tabbar{flex-shrink:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px))}
+.tabbar{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px))}
 .tabbar button{border:none;background:none;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11px;font-weight:500}
 .tabbar button[aria-current="page"]{color:var(--accent)}
 .fab{position:absolute;right:20px;bottom:96px;width:60px;height:60px;border-radius:30px;border:none;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);z-index:5}
@@ -114,6 +114,7 @@ h2,h3{margin:0}
 .mapwrap svg:active{cursor:grabbing}
 .mapctl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
 .mapctl button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px;box-shadow:0 2px 6px rgba(42,33,27,.12)}
+.maplegend{position:absolute;left:12px;bottom:12px;display:flex;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:12px;color:var(--muted)}
 .bubble{position:absolute;left:12px;bottom:12px;right:64px;background:var(--hero);color:var(--hero-ink);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;pointer-events:none}
 .pinrow{width:100%;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 10px;border:none;border-radius:14px;background:transparent;text-align:left}
 .pinrow[aria-pressed="true"]{background:var(--surface)}
@@ -193,25 +194,26 @@ function seed(){
 }
 
 var CAFES=[
-  {name:'Siebwerk',kind:['cafe'],dist:0.35,desc:'Espressobar · Gaströster wechseln wöchentlich',open:true,hours:'Geöffnet bis 18:00',extra:'Schenkt gerade Guji Hambela aus'},
-  {name:'Kontor 17',kind:['cafe'],dist:1.2,desc:'Filter-Bar · V60, Batch Brew, Cupping samstags',open:true,hours:'Geöffnet bis 17:00'},
-  {name:'Bohne & Brise',kind:['cafe','roaster'],dist:2.4,desc:'Café mit eigener Rösterei · Frühstück',open:false,hours:'Öffnet morgen 08:00'},
-  {name:'Hafenrösterei',kind:['roaster'],dist:3.1,desc:'Rösterei mit Probierbar',open:true,hours:'Geöffnet bis 19:00',extra:'Deine meistgekaufte Rösterei'},
-  {name:'Röstwerk Nord',kind:['roaster'],dist:4.8,desc:'Rösterei · Werksverkauf',open:false,hours:'Öffnet Samstag 10:00'}
+  {name:'Siebwerk',lat:53.5531,lon:9.9265,kind:['cafe'],dist:0.35,desc:'Espressobar · Gaströster wechseln wöchentlich',open:true,hours:'Geöffnet bis 18:00',extra:'Schenkt gerade Guji Hambela aus'},
+  {name:'Kontor 17',lat:53.5487,lon:9.9502,kind:['cafe'],dist:1.2,desc:'Filter-Bar · V60, Batch Brew, Cupping samstags',open:true,hours:'Geöffnet bis 17:00'},
+  {name:'Bohne & Brise',lat:53.5642,lon:9.9588,kind:['cafe','roaster'],dist:2.4,desc:'Café mit eigener Rösterei · Frühstück',open:false,hours:'Öffnet morgen 08:00'},
+  {name:'Hafenrösterei',lat:53.5431,lon:9.9853,kind:['roaster'],dist:3.1,desc:'Rösterei mit Probierbar',open:true,hours:'Geöffnet bis 19:00',extra:'Deine meistgekaufte Rösterei'},
+  {name:'Röstwerk Nord',lat:53.5712,lon:9.9981,kind:['roaster'],dist:4.8,desc:'Rösterei · Werksverkauf',open:false,hours:'Öffnet Samstag 10:00'}
 ];
 var RECS=[
-  {id:'r1',country:'Kenia',region:'Kiambu',name:'Kamundu Peaberry',roaster:'Röstwerk Nord',process:'Washed',notes:'Cassis, Grapefruit',price:'18,90 € / 250 g',why:'Weil du Karogoto AA mit 4.5 bewertet hast.'},
-  {id:'r2',country:'Burundi',region:'Kayanza',name:'Gatukuza',roaster:'Bohnenwerk',process:'Washed',notes:'Hibiskus, Rote Johannisbeere',price:'17,50 € / 250 g',why:'Ähnlich wie Nyamasheke, nur floraler.'},
-  {id:'r3',country:'Äthiopien',region:'Sidama',name:'Bensa Shantawene',roaster:'Nordlys Kaffe',process:'Natural',notes:'Blaubeere, Kakaonibs',price:'19,00 € / 250 g',why:'Sidamo Bensa gehört zu deinen Top 3.'}
+  {id:'r1',city:'Hamburg',lat:53.5712,lon:9.9981,country:'Kenia',region:'Kiambu',name:'Kamundu Peaberry',roaster:'Röstwerk Nord',process:'Washed',notes:'Cassis, Grapefruit',price:'18,90 € / 250 g',why:'Weil du Karogoto AA mit 4.5 bewertet hast.'},
+  {id:'r2',city:'Berlin',lat:52.52,lon:13.4,country:'Burundi',region:'Kayanza',name:'Gatukuza',roaster:'Bohnenwerk',process:'Washed',notes:'Hibiskus, Rote Johannisbeere',price:'17,50 € / 250 g',why:'Ähnlich wie Nyamasheke, nur floraler.'},
+  {id:'r3',city:'Kopenhagen',lat:55.68,lon:12.57,country:'Äthiopien',region:'Sidama',name:'Bensa Shantawene',roaster:'Nordlys Kaffe',process:'Natural',notes:'Blaubeere, Kakaonibs',price:'19,00 € / 250 g',why:'Sidamo Bensa gehört zu deinen Top 3.'}
 ];
-var CITIES=[{name:'Kopenhagen',cafes:14,roasters:5},{name:'Wien',cafes:11,roasters:3},{name:'Berlin',cafes:23,roasters:9},{name:'Amsterdam',cafes:17,roasters:6}];
+var CITIES=[{name:'Kopenhagen',lat:55.68,lon:12.57,cafes:14,roasters:5},{name:'Wien',lat:48.21,lon:16.37,cafes:11,roasters:3},{name:'Berlin',lat:52.52,lon:13.4,cafes:23,roasters:9},{name:'Amsterdam',lat:52.37,lon:4.9,cafes:17,roasters:6}];
+var HOME_POS={lat:53.5545,lon:9.9345,label:'Du · Hamburg-Ottensen'};
 var COUNTRIES={'Äthiopien':[7,38.7],'Kenia':[-0.4,37],'Ruanda':[-2.3,29.5],'Burundi':[-3,29.9],'Kolumbien':[2,-75.5],'Brasilien':[-19,-46.5],'Guatemala':[15,-91],'Costa Rica':[9.7,-84],'Honduras':[14.5,-88],'El Salvador':[13.8,-89],'Panama':[8.8,-82.4],'Peru':[-6,-78],'Mexiko':[16.5,-92.5],'Indonesien':[3.5,98.5],'Jemen':[15.3,44],'Indien':[12.5,75.5]};
 var CITYPOS={'Hamburg':[53.55,9.99],'Berlin':[52.52,13.4],'Leipzig':[51.34,12.37],'München':[48.14,11.58],'Köln':[50.94,6.96],'Frankfurt':[50.11,8.68],'Kopenhagen':[55.68,12.57],'Amsterdam':[52.37,4.9],'Wien':[48.21,16.37],'Zürich':[47.37,8.54]};
 
 /* ---------- Zustand ---------- */
 var S; try{ S=JSON.parse(localStorage.getItem(KEY)); }catch(e){ S=null; }
 if(!S||!S.beans) S=seed();
-var UI={route:'home',beanId:'b1',recipeIdx:0,beanFilter:'all',q:'',mapMode:'origin',mapSel:null,vb:null,cafeFilter:'cafe',addForm:null,shot:null,prev:'home'};
+var UI={route:'home',beanId:'b1',recipeIdx:0,beanFilter:'all',q:'',mapMode:'origin',mapSel:null,vb:null,cafeFilter:'cafe',discFilter:'near',addForm:null,shot:null,prev:'home'};
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 
 /* ---------- Helfer ---------- */
@@ -276,7 +278,7 @@ function projW(lat,lon){var r=Math.PI/180;return [GEO.w.t[0]+GEO.w.k*lon*r, GEO.
 function projE(lat,lon){var r=Math.PI/180;return [GEO.e.t[0]+GEO.e.k*lon*r, GEO.e.t[1]-GEO.e.k*Math.log(Math.tan(Math.PI/4+lat*r/2))];}
 
 /* ---------- Tab-Leiste ---------- */
-var TABS=[['home','Heute','home'],['beans','Bohnen','bean'],['map','Karte','map'],['discover','Entdecken','compass'],['setup','Setup','setup']];
+var TABS=[['home','Heute','home'],['beans','Bohnen','bean'],['map','Karte','map'],['setup','Setup','setup']];
 function renderTabs(){
   var cur = {bean:'beans',add:'beans'}[UI.route]||UI.route;
   document.getElementById('tabbar').innerHTML=TABS.map(function(t){
@@ -466,7 +468,21 @@ function tick(){
 }
 
 /* Karte */
+function discoverPins(){
+  var f=UI.discFilter,pins=[];
+  if(f==='near'){
+    CAFES.filter(function(c){return UI.cafeFilter==='open'?c.open:c.kind.indexOf(UI.cafeFilter)>=0;}).forEach(function(c){pins.push({id:'c:'+c.name,title:c.name,sub:c.desc,lat:c.lat,lon:c.lon,n:2,kind:c.open?'cafe':'closed'});});
+    pins.push({id:'me',title:HOME_POS.label,sub:'Dein Standort (Beispiel)',lat:HOME_POS.lat,lon:HOME_POS.lon,n:0,kind:'me'});
+  } else if(f==='recs'){
+    RECS.forEach(function(r){pins.push({id:'r:'+r.id,title:r.name,sub:r.roaster+' · '+r.city,lat:r.lat,lon:r.lon,n:3,kind:'rec'});});
+  } else {
+    CITIES.forEach(function(c){pins.push({id:'t:'+c.name,title:c.name,sub:c.cafes+' Cafés · '+c.roasters+' Röstereien',lat:c.lat,lon:c.lon,n:Math.round(c.cafes/5),kind:'travel'});});
+  }
+  return pins.map(function(p){var q=projE(p.lat,p.lon);p.x=q[0];p.y=q[1];return p;});
+}
+var PIN_FILL={cafe:'var(--accent)',closed:'var(--muted)',rec:'var(--ok)',travel:'var(--ice)',me:'var(--inv)'};
 function mapPins(){
+  if(UI.mapMode==='discover') return discoverPins();
   var groups={};
   S.beans.forEach(function(b){
     var k,lat,lon,title,city;
@@ -478,20 +494,21 @@ function mapPins(){
     g.places[UI.mapMode==='origin'?b.region:b.shop.name+' · '+b.shop.how]=1;
   });
   return Object.keys(groups).map(function(k){var g=groups[k];g.lat/=g.beans.length;g.lon/=g.beans.length;
-    var p=UI.mapMode==='origin'?projW(g.lat,g.lon):projE(g.lat,g.lon);g.x=p[0];g.y=p[1];return g;})
+    var p=UI.mapMode==='origin'?projW(g.lat,g.lon):projE(g.lat,g.lon);g.x=p[0];g.y=p[1];g.n=g.beans.length;g.kind='bean';return g;})
     .sort(function(a,b){return b.beans.length-a.beans.length;});
 }
 function vMap(){
-  var origin=UI.mapMode==='origin',pins=mapPins();
-  if(!pins.some(function(p){return p.id===UI.mapSel;})) UI.mapSel=pins.length?pins[0].id:null;
-  if(!UI.vb) UI.vb=fitView(pins);
+  var origin=UI.mapMode==='origin',disc=UI.mapMode==='discover',pins=mapPins();
+  if(!pins.some(function(p){return p.id===UI.mapSel;})) UI.mapSel=disc?null:(pins.length?pins[0].id:null);
+  if(!UI.vb) UI.vb=fitView(pins,disc&&UI.discFilter==='near'?2.2:120);
   var sel=pins.find(function(p){return p.id===UI.mapSel;});
   var nC=pins.length, nB=S.beans.length;
   var roasters={};S.beans.forEach(function(b){roasters[b.shop.name]=1;});
-  var h='<div style="display:flex;flex-direction:column;gap:16px;padding-top:28px;padding-bottom:24px"><div style="padding:0 20px;display:flex;flex-direction:column;gap:14px"><div class="between" style="align-items:flex-end"><h1 class="title">Karte</h1><span class="mono small muted">'+(origin?nC+' Länder · '+nB+' Röstungen':nC+' Städte · '+Object.keys(roasters).length+' Röstereien')+'</span></div>'+
-    '<div class="seg" role="group" aria-label="Kartenansicht"><button data-act="mapmode" data-v="origin" aria-pressed="'+origin+'">Anbauregion</button><button data-act="mapmode" data-v="shop" aria-pressed="'+!origin+'">Gekauft bei</button></div></div>';
+  var h='<div style="display:flex;flex-direction:column;gap:16px;padding-top:28px;padding-bottom:24px"><div style="padding:0 20px;display:flex;flex-direction:column;gap:14px"><div class="between" style="align-items:flex-end"><h1 class="title">Karte</h1><span class="mono small muted">'+(disc?{near:'Beispiel: Hamburg',recs:RECS.length+' Vorschläge',travel:CITIES.length+' Städte'}[UI.discFilter]:origin?nC+' Länder · '+nB+' Röstungen':nC+' Städte · '+Object.keys(roasters).length+' Röstereien')+'</span></div>'+
+    '<div class="seg" role="group" aria-label="Kartenansicht"><button data-act="mapmode" data-v="origin" aria-pressed="'+origin+'">Anbauregion</button><button data-act="mapmode" data-v="shop" aria-pressed="'+(UI.mapMode==='shop')+'">Gekauft bei</button><button data-act="mapmode" data-v="discover" aria-pressed="'+disc+'">Entdecken</button></div>'+
+    (disc?'<div class="chips">'+[['near','In der Nähe'],['recs','Empfehlungen'],['travel','Reiseziele']].map(function(c){return '<button class="chip" data-act="discfilter" data-v="'+c[0]+'" aria-pressed="'+(UI.discFilter===c[0])+'">'+c[1]+'</button>';}).join('')+'</div>':'')+'</div>';
   var vb=UI.vb,sc=vb.w/390;
-  h+='<div class="mapwrap" id="mapwrap"><svg id="mapsvg" viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+vb.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+(origin?'Weltkarte mit den Anbauregionen deiner Bohnen':'Karte Europas mit den Orten, an denen du Kaffee gekauft hast')+'">'+
+  h+='<div class="mapwrap" id="mapwrap"><svg id="mapsvg" viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+vb.h+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+(origin?'Weltkarte mit den Anbauregionen deiner Bohnen':disc?'Karte mit Cafés, empfohlenen Kaffees und Reisezielen':'Karte Europas mit den Orten, an denen du Kaffee gekauft hast')+'">'+
     '<rect x="-400" y="-400" width="1400" height="1200" fill="var(--sea)"/>';
   if(origin){
     var t1=projW(23.44,0)[1],t2=projW(-23.44,0)[1];
@@ -500,19 +517,26 @@ function vMap(){
   } else {
     h+='<path d="'+GEO.euLand+'" fill="var(--land)"/><path d="'+GEO.euBorders+'" fill="none" stroke="var(--land-line)" stroke-width="'+(0.8*sc)+'"/>';
   }
-  h+='<g id="pins">'+pins.slice().reverse().map(function(p){var on=p.id===UI.mapSel,r=(6+p.beans.length*1.6+(on?2:0))*sc;
-    return '<g class="pin" data-act="pin" data-v="'+esc(p.id)+'" style="cursor:pointer"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+22*sc+'" fill="transparent"/><circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" data-r="'+(6+p.beans.length*1.6+(on?2:0))+'" fill="'+(on?'var(--inv)':'var(--accent)')+'" stroke="var(--surface)" stroke-width="'+2*sc+'"/></g>';}).join('')+'</g></svg>'+
+  h+='<g id="pins">'+pins.slice().reverse().map(function(p){var on=p.id===UI.mapSel,base=p.kind==='me'?5:(6+p.n*1.6+(on?2:0)),fill=p.kind==='bean'?(on?'var(--inv)':'var(--accent)'):(on?'var(--inv)':PIN_FILL[p.kind]);
+    return '<g class="pin" data-act="pin" data-v="'+esc(p.id)+'" style="cursor:pointer"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+22*sc+'" fill="transparent"/>'+(p.kind==='me'?'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+12*sc+'" data-r="12" fill="var(--inv)" fill-opacity=".12" stroke="none"/>':'')+'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+base*sc+'" data-r="'+base+'" fill="'+fill+'" stroke="var(--surface)" stroke-width="'+2*sc+'"/></g>';}).join('')+'</g></svg>'+
     '<div class="mapctl"><button data-act="zoom" data-v="0.7" aria-label="Hineinzoomen">+</button><button data-act="zoom" data-v="1.4" aria-label="Herauszoomen">−</button><button data-act="fit" aria-label="Alle zeigen" style="font-size:12px">'+ic('ring',16)+'</button></div>'+
-    ''+'</div>';
+    (disc?'<div class="maplegend">'+legend()+'</div>':'')+'</div>';
+  if(disc) return h+'<div class="pad" style="padding-top:4px">'+discoverContent(pins)+'</div></div>';
   h+='<div style="padding:0 10px;display:flex;flex-direction:column">'+pins.map(function(p){
     return '<button class="pinrow" data-act="pin" data-v="'+esc(p.id)+'" aria-pressed="'+(p.id===UI.mapSel)+'"><span class="dot"></span><span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">'+esc(p.title)+'</span><span class="small muted">'+esc(Object.keys(p.places).join(', '))+'</span></span><span class="mono small muted">'+p.beans.length+' '+(p.beans.length===1?'Röstung':'Röstungen')+'</span></button>';}).join('')+'</div></div>';
   return h;
 }
-function fitView(pins){
+function legend(){
+  var items=UI.discFilter==='near'?[['cafe','Geöffnet'],['closed','Geschlossen'],['me','Du']]:UI.discFilter==='recs'?[['rec','Rösterei des Vorschlags']]:[['travel','Städte-Guide']];
+  return items.map(function(i){return '<span class="row" style="gap:6px"><span style="width:8px;height:8px;border-radius:4px;background:'+PIN_FILL[i[0]]+'"></span>'+i[1]+'</span>';}).join('');
+}
+function fitView(pins,minW){
+  minW=minW||120;
   if(!pins.length) return {x:0,y:0,w:390,h:300};
   var xs=pins.map(function(p){return p.x;}),ys=pins.map(function(p){return p.y;});
   var x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys);
-  var w=Math.max(x1-x0+80,120),h=Math.max(y1-y0+80,92),ar=390/300;
+  var padX=Math.max((x1-x0)*0.25,minW*0.2),padY=Math.max((y1-y0)*0.25,minW*0.2);
+  var w=Math.max(x1-x0+2*padX,minW),h=Math.max(y1-y0+2*padY,minW*300/390),ar=390/300;
   if(w/h>ar)h=w/ar;else w=h*ar;
   return {x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w:w,h:h};
 }
@@ -532,7 +556,7 @@ function bindMap(){
   svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
   svg.addEventListener('wheel',function(e){e.preventDefault();zoom(e.deltaY>0?1.15:0.87);},{passive:false});
 }
-function zoom(f){var vb=UI.vb,cx=vb.x+vb.w/2,cy=vb.y+vb.h/2,w=Math.min(1200,Math.max(40,vb.w*f)),h=w*vb.h/vb.w;UI.vb={x:cx-w/2,y:cy-h/2,w:w,h:h};applyVB();}
+function zoom(f){var vb=UI.vb,cx=vb.x+vb.w/2,cy=vb.y+vb.h/2,w=Math.min(1200,Math.max(1.5,vb.w*f)),h=w*vb.h/vb.w;UI.vb={x:cx-w/2,y:cy-h/2,w:w,h:h};applyVB();}
 
 /* Entdecken */
 function palate(){
@@ -549,21 +573,21 @@ function palate(){
   var sentence=(avg(washed.map(function(b){return b.rating;}))>=avg(other.map(function(b){return b.rating;}))?'Gewaschen':'Natural & Honey')+', '+top[0].toLowerCase()+' und '+top[1].toLowerCase()+'. '+(avg(reg.Afrika)>=avg(reg.Amerika)?'Ostafrika':'Lateinamerika')+' holt bei dir die besten Noten.';
   return {sc:sc,max:max||1,sentence:sentence};
 }
-function vDiscover(){
-  var p=palate(),rated=S.beans.filter(function(b){return b.rating;}).length;
-  var h='<div class="pad"><div style="display:flex;flex-direction:column;gap:4px"><h1 class="title">Entdecken</h1><span class="small muted">Auf Basis von '+rated+' bewerteten Röstungen und '+S.shots.length+' geloggten Shots</span></div>';
+function discoverContent(){
+  var p=palate(),rated=S.beans.filter(function(b){return b.rating;}).length,sel=UI.mapSel;
+  var h='<span class="small muted">Auf Basis von '+rated+' bewerteten Röstungen und '+S.shots.length+' geloggten Shots. Tippe auf einen Eintrag, um ihn auf der Karte zu sehen.</span>';
   h+='<section class="hero" style="gap:14px"><span class="eyebrow">Dein Gaumen</span><p class="serif" style="margin:0;font-size:24px;line-height:1.15;text-wrap:balance">'+esc(p.sentence)+'</p>'+
     '<div style="display:grid;grid-template-columns:84px 1fr;gap:8px 12px;align-items:center;font-size:12px" class="hm">'+Object.keys(p.sc).map(function(k){var w=p.sc[k]/p.max*100;return '<span>'+k+'</span><div style="height:6px;border-radius:3px;background:var(--hero-line)"><div style="width:'+Math.max(4,w)+'%;height:6px;border-radius:3px;background:'+(w>=50?'var(--hero-accent)':'var(--hero-faint)')+'"></div></div>';}).join('')+'</div></section>';
   h+='<section style="display:flex;flex-direction:column;gap:12px"><div class="between"><h2 style="font-size:17px;font-weight:600">Könnte dir schmecken</h2><span class="small muted">'+RECS.length+' Vorschläge</span></div><div class="hscroll">'+
-    RECS.map(function(r){var sv=!!S.saved[r.id];return '<article class="card rec"><span class="eyebrow">'+esc(r.country)+' · '+esc(r.region)+'</span><span class="serif" style="font-size:26px;line-height:1">'+esc(r.name)+'</span><span class="small muted">'+esc(r.roaster)+' · '+esc(r.process)+' · '+esc(r.notes)+'</span><div class="hint" style="font-size:12px;padding:8px 10px;border-radius:12px">'+esc(r.why)+'</div><div class="between" style="align-items:center"><span class="mono small">'+esc(r.price)+'</span><button class="link" data-act="saverec" data-v="'+r.id+'" aria-pressed="'+sv+'">'+(sv?'Gemerkt ✓':'Merken')+'</button></div></article>';}).join('')+'</div></section>';
+    RECS.map(function(r){var sv=!!S.saved[r.id],on=sel==='r:'+r.id;return '<article class="card rec" style="'+(on?'border-color:var(--ink)':'')+'"><button class="link" style="text-align:left;padding:0;color:var(--muted);font-size:12px;min-height:24px" data-act="focus" data-v="r:'+r.id+'">'+ic('pin',14)+' '+esc(r.roaster)+', '+esc(r.city)+'</button><span class="eyebrow">'+esc(r.country)+' · '+esc(r.region)+'</span><span class="serif" style="font-size:26px;line-height:1">'+esc(r.name)+'</span><span class="small muted">'+esc(r.roaster)+' · '+esc(r.process)+' · '+esc(r.notes)+'</span><div class="hint" style="font-size:12px;padding:8px 10px;border-radius:12px">'+esc(r.why)+'</div><div class="between" style="align-items:center"><span class="mono small">'+esc(r.price)+'</span><button class="link" data-act="saverec" data-v="'+r.id+'" aria-pressed="'+sv+'">'+(sv?'Gemerkt ✓':'Merken')+'</button></div></article>';}).join('')+'</div></section>';
   var f=UI.cafeFilter;
   var cafes=CAFES.filter(function(c){return f==='open'?c.open:c.kind.indexOf(f)>=0;});
   h+='<section style="display:flex;flex-direction:column;gap:12px"><div class="between"><h2 style="font-size:17px;font-weight:600">In deiner Nähe</h2><span class="small muted">Beispiel: Hamburg-Ottensen</span></div>'+
     '<div class="chips">'+[['cafe','Cafés'],['roaster','Röstereien'],['open','Jetzt offen']].map(function(c){return '<button class="chip" data-act="cafefilter" data-v="'+c[0]+'" aria-pressed="'+(f===c[0])+'">'+c[1]+'</button>';}).join('')+'</div>'+
-    '<div class="card list">'+cafes.map(function(c){return '<div class="row" style="padding:14px 16px;align-items:flex-start"><div class="ibox" style="width:48px;height:48px;border-radius:14px;background:'+(c.open?'var(--warn-soft)':'var(--track)')+';color:'+(c.open?'var(--accent)':'var(--muted)')+'">'+ic(c.kind[0]==='roaster'?'grinder':'coffee',22,1.8)+'</div>'+
-      '<div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><div class="between"><span style="font-weight:600">'+esc(c.name)+'</span><span class="mono small muted">'+(c.dist<1?Math.round(c.dist*1000)+' m':de(c.dist)+' km')+'</span></div><span class="small muted">'+esc(c.desc)+'</span><span class="small" style="font-weight:500;color:'+(c.open?'var(--ok)':'var(--muted)')+'">'+esc(c.hours)+(c.extra?' · '+esc(c.extra):'')+'</span></div></div>';}).join('')+'</div></section>';
-  h+='<section style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px;font-weight:600">Auf Reisen</h2><div class="grid2">'+CITIES.map(function(c){return '<button class="card" data-act="city" data-v="'+c.name+'" style="padding:14px;display:flex;flex-direction:column;gap:4px;text-align:left"><span class="serif" style="font-size:24px;line-height:1">'+c.name+'</span><span class="small muted">'+c.cafes+' Cafés · '+c.roasters+' Röstereien</span></button>';}).join('')+'</div></section>';
-  return h+'</div>';
+    '<div class="card list">'+cafes.map(function(c){var on=sel==='c:'+c.name;return '<button class="row" data-act="focus" data-v="c:'+esc(c.name)+'" style="width:100%;border:none;text-align:left;padding:14px 16px;align-items:flex-start;background:'+(on?'var(--bg)':'transparent')+'"><div class="ibox" style="width:48px;height:48px;border-radius:14px;background:'+(c.open?'var(--warn-soft)':'var(--track)')+';color:'+(c.open?'var(--accent)':'var(--muted)')+'">'+ic(c.kind[0]==='roaster'?'grinder':'coffee',22,1.8)+'</div>'+
+      '<div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><div class="between"><span style="font-weight:600">'+esc(c.name)+'</span><span class="mono small muted">'+(c.dist<1?Math.round(c.dist*1000)+' m':de(c.dist)+' km')+'</span></div><span class="small muted">'+esc(c.desc)+'</span><span class="small" style="font-weight:500;color:'+(c.open?'var(--ok)':'var(--muted)')+'">'+esc(c.hours)+(c.extra?' · '+esc(c.extra):'')+'</span></div></button>';}).join('')+'</div></section>';
+  h+='<section style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px;font-weight:600">Auf Reisen</h2><div class="grid2">'+CITIES.map(function(c){return '<button class="card" data-act="focus" data-v="t:'+c.name+'" style="'+(sel==='t:'+c.name?'border-color:var(--ink);':'')+'padding:14px;display:flex;flex-direction:column;gap:4px;text-align:left"><span class="serif" style="font-size:24px;line-height:1">'+c.name+'</span><span class="small muted">'+c.cafes+' Cafés · '+c.roasters+' Röstereien</span></button>';}).join('')+'</div></section>';
+  return h;
 }
 
 /* Setup & Pflege */
@@ -602,7 +626,7 @@ function similarGrind(f){var m=S.beans.filter(function(b){return b.recipes[0]&&b
 /* ---------- Render ---------- */
 function render(keepScroll){
   var v=document.getElementById('view'),top=v.scrollTop;
-  var fn={home:vHome,beans:vBeans,bean:vBean,map:vMap,discover:vDiscover,setup:vSetup,shot:vShot,add:vAdd}[UI.route];
+  var fn={home:vHome,beans:vBeans,bean:vBean,map:vMap,setup:vSetup,shot:vShot,add:vAdd}[UI.route];
   v.innerHTML=fn();
   renderTabs();
   if(keepScroll)v.scrollTop=top;else v.scrollTop=0;
@@ -641,10 +665,11 @@ document.getElementById('app').addEventListener('click',function(e){
     case 'mapmode': UI.mapMode=v;UI.mapSel=null;UI.vb=null;render(true);break;
     case 'pin': var svg=document.getElementById('mapsvg');if(svg&&svg._justDragged)return;UI.mapSel=v;render(true);break;
     case 'zoom': zoom(+v);break;
-    case 'fit': UI.vb=fitView(mapPins());applyVB();break;
+    case 'fit': UI.vb=fitView(mapPins(),UI.mapMode==='discover'&&UI.discFilter==='near'?2.2:120);applyVB();break;
     case 'saverec': S.saved[v]=!S.saved[v];save();render(true);toast(S.saved[v]?'Auf der Merkliste':'Von der Merkliste entfernt');break;
-    case 'cafefilter': UI.cafeFilter=v;render(true);break;
-    case 'city': toast('Städte-Guide '+v+' ist im Prototyp noch nicht ausgebaut');break;
+    case 'cafefilter': UI.cafeFilter=v;if(UI.discFilter==='near'){UI.vb=null;UI.mapSel=null;}render(true);break;
+    case 'discfilter': UI.discFilter=v;UI.mapSel=null;UI.vb=null;render(true);break;
+    case 'focus': var kind={c:'near',r:'recs',t:'travel'}[v[0]];if(UI.discFilter!==kind){UI.discFilter=kind;UI.vb=null;}UI.mapSel=v;render(true);var mw=document.getElementById('mapwrap');if(mw)mw.scrollIntoView({behavior:'smooth',block:'center'});break;
     case 'measure': toast('Messwert per Teststreifen eintragen – im Prototyp noch nicht ausgebaut');break;
     case 'reset': S=seed();save();UI.route='home';render();toast('Beispieldaten wiederhergestellt');break;
     case 'theme': var r=document.documentElement,cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.setAttribute('data-theme',cur==='dark'?'light':'dark');break;
