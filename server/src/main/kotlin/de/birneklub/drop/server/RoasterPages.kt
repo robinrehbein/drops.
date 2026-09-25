@@ -44,7 +44,7 @@ fun Route.roasterPages(config: ServerConfig) {
         if (fingerprints.isEmpty()) return@get call.respondText("[]", ContentType.Application.Json, HttpStatusCode.NotFound)
         val list = fingerprints.joinToString(",") { "\"${it}\"" }
         call.respondText(
-            """[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"de.birneklub.drop","sha256_cert_fingerprints":[$list]}}]""",
+            """[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"de.birneklub.drops","sha256_cert_fingerprints":[$list]}}]""",
             ContentType.Application.Json,
         )
     }
@@ -116,7 +116,7 @@ private fun landing(c: RoasterCard) = """
   <p class=eyebrow>Startrezept von ${esc(c.roaster)}</p>
   <h1>${esc(c.coffee)}</h1>
   ${recipeLines(c)}
-  <p><a class=button href="https://play.google.com/store/apps/details?id=de.birneklub.drop">drops. für Android holen</a></p>
+  <p><a class=button href="https://play.google.com/store/apps/details?id=de.birneklub.drops">drops. für Android holen</a></p>
   <p class=small>Mit installierter App öffnet dieser Link die Bohne direkt in drops. Der Mahlgrad fehlt bewusst: Er hängt von deiner Mühle ab.</p>
   ${c.url?.let { "<p><a href=\"${esc(it)}\">Beim Röster ansehen</a></p>" } ?: ""}
 """

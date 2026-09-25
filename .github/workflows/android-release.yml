@@ -1,11 +1,15 @@
 name: Android release
 
-# main  -> signed release APK + AAB as workflow artifacts (and Play internal track if configured)
-# v*    -> additionally a GitHub Release with the APK/AAB attached
+# Signed APK + AAB on every run (workflow artifacts). With PLAY_SERVICE_ACCOUNT_JSON
+# set, the AAB also goes to Google Play automatically:
+#   dev   -> internal testing   (the team)
+#   main  -> closed testing     ("alpha", beta testers)
+#   v*    -> production         (draft by default; vars.PLAY_PRODUCTION_STATUS=completed rolls out)
+# Tags also create a GitHub Release with the APK/AAB attached.
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags: ["v*"]
     paths:
       - androidApp/**
@@ -77,15 +81,28 @@ jobs:
             androidApp/build/outputs/apk/release/*.apk
             androidApp/build/outputs/bundle/release/*.aab
 
-      - name: Upload to Google Play (internal track)
+      - name: Play track
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/v*)      track=production; status="${{ vars.PLAY_PRODUCTION_STATUS || 'draft' }}" ;;
+            refs/heads/main)   track=alpha;      status="${{ vars.PLAY_TESTING_STATUS || 'completed' }}" ;;
+            *)                 track=internal;   status="${{ vars.PLAY_TESTING_STATUS || 'completed' }}" ;;
+          esac
+          echo "PLAY_TRACK=$track" >> "$GITHUB_ENV"
+          echo "PLAY_STATUS=$status" >> "$GITHUB_ENV"
+
+      # The very first release of a new app must be uploaded by hand in the Play
+      # Console; until then Play only accepts drafts (set vars.PLAY_TESTING_STATUS=draft).
+      - name: Upload to Google Play
         if: env.HAS_PLAY_ACCOUNT == 'true' && env.DROPS_KEYSTORE_PATH != ''
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: de.birneklub.drop
+          packageName: de.birneklub.drops
           releaseFiles: androidApp/build/outputs/bundle/release/*.aab
-          track: internal
-          status: draft
+          track: ${{ env.PLAY_TRACK }}
+          status: ${{ env.PLAY_STATUS }}
+          whatsNewDirectory: distribution/whatsnew
 
       - name: GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')

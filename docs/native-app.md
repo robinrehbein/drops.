@@ -119,9 +119,58 @@ without tracking people:
 Without the Coolify secrets the image is still pushed and the deploy step is
 skipped with a warning; without a keystore the release build is unsigned.
 
-The Android `applicationId` stays `de.birneklub.drop`, so the native app can
-replace the current store listing. That only works with the same upload key
-that signed the existing app (Play App Signing).
+### Google Play
+
+The native app is a new Play listing, **drops.** with the id `de.birneklub.drops`.
+The old Expo test app (`de.birneklub.drop`, a typo) is retired: unpublish its
+test tracks once testers have the new app.
+
+**Upload key (once, on your own machine):**
+
+```bash
+scripts/android-upload-key.sh
+```
+
+It creates `~/.drops-signing/drops-upload.jks` with a random password and, if
+the GitHub CLI is logged in (`gh auth login`), stores `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` in
+the `production` environment. Otherwise it prints them. Put the keystore file
+and password into your password manager.
+
+**Service account for automatic uploads (`PLAY_SERVICE_ACCOUNT_JSON`):**
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → create or pick a
+   project → *APIs & Services → Library* → enable **Google Play Android
+   Developer API**.
+2. *IAM & Admin → Service Accounts* → **Create service account** (e.g.
+   `drops-ci`), no roles needed → open it → *Keys → Add key → Create new key →
+   JSON*. The file downloads once.
+3. [Play Console](https://play.google.com/console) → *Users and permissions* →
+   **Invite new users** → the service account's e-mail → *App permissions* →
+   add **drops.** with *Release apps to testing tracks* (and *Release to
+   production* if tags should publish) → invite.
+4. GitHub → *Settings → Environments → production* → secret
+   `PLAY_SERVICE_ACCOUNT_JSON` = the full content of the JSON file
+   (`gh secret set PLAY_SERVICE_ACCOUNT_JSON --env production < key.json`).
+   Then delete the downloaded file.
+
+**First release, by hand:** Play's API cannot create an app. In the Play
+Console create the app **drops.**, then upload the first AAB (from the
+*Android release* workflow artifacts) to *Internal testing* and roll it out.
+This also enrols Play App Signing. After that the pipeline takes over:
+
+| Push | Play track | Default status |
+| --- | --- | --- |
+| `dev` | Internal testing | completed (live for the team) |
+| `main` | Closed testing (alpha) | completed (live for beta testers) |
+| tag `v1.2.3` | Production | draft; set variable `PLAY_PRODUCTION_STATUS=completed` to roll out automatically |
+
+Release notes come from `distribution/whatsnew/`. The version code is the
+workflow run number, so every upload is higher than the one before.
+
+For `ANDROID_CERT_SHA256` on the server take the *App signing key* SHA-256
+from Play Console → *Test and release → App integrity*, plus the upload key's
+(printed by the script) for builds installed outside Play, comma-separated.
 
 ## Open points
 
