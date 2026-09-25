@@ -201,6 +201,53 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Takes over beans and espresso shots from a Beanconqueror export (ZIP or JSON). */
+    fun importBeanconqueror(source: Uri) = viewModelScope.launch {
+        try {
+            val backup = withContext(Dispatchers.IO) {
+                val bytes = container.app.contentResolver.openInputStream(source)?.use { it.readBytes() } ?: error("no stream")
+                val files = readBeanconquerorFiles(bytes)
+                de.birneklub.drop.core.importer.BeanconquerorImport.parse(
+                    mainJson = files["Beanconqueror.json"] ?: throw BackupException("Im ZIP fehlt Beanconqueror.json."),
+                    extraBeans = chunks(files, "Beans"),
+                    extraBrews = chunks(files, "Brews"),
+                    exportedAt = repo.now(),
+                )
+            }
+            val result = repo.importBackup(backup)
+            say("Aus Beanconqueror: ${backup.beans.size} Bohnen, ${backup.shots.size} Espresso-Shots (${result.added} neu)")
+            scheduleSync()
+        } catch (e: BackupException) {
+            say(e.message ?: "Import fehlgeschlagen")
+        } catch (e: Exception) {
+            say("Die Datei konnte nicht gelesen werden.")
+        }
+    }
+
+    private fun chunks(files: Map<String, String>, name: String): List<String> =
+        generateSequence(1) { it + 1 }.map { files["Beanconqueror_${name}_$it.json"] }.takeWhile { it != null }.filterNotNull().toList()
+
+    /** A ZIP export is unpacked (JSON files only, size-capped); a plain JSON file is taken as the main file. */
+    private fun readBeanconquerorFiles(bytes: ByteArray): Map<String, String> {
+        val isZip = bytes.size > 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte()
+        if (!isZip) return mapOf("Beanconqueror.json" to bytes.decodeToString())
+        val files = mutableMapOf<String, String>()
+        java.util.zip.ZipInputStream(bytes.inputStream()).use { zip ->
+            var total = 0L
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                val name = entry.name.substringAfterLast('/')
+                if (!entry.isDirectory && name.startsWith("Beanconqueror") && name.endsWith(".json")) {
+                    val content = zip.readBytes()
+                    total += content.size
+                    if (total > MAX_IMPORT_BYTES) throw BackupException("Der Export ist zu groß.")
+                    files[name] = content.decodeToString()
+                }
+            }
+        }
+        return files
+    }
+
     // --- account (optional) ------------------------------------------------------
     fun login(serverUrl: String, email: String, password: String, register: Boolean) {
         viewModelScope.launch {
@@ -239,6 +286,8 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     companion object {
+        private const val MAX_IMPORT_BYTES = 200L * 1024 * 1024
+
         fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
             initializer { DropsViewModel(container) }
         }

@@ -166,4 +166,41 @@ class DomainTest {
         assertEquals("https://example.com/guji", de.birneklub.drop.core.reminders.Links.reorder(withShop))
         assertEquals("https://www.google.com/search?tbm=shop&q=Br%C3%BChgruppendichtung", de.birneklub.drop.core.reminders.Links.supply("Brühgruppendichtung"))
     }
+
+    @Test
+    fun importsABeanconquerorExport() {
+        val json = """
+            {"VERSION":[],"SETTINGS":[{}],
+             "PREPARATION":[{"name":"Silvia","style_type":"ESPRESSO","config":{"uuid":"p1","unix_timestamp":1700000000}},
+                            {"name":"V60","style_type":"POUR OVER","config":{"uuid":"p2","unix_timestamp":1700000000}}],
+             "BEANS":[{"name":"Guji","roaster":"Nordbahnhof","weight":250,"cost":16.5,"finished":false,"aromatics":"Pfirsich, Jasmin",
+                       "roastingDate":"2026-09-01T22:00:00.000Z","url":"https://example.com/guji","rating":4,
+                       "bean_information":[{"country":"Ethiopia","region":"Guji","processing":"Natural","variety":"Heirloom","elevation":"2000"}],
+                       "config":{"uuid":"b1","unix_timestamp":1758000000}}],
+             "BREWS":[{"bean":"b1","method_of_preparation":"p1","grind_size":"2,5","grind_weight":18,"brew_beverage_quantity":38,
+                       "brew_time":28,"brew_time_milliseconds":400,"brew_temperature":93,"config":{"uuid":"s1","unix_timestamp":1758100000}},
+                      {"bean":"b1","method_of_preparation":"p2","grind_size":"20","grind_weight":15,"config":{"uuid":"s2","unix_timestamp":1758100000}}]}
+        """.trimIndent()
+        val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
+        val b = de.birneklub.drop.core.importer.BeanconquerorImport.parse(json, exportedAt = now, zone = kotlinx.datetime.TimeZone.of("Europe/Berlin"))
+        val bean = b.beans.single()
+        assertEquals("bc-b1", bean.id)
+        assertEquals("Äthiopien", bean.country)
+        assertNotNull(bean.origin)
+        assertEquals(Process.NATURAL, bean.process)
+        assertEquals(kotlinx.datetime.LocalDate(2026, 9, 2), bean.roastDate, "local midnight in Germany")
+        assertEquals(232.0, bean.remainingGrams)
+        assertEquals(1650, bean.purchase?.priceCents)
+        assertEquals(listOf("Pfirsich", "Jasmin"), bean.tastingNotes)
+        val shot = b.shots.single()
+        assertEquals(2.5, shot.grindSetting)
+        assertEquals(28.4, shot.timeSec)
+        assertEquals(38.0, shot.yieldGrams)
+        assertFailsWithMessage { de.birneklub.drop.core.importer.BeanconquerorImport.parse("{\"x\":1}", exportedAt = now) }
+    }
+
+    private fun assertFailsWithMessage(block: () -> Unit) {
+        val e = runCatching(block).exceptionOrNull()
+        assertTrue(e is de.birneklub.drop.core.backup.BackupException)
+    }
 }

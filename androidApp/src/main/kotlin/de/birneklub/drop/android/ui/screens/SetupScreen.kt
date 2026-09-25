@@ -33,6 +33,7 @@ import de.birneklub.drop.android.ui.PillButton
 import de.birneklub.drop.android.ui.Routes
 import de.birneklub.drop.android.ui.SectionHeader
 import de.birneklub.drop.android.ui.TaskRow
+import de.birneklub.drop.android.ui.TextAction
 import de.birneklub.drop.android.ui.fmtDe
 import de.birneklub.drop.android.ui.grouped
 import de.birneklub.drop.android.ui.rememberNotificationPermission
@@ -142,6 +143,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(vm::exportBackup) }
             val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::importBackup) }
+            val bcImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::importBeanconqueror) }
             SectionHeader("Daten sichern")
             DropsCard(Modifier.fillMaxWidth()) {
                 Text("Android sichert drops. automatisch mit deinem Geräte-Backup.", style = DropsType.bodyStrong, color = c.ink)
@@ -154,6 +156,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
                 PillButton("Exportieren", { exporter.launch("drops-backup-${vm.now().toString().take(10)}.json") }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
                 PillButton("Einspielen", { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
             }
+            TextAction("Von Beanconqueror umziehen (Export-ZIP wählen)", { bcImporter.launch(arrayOf("application/zip", "application/json", "application/octet-stream")) })
         }
 
         if (lib.beans.any { it.id.startsWith(de.birneklub.drop.data.SampleData.PREFIX) }) {

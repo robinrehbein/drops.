@@ -1,5 +1,7 @@
 package de.birneklub.drop.android.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -98,6 +100,10 @@ fun OnboardingScreen(vm: DropsViewModel, nav: NavController) {
                     )
                 }
                 PillButton("Bohne anlegen", { leave(Routes.ADD_BEAN) }, Modifier.fillMaxWidth(), kind = ButtonKind.Ink, height = 56.dp)
+                val bcImporter = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    if (uri != null) { vm.importBeanconqueror(uri); leave(null) }
+                }
+                TextAction("Von Beanconqueror umziehen", { bcImporter.launch(arrayOf("application/zip", "application/json", "application/octet-stream")) })
                 TextAction("Später", { leave(null) }, c.muted)
             }
         }
