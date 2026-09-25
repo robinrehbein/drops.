@@ -21,22 +21,22 @@ import io.ktor.server.routing.get
  * with drops. installed the scan goes straight into the app.
  */
 fun Route.roasterPages(config: ServerConfig) {
-    get("/roaster") { call.html(page("Rezeptkarte erstellen", form())) }
+    get("/roaster") { call.respondHtml(page("Rezeptkarte erstellen", form())) }
 
     get("/roaster/card") {
         val card = try {
             cardFrom(call.request.queryParameters).validate()
         } catch (e: IllegalArgumentException) {
-            return@get call.html(page("Rezeptkarte erstellen", "<p class=err>${esc(e.message ?: "Ungültige Angaben")}</p>" + form(call.request.queryParameters)), HttpStatusCode.BadRequest)
+            return@get call.respondHtml(page("Rezeptkarte erstellen", "<p class=err>${esc(e.message ?: "Ungültige Angaben")}</p>" + form(call.request.queryParameters)), HttpStatusCode.BadRequest)
         }
         val link = baseUrl(call, config) + RoasterCard.PATH + card.encode()
-        call.html(page("Rezeptkarte · ${card.coffee}", printable(card, link)))
+        call.respondHtml(page("Rezeptkarte · ${card.coffee}", printable(card, link)))
     }
 
     get("/r/{payload}") {
         val card = RoasterCard.decode(call.parameters["payload"].orEmpty())
-            ?: return@get call.html(page("Karte ungültig", "<p>Dieser Code ist beschädigt oder unvollständig.</p>"), HttpStatusCode.NotFound)
-        call.html(page("${card.coffee} · ${card.roaster}", landing(card)))
+            ?: return@get call.respondHtml(page("Karte ungültig", "<p>Dieser Code ist beschädigt oder unvollständig.</p>"), HttpStatusCode.NotFound)
+        call.respondHtml(page("${card.coffee} · ${card.roaster}", landing(card)))
     }
 
     get("/.well-known/assetlinks.json") {
@@ -44,13 +44,13 @@ fun Route.roasterPages(config: ServerConfig) {
         if (fingerprints.isEmpty()) return@get call.respondText("[]", ContentType.Application.Json, HttpStatusCode.NotFound)
         val list = fingerprints.joinToString(",") { "\"${it}\"" }
         call.respondText(
-            """[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"de.birneklub.drop","sha256_cert_fingerprints":[$list]}}]""",
+            """[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"de.birneklub.drops","sha256_cert_fingerprints":[$list]}}]""",
             ContentType.Application.Json,
         )
     }
 }
 
-private fun baseUrl(call: ApplicationCall, config: ServerConfig): String =
+internal fun baseUrl(call: ApplicationCall, config: ServerConfig): String =
     config.publicUrl ?: "${call.request.origin.scheme}://${call.request.origin.serverHost}" +
         (call.request.origin.serverPort.takeIf { it != 80 && it != 443 }?.let { ":$it" } ?: "")
 
@@ -73,10 +73,10 @@ internal fun cardFrom(p: Parameters): RoasterCard {
     )
 }
 
-private suspend fun ApplicationCall.html(body: String, status: HttpStatusCode = HttpStatusCode.OK) =
+internal suspend fun ApplicationCall.respondHtml(body: String, status: HttpStatusCode = HttpStatusCode.OK) =
     respondText(body, ContentType.Text.Html.withParameter("charset", "utf-8"), status)
 
-private fun esc(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;")
+internal fun esc(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;")
 
 private fun fmt(d: Double) = if (d % 1.0 == 0.0) d.toInt().toString() else d.toString().replace('.', ',')
 
@@ -116,7 +116,7 @@ private fun landing(c: RoasterCard) = """
   <p class=eyebrow>Startrezept von ${esc(c.roaster)}</p>
   <h1>${esc(c.coffee)}</h1>
   ${recipeLines(c)}
-  <p><a class=button href="https://play.google.com/store/apps/details?id=de.birneklub.drop">drops. für Android holen</a></p>
+  <p><a class=button href="https://play.google.com/store/apps/details?id=de.birneklub.drops">drops. für Android holen</a></p>
   <p class=small>Mit installierter App öffnet dieser Link die Bohne direkt in drops. Der Mahlgrad fehlt bewusst: Er hängt von deiner Mühle ab.</p>
   ${c.url?.let { "<p><a href=\"${esc(it)}\">Beim Röster ansehen</a></p>" } ?: ""}
 """
@@ -141,7 +141,7 @@ private fun form(p: Parameters = Parameters.Empty): String {
 """
 }
 
-private fun page(title: String, body: String) = """<!doctype html>
+internal fun page(title: String, body: String) = """<!doctype html>
 <html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <style>

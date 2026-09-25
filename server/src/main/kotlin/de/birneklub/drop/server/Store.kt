@@ -72,6 +72,15 @@ class Store(path: String) : AutoCloseable {
                     count INTEGER NOT NULL,
                     PRIMARY KEY(install_id, day, event))""",
             )
+            // Waitlist with double opt-in: an address counts only once confirmed.
+            st.execute(
+                """CREATE TABLE IF NOT EXISTS waitlist(
+                    email TEXT PRIMARY KEY,
+                    token TEXT NOT NULL UNIQUE,
+                    source TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    confirmed_at INTEGER)""",
+            )
             st.execute(
                 """CREATE TABLE IF NOT EXISTS stat_installs(
                     install_id TEXT PRIMARY KEY,
@@ -79,6 +88,59 @@ class Store(path: String) : AutoCloseable {
                     app_version TEXT NOT NULL)""",
             )
         }
+    }
+
+    // --- waitlist ----------------------------------------------------------------
+
+    /**
+     * Adds an address as unconfirmed and returns the token for its confirmation
+     * mail, or null if it is already confirmed (nothing to send).
+     */
+    fun waitlistAdd(email: String, source: String, now: Long): String? = synchronized(lock) {
+        val existing = conn.prepareStatement("SELECT token, confirmed_at FROM waitlist WHERE email = ?").use { ps ->
+            ps.setString(1, email)
+            ps.executeQuery().use { rs -> if (rs.next()) rs.getString(1) to (rs.getObject(2) != null) else null }
+        }
+        when {
+            existing == null -> {
+                val token = randomToken()
+                conn.prepareStatement("INSERT INTO waitlist(email, token, source, created_at) VALUES(?,?,?,?)").use { ps ->
+                    ps.setString(1, email); ps.setString(2, token); ps.setString(3, source); ps.setLong(4, now); ps.executeUpdate()
+                }
+                token
+            }
+            existing.second -> null
+            else -> existing.first
+        }
+    }
+
+    fun waitlistConfirm(token: String, now: Long): Boolean = synchronized(lock) {
+        conn.prepareStatement("UPDATE waitlist SET confirmed_at = coalesce(confirmed_at, ?) WHERE token = ?").use { ps ->
+            ps.setLong(1, now); ps.setString(2, token); ps.executeUpdate() > 0
+        }
+    }
+
+    fun waitlistRemove(token: String): Boolean = synchronized(lock) {
+        conn.prepareStatement("DELETE FROM waitlist WHERE token = ?").use { ps -> ps.setString(1, token); ps.executeUpdate() > 0 }
+    }
+
+    /** Confirmed addresses with source and confirmation time (epoch ms). */
+    fun waitlistConfirmed(): List<Triple<String, String, Long>> = synchronized(lock) {
+        conn.createStatement().use { st ->
+            st.executeQuery("SELECT email, source, confirmed_at FROM waitlist WHERE confirmed_at IS NOT NULL ORDER BY confirmed_at").use { rs ->
+                buildList { while (rs.next()) add(Triple(rs.getString(1), rs.getString(2), rs.getLong(3))) }
+            }
+        }
+    }
+
+    /** Unconfirmed sign-ups older than [before] are dropped; consent was never given. */
+    fun waitlistPurgeUnconfirmed(before: Long): Int = synchronized(lock) {
+        conn.prepareStatement("DELETE FROM waitlist WHERE confirmed_at IS NULL AND created_at < ?").use { ps -> ps.setLong(1, before); ps.executeUpdate() }
+    }
+
+    private fun randomToken(): String {
+        val bytes = ByteArray(24).also { java.security.SecureRandom().nextBytes(it) }
+        return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 
     // --- beta statistics -------------------------------------------------------

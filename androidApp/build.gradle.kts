@@ -18,8 +18,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        // Same application id as the store listing, so the Kotlin app can replace it.
-        applicationId = "de.birneklub.drop"
+        // Play listing "drops." (de.birneklub.drops); the old Expo test app used de.birneklub.drop.
+        applicationId = "de.birneklub.drops"
         minSdk = 26
         targetSdk = 35
         versionCode = ciVersionCode.get()

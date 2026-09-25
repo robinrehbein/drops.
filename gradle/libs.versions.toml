@@ -16,6 +16,7 @@ billing = "8.3.0"
 sqliteJdbc = "3.49.1.0"
 logback = "1.5.18"
 zxing = "3.5.3"
+angusMail = "2.0.3"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -46,6 +47,7 @@ sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version.ref = "angusMail" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 

@@ -168,6 +168,14 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
         if (lib.beans.any { it.id.startsWith(de.birneklub.drop.data.SampleData.PREFIX) }) {
             PillButton("Beispielbohnen entfernen", { vm.removeSampleData() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
         }
+        // Legal pages live on the website; the Impressum must be reachable within two taps.
+        val site = de.birneklub.drop.android.BuildConfig.DEFAULT_SYNC_URL.trimEnd('/').takeIf { it.removePrefix("https://").isNotBlank() }
+        if (site != null) {
+            Row(Modifier.align(Alignment.CenterHorizontally), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                TextAction("Impressum", { uri.openUri("$site/impressum") }, c.muted)
+                TextAction("Datenschutz", { uri.openUri("$site/datenschutz") }, c.muted)
+            }
+        }
         Text("Version ${de.birneklub.drop.android.BuildConfig.VERSION_NAME}", style = DropsType.caption.copy(fontFamily = MonoFamily), color = c.muted, modifier = Modifier.align(Alignment.CenterHorizontally))
     }
 }

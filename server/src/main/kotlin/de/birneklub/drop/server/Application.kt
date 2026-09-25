@@ -65,6 +65,8 @@ data class ServerConfig(
     val publicUrl: String? = null,
     /** SHA-256 fingerprints of the app signing key(s), so Android opens /r/ links in the app. */
     val androidCertSha256: List<String> = emptyList(),
+    /** Outgoing mail for the waitlist; without it sign-ups cannot be confirmed. */
+    val smtp: SmtpConfig? = null,
 ) {
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()) = ServerConfig(
@@ -76,6 +78,15 @@ data class ServerConfig(
             statsToken = env["STATS_TOKEN"]?.takeIf { it.length >= 16 },
             publicUrl = env["PUBLIC_URL"]?.trimEnd('/')?.takeIf { it.startsWith("https://") || it.startsWith("http://") },
             androidCertSha256 = env["ANDROID_CERT_SHA256"].orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() },
+            smtp = env["SMTP_HOST"]?.takeIf { it.isNotBlank() }?.let { host ->
+                SmtpConfig(
+                    host = host,
+                    port = env["SMTP_PORT"]?.toIntOrNull() ?: 587,
+                    user = env["SMTP_USER"]?.takeIf { it.isNotBlank() },
+                    password = env["SMTP_PASSWORD"],
+                    from = env["MAIL_FROM"] ?: "drops. <${env["SMTP_USER"] ?: "noreply@localhost"}>",
+                )
+            },
         )
     }
 }
@@ -96,7 +107,7 @@ fun main() {
     embeddedServer(Netty, port = config.port) { dropsModule(store, config) }.start(wait = true)
 }
 
-fun Application.dropsModule(store: Store, config: ServerConfig) {
+fun Application.dropsModule(store: Store, config: ServerConfig, mailer: Mailer = config.smtp?.let(::SmtpMailer) ?: LogMailer) {
     install(CallLogging)
     // Coolify puts Traefik/Caddy in front; use the client IP it forwards for rate limiting.
     if (config.behindProxy) install(XForwardedHeaders)
@@ -131,6 +142,8 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
         }
 
         roasterPages(config)
+        website()
+        rateLimit(AUTH_LIMIT) { waitlistRoutes(store, config, mailer) }
 
         route("/api") {
             rateLimit(AUTH_LIMIT) {
@@ -163,12 +176,9 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
                 }
             }
             get("/stats/report") {
-                val expected = config.statsToken ?: throw ApiException(HttpStatusCode.NotFound, "not_found", "Nicht gefunden")
-                val given = call.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")?.trim().orEmpty()
-                if (!MessageDigest.isEqual(given.toByteArray(), expected.toByteArray())) {
-                    throw ApiException(HttpStatusCode.Unauthorized, "unauthorized", "Nicht angemeldet")
-                }
-                call.respond(BetaReports.compute(store.statRows(), Clock.System.todayIn(TimeZone.UTC)))
+                call.requireStatsToken(config)
+                val report = BetaReports.compute(store.statRows(), Clock.System.todayIn(TimeZone.UTC))
+                call.respond(report.copy(waitlistConfirmed = store.waitlistConfirmed().size))
             }
 
             authenticate("token") {

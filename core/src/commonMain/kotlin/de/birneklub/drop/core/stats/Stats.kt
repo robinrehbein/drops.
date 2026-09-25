@@ -67,6 +67,8 @@ data class BetaReport(
     val linkClickShare: Double?,
     /** KR6: beans added from a roaster's QR card (only from opted-in installs). */
     val roasterRecipes: Int = 0,
+    /** Confirmed waitlist sign-ups (double opt-in). */
+    val waitlistConfirmed: Int = 0,
     val weekly: List<WeekRow>,
 )
 

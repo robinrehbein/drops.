@@ -33,11 +33,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ServerTest {
+    private val sentMails = mutableListOf<Pair<String, String>>()
+
     private fun withServer(config: ServerConfig = ServerConfig(authRateLimit = 100), block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) {
         val db = File.createTempFile("drops", ".db").apply { deleteOnExit() }
         val store = Store(db.absolutePath)
         testApplication {
-            application { dropsModule(store, config) }
+            application { dropsModule(store, config) { to, _, text -> sentMails += to to text } }
             val client = createClient { install(ContentNegotiation) { json(DropsJson) } }
             block(client)
         }
@@ -222,5 +224,45 @@ class ServerTest {
         assertEquals(HttpStatusCode.BadRequest, client.get("/roaster/card?roaster=X&coffee=Y&dose=18&yield=40&tmin=26&tmax=30&temp=150").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/r/kaputt").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/.well-known/assetlinks.json").status)
+    }
+
+    @Test
+    fun waitlistNeedsConsentAndDoubleOptIn() = withServer(ServerConfig(authRateLimit = 100, publicUrl = "https://drops.example.com", statsToken = "0123456789abcdef-secret")) { client ->
+        fun join(consent: Boolean) = kotlinx.coroutines.runBlocking {
+            client.post("/api/waitlist") { contentType(ContentType.Application.Json); setBody(WaitlistRequest("Robin@Example.com ", consent)) }
+        }
+        assertEquals(HttpStatusCode.BadRequest, join(consent = false).status)
+        assertEquals(HttpStatusCode.Accepted, join(consent = true).status)
+        val (to, text) = sentMails.single()
+        assertEquals("robin@example.com", to)
+        val confirm = Regex("""https://drops\.example\.com(/waitlist/confirm\?token=[A-Za-z0-9_-]+)""").find(text)!!.groupValues[1]
+
+        val before: de.birneklub.drop.core.stats.BetaReport = client.get("/api/stats/report") { bearerAuth("0123456789abcdef-secret") }.body()
+        assertEquals(0, before.waitlistConfirmed, "unconfirmed sign-ups do not count")
+        assertEquals(HttpStatusCode.OK, client.get(confirm).status)
+        val after: de.birneklub.drop.core.stats.BetaReport = client.get("/api/stats/report") { bearerAuth("0123456789abcdef-secret") }.body()
+        assertEquals(1, after.waitlistConfirmed)
+
+        // A confirmed address gets no second mail, and the answer does not reveal it.
+        assertEquals(HttpStatusCode.Accepted, join(consent = true).status)
+        assertEquals(1, sentMails.size)
+        assertTrue("robin@example.com" in client.get("/api/waitlist/export") { bearerAuth("0123456789abcdef-secret") }.bodyAsText())
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/waitlist/export").status)
+
+        val remove = Regex("""https://drops\.example\.com(/waitlist/remove\?token=[A-Za-z0-9_-]+)""").find(text)!!.groupValues[1]
+        client.get(remove)
+        assertTrue("robin@example.com" !in client.get("/api/waitlist/export") { bearerAuth("0123456789abcdef-secret") }.bodyAsText())
+    }
+
+    @Test
+    fun websiteIsServedNextToTheApi() = withServer { client ->
+        val home = client.get("/")
+        assertEquals(HttpStatusCode.OK, home.status)
+        assertTrue("Auf die Warteliste" in home.bodyAsText())
+        assertEquals(HttpStatusCode.OK, client.get("/datenschutz").status)
+        assertEquals(HttpStatusCode.OK, client.get("/site.css").status)
+        assertEquals(HttpStatusCode.OK, client.get("/healthz").status)
+        assertEquals(HttpStatusCode.OK, client.get("/roaster").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/gibt-es-nicht").status)
     }
 }
