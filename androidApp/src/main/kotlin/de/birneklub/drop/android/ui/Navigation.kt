@@ -1,5 +1,6 @@
 package de.birneklub.drop.android.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,6 +85,7 @@ fun DropsRoot(container: AppContainer, deepLink: MutableStateFlow<String?> = Mut
     val vm: DropsViewModel = viewModel(factory = DropsViewModel.factory(container))
     val nav = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
+    val reduced = rememberReducedMotion()
     val message by vm.messages.collectAsStateWithLifecycle()
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.consumeMessage() }
@@ -98,7 +100,10 @@ fun DropsRoot(container: AppContainer, deepLink: MutableStateFlow<String?> = Mut
     Scaffold(
         containerColor = Drops.colors.paper,
         snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = { if (showTabs) TabBar(route, nav) },
+        // Enter and exit beyond screen bounds: the bar collapses away on detail screens.
+        bottomBar = {
+            AnimatedVisibility(showTabs, enter = Motion.barIn(reduced), exit = Motion.barOut(reduced)) { TabBar(route, nav) }
+        },
     ) { padding ->
         if (setupDone == null) return@Scaffold
         val link by deepLink.collectAsStateWithLifecycle()
@@ -108,7 +113,15 @@ fun DropsRoot(container: AppContainer, deepLink: MutableStateFlow<String?> = Mut
             deepLink.value = null
             nav.navigate(target) { launchSingleTop = true }
         }
-        NavHost(nav, startDestination = start, modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
+        NavHost(
+            nav,
+            startDestination = start,
+            modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()),
+            enterTransition = { patternFor(initialState.destination.route, targetState.destination.route, reduced, popping = false).first },
+            exitTransition = { patternFor(initialState.destination.route, targetState.destination.route, reduced, popping = false).second },
+            popEnterTransition = { patternFor(initialState.destination.route, targetState.destination.route, reduced, popping = true).first },
+            popExitTransition = { patternFor(initialState.destination.route, targetState.destination.route, reduced, popping = true).second },
+        ) {
             composable(Routes.TODAY) { TodayScreen(vm, nav) }
             composable(Routes.BEANS) { BeansScreen(vm, nav) }
             composable(Routes.MAP) { MapScreen(vm) }

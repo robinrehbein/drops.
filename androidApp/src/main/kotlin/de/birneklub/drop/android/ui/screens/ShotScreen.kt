@@ -19,6 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import de.birneklub.drop.android.ui.Motion
+import de.birneklub.drop.android.ui.rememberReducedMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +71,7 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
     val lib by vm.library.collectAsStateWithLifecycle()
     val bean = lib.bean(beanId) ?: lib.hopperBean
     val c = Drops.colors
+    val reduced = rememberReducedMotion()
     if (bean == null) return
     val recipe: Recipe? = lib.recipesFor(bean.id).firstOrNull()
 
@@ -175,10 +179,9 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
                 Text(adviceText(advice, grind), style = DropsType.body.copy(fontSize = 14.sp), color = c.ink)
             }
 
-            saved?.let { shot ->
-                if (advice.adoptAsRecipe) {
-                    PillButton("Als Rezept übernehmen", { vm.adoptShot(shot); nav.popBackStack() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
-                }
+            // Enters below the advice once a good shot is saved.
+            AnimatedVisibility(saved != null && advice.adoptAsRecipe, enter = Motion.expandIn(reduced), exit = Motion.collapseOut(reduced)) {
+                PillButton("Als Rezept übernehmen", { saved?.let(vm::adoptShot); nav.popBackStack() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
             }
         }
 
