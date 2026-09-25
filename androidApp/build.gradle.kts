@@ -25,6 +25,8 @@ android {
         versionCode = ciVersionCode.get()
         versionName = ciVersionName.get()
         buildConfigField("String", "DEFAULT_SYNC_URL", "\"${defaultSyncUrl.get()}\"")
+        // Roaster QR cards link to <sync server>/r/…; the app claims those links.
+        manifestPlaceholders["linkHost"] = defaultSyncUrl.get().removePrefix("https://").substringBefore('/').ifBlank { "drops.invalid" }
     }
 
     signingConfigs {

@@ -16,6 +16,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -204,5 +205,22 @@ class ServerTest {
         assertEquals(2, r.activeLast30Days)
         assertEquals(0.5, r.foundingBuyerShare)
         assertEquals(0.5, r.linkClickShare)
+    }
+
+    @Test
+    fun roasterCardsRenderAndOpen() = withServer(ServerConfig(authRateLimit = 100, publicUrl = "https://sync.example.com")) { client ->
+        assertEquals(HttpStatusCode.OK, client.get("/roaster").status)
+        val card = client.get("/roaster/card?roaster=Nordbahnhof&coffee=Guji%20%3Cb%3E&country=Ethiopia&process=NATURAL&dose=18&yield=40&tmin=26&tmax=30&temp=94")
+        assertEquals(HttpStatusCode.OK, card.status)
+        val html = card.bodyAsText()
+        assertTrue("<svg" in html && "Guji &lt;b&gt;" in html, "QR code rendered, input escaped")
+        val link = Regex("""https://sync\.example\.com/r/[A-Za-z0-9_-]+""").find(html)!!.value
+        val landing = client.get(link.removePrefix("https://sync.example.com"))
+        assertEquals(HttpStatusCode.OK, landing.status)
+        assertTrue("94 °C" in landing.bodyAsText())
+
+        assertEquals(HttpStatusCode.BadRequest, client.get("/roaster/card?roaster=X&coffee=Y&dose=18&yield=40&tmin=26&tmax=30&temp=150").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/r/kaputt").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/.well-known/assetlinks.json").status)
     }
 }

@@ -38,6 +38,8 @@ From the Android emulator the local server is reachable at `http://10.0.2.2:8080
 | `ALLOW_SIGNUP` | `true` | `false` closes registration (existing accounts keep working) |
 | `AUTH_RATE_LIMIT_PER_MINUTE` | `10` | Login/register attempts per client IP |
 | `BEHIND_PROXY` | `true` | Trust `X-Forwarded-For` from Coolify's proxy for rate limiting |
+| `PUBLIC_URL` | request host | Base URL printed into roaster QR codes, e.g. `https://sync.example.com` |
+| `ANDROID_CERT_SHA256` | unset | Comma-separated SHA-256 fingerprints of the app signing key (Play Console → App integrity); served as `/.well-known/assetlinks.json` so `/r/` links open the app directly |
 | `STATS_TOKEN` | unset | At least 16 characters; enables `GET /api/stats/report` with `Authorization: Bearer <token>` |
 
 Endpoints: `GET /healthz`, `POST /api/auth/register`, `POST /api/auth/login`,
@@ -73,6 +75,14 @@ without tracking people:
   consumables and reordering open a shop search or the bean's saved shop page.
   They are not affiliate links yet; once partner links are added they must be
   labelled as advertising ("Anzeige").
+- **Roaster QR cards (KR6).** Roasters open `https://<server>/roaster`, enter
+  a starting recipe and print the card. The QR code holds the whole recipe in
+  the link `https://<server>/r/<card>`; nothing is stored on the server.
+  With the app installed (and `ANDROID_CERT_SHA256` set) the link opens a
+  preview in drops., which adds the bean and a "Start von <Rösterei>" recipe
+  without a grind setting. Without the app the page shows the recipe and a
+  Play Store link. The report counts adopted cards as `roasterRecipes`.
+  The app claims the host of `DROPS_SYNC_URL` at build time.
 - **Backups.** Export/import as JSON in Setup; Android Auto Backup covers the
   database. **Beanconqueror**: the export ZIP can be imported in onboarding or
   Setup (beans and espresso brews).

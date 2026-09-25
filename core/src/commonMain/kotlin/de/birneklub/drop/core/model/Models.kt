@@ -76,9 +76,15 @@ data class Recipe(
     val temperatureC: Int,
     val preinfusion: String = "",
     val equipmentNotes: String = "",
+    /** Where the recipe came from, e.g. [SOURCE_ROASTER] for a roaster's QR card. */
+    val source: String? = null,
     override val updatedAt: Instant,
 ) : Entity {
     val ratio: Double get() = if (doseGrams > 0) yieldGrams / doseGrams else 0.0
+
+    companion object {
+        const val SOURCE_ROASTER = "roaster"
+    }
 }
 
 @Serializable

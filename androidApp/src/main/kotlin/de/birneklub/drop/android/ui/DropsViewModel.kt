@@ -145,6 +145,18 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
 
     // --- shots -----------------------------------------------------------------
     fun logShot(shot: Shot) = write("Shot gespeichert") { repo.logShot(shot); stats.count(StatEvents.SHOT_LOGGED) }
+    /** Adds the coffee and the roaster's starting recipe from a scanned card; returns the bean id. */
+    fun addRoasterCard(card: de.birneklub.drop.core.roaster.RoasterCard): String {
+        val (bean, recipe) = card.toBeanAndRecipe(repo.newId(), repo.newId(), repo.now())
+        write("${bean.name} mit Rezept von ${card.roaster} angelegt") {
+            repo.saveBean(bean)
+            repo.saveRecipe(recipe)
+            stats.count(StatEvents.BEAN_ADDED)
+            stats.count(StatEvents.ROASTER_RECIPE)
+        }
+        return bean.id
+    }
+
     fun addBean(bean: Bean) = write("${bean.name} angelegt") { repo.saveBean(bean); stats.count(StatEvents.BEAN_ADDED) }
     fun adoptShot(shot: Shot) = write("Rezept aktualisiert") { repo.adoptShotAsRecipe(shot) }
 

@@ -61,6 +61,10 @@ data class ServerConfig(
     val behindProxy: Boolean = true,
     /** Bearer token for GET /api/stats/report; the report is disabled without one. */
     val statsToken: String? = null,
+    /** Public base URL for QR links, e.g. https://sync.example.com; defaults to the request host. */
+    val publicUrl: String? = null,
+    /** SHA-256 fingerprints of the app signing key(s), so Android opens /r/ links in the app. */
+    val androidCertSha256: List<String> = emptyList(),
 ) {
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()) = ServerConfig(
@@ -70,6 +74,8 @@ data class ServerConfig(
             authRateLimit = env["AUTH_RATE_LIMIT_PER_MINUTE"]?.toIntOrNull() ?: 10,
             behindProxy = env["BEHIND_PROXY"]?.lowercase() != "false",
             statsToken = env["STATS_TOKEN"]?.takeIf { it.length >= 16 },
+            publicUrl = env["PUBLIC_URL"]?.trimEnd('/')?.takeIf { it.startsWith("https://") || it.startsWith("http://") },
+            androidCertSha256 = env["ANDROID_CERT_SHA256"].orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() },
         )
     }
 }
@@ -123,6 +129,8 @@ fun Application.dropsModule(store: Store, config: ServerConfig) {
         get("/healthz") {
             call.respond(if (store.ping()) mapOf("status" to "ok") else throw ApiException(HttpStatusCode.ServiceUnavailable, "db", "Datenbank nicht erreichbar"))
         }
+
+        roasterPages(config)
 
         route("/api") {
             rateLimit(AUTH_LIMIT) {

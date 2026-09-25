@@ -18,8 +18,9 @@ object StatEvents {
     const val LINK_SUPPLY = "link_supply"
     const val FOUNDING_VIEW = "founding_view"
     const val FOUNDING_BUY = "founding_buy"
+    const val ROASTER_RECIPE = "roaster_recipe"
 
-    val all: Set<String> = setOf(APP_OPEN, SETUP_DONE, BEAN_ADDED, SHOT_LOGGED, TASK_DONE, LINK_REORDER, LINK_SUPPLY, FOUNDING_VIEW, FOUNDING_BUY)
+    val all: Set<String> = setOf(APP_OPEN, SETUP_DONE, BEAN_ADDED, SHOT_LOGGED, TASK_DONE, LINK_REORDER, LINK_SUPPLY, FOUNDING_VIEW, FOUNDING_BUY, ROASTER_RECIPE)
 }
 
 @Serializable
@@ -64,6 +65,8 @@ data class BetaReport(
     val foundingBuyers: Int,
     /** KR5: installs that opened a reorder or supply link in the last 30 days, of the active ones. */
     val linkClickShare: Double?,
+    /** KR6: beans added from a roaster's QR card (only from opted-in installs). */
+    val roasterRecipes: Int = 0,
     val weekly: List<WeekRow>,
 )
 

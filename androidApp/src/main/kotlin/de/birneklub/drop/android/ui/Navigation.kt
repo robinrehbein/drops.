@@ -46,6 +46,7 @@ import de.birneklub.drop.android.ui.screens.BeansScreen
 import de.birneklub.drop.android.ui.screens.EquipmentScreen
 import de.birneklub.drop.android.ui.screens.MapScreen
 import de.birneklub.drop.android.ui.screens.OnboardingScreen
+import de.birneklub.drop.android.ui.screens.RoasterCardScreen
 import de.birneklub.drop.core.model.EquipmentKind
 import de.birneklub.drop.android.ui.screens.SetupScreen
 import de.birneklub.drop.android.ui.screens.ShotScreen
@@ -62,6 +63,7 @@ object Routes {
     const val ACCOUNT = "account"
     const val ONBOARDING = "onboarding"
     const val EQUIPMENT = "equipment/{kind}"
+    const val ROASTER_CARD = "card/{payload}"
 
     fun bean(id: String) = "bean/$id"
     fun shot(beanId: String) = "shot/$beanId"
@@ -116,6 +118,7 @@ fun DropsRoot(container: AppContainer, deepLink: MutableStateFlow<String?> = Mut
             composable(Routes.ADD_BEAN) { AddBeanScreen(vm, nav) }
             composable(Routes.ACCOUNT) { AccountScreen(vm, nav) }
             composable(Routes.ONBOARDING) { OnboardingScreen(vm, nav) }
+            composable(Routes.ROASTER_CARD) { RoasterCardScreen(vm, nav, it.arguments?.getString("payload").orEmpty()) }
             composable(Routes.EQUIPMENT) {
                 val kind = EquipmentKind.entries.firstOrNull { k -> k.name == it.arguments?.getString("kind") } ?: EquipmentKind.MACHINE
                 EquipmentScreen(vm, nav, kind)

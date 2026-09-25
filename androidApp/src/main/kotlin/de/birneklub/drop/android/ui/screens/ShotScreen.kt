@@ -80,7 +80,8 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
     val step = scale?.step ?: 0.25
     var dose by rememberSaveable { mutableDoubleStateOf(recipe?.doseGrams ?: last?.doseGrams ?: 18.0) }
     var yieldG by rememberSaveable { mutableDoubleStateOf(recipe?.yieldGrams ?: last?.yieldGrams ?: 36.0) }
-    var grind by rememberSaveable { mutableDoubleStateOf(last?.grindSetting ?: recipe?.grindSetting ?: scale?.espressoStart ?: 15.0) }
+    // Roaster recipes come without a grind setting: every grinder is different.
+    var grind by rememberSaveable { mutableDoubleStateOf(last?.grindSetting ?: recipe?.grindSetting?.takeIf { it > 0 } ?: scale?.espressoStart ?: 15.0) }
     var temp by rememberSaveable { mutableIntStateOf(recipe?.temperatureC ?: last?.temperatureC ?: 93) }
     var taste by rememberSaveable { mutableIntStateOf(Taste.BALANCED.ordinal) }
     var saved by remember { mutableStateOf<Shot?>(null) }

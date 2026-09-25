@@ -66,6 +66,7 @@ object BetaReports {
             foundingBuyerShare = share(buyers.count { it in active30 }, active30.size),
             foundingBuyers = buyers.size,
             linkClickShare = share(clickers.count { it in active30 }, active30.size),
+            roasterRecipes = parsed.filter { it.event == StatEvents.ROASTER_RECIPE }.sumOf { it.count },
             weekly = weekly,
         )
     }

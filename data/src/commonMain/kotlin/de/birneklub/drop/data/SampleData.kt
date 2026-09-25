@@ -90,11 +90,11 @@ class SampleData(
             )
 
             val recipes = listOf(
-                Recipe("${PREFIX}r-guji", "${PREFIX}guji", "Morgen-Espresso", 14.5, 1200, 18.0, 38.0, 27, 29, 93, "5 s · 3 bar", "Sieb 18 g Präzision · Puck-Screen · WDT", now),
-                Recipe("${PREFIX}r-guji-cortado", "${PREFIX}guji", "Cortado", 14.0, 1200, 18.0, 32.0, 26, 28, 93, "5 s · 3 bar", "Sieb 18 g Präzision", now),
-                Recipe("${PREFIX}r-cerrado", "${PREFIX}cerrado", "Milchgetränke", 16.0, 1000, 18.0, 36.0, 26, 30, 92, "3 s", "Sieb 18 g", now),
-                Recipe("${PREFIX}r-karogoto", "${PREFIX}karogoto", "Espresso", 13.5, 1400, 17.5, 40.0, 26, 28, 94, "8 s · 2 bar", "Sieb 18 g Präzision", now),
-                Recipe("${PREFIX}r-huehue", "${PREFIX}huehue", "Espresso", 15.0, 1100, 18.0, 37.0, 27, 29, 93, "4 s", "Sieb 18 g", now),
+                Recipe("${PREFIX}r-guji", "${PREFIX}guji", "Morgen-Espresso", 14.5, 1200, 18.0, 38.0, 27, 29, 93, "5 s · 3 bar", "Sieb 18 g Präzision · Puck-Screen · WDT", updatedAt = now),
+                Recipe("${PREFIX}r-guji-cortado", "${PREFIX}guji", "Cortado", 14.0, 1200, 18.0, 32.0, 26, 28, 93, "5 s · 3 bar", "Sieb 18 g Präzision", updatedAt = now),
+                Recipe("${PREFIX}r-cerrado", "${PREFIX}cerrado", "Milchgetränke", 16.0, 1000, 18.0, 36.0, 26, 30, 92, "3 s", "Sieb 18 g", updatedAt = now),
+                Recipe("${PREFIX}r-karogoto", "${PREFIX}karogoto", "Espresso", 13.5, 1400, 17.5, 40.0, 26, 28, 94, "8 s · 2 bar", "Sieb 18 g Präzision", updatedAt = now),
+                Recipe("${PREFIX}r-huehue", "${PREFIX}huehue", "Espresso", 15.0, 1100, 18.0, 37.0, 27, 29, 93, "4 s", "Sieb 18 g", updatedAt = now),
             )
 
             // Dial-in of the current bag: from sour and fast to balanced.

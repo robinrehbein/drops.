@@ -27,7 +27,7 @@ class AppContainer(val app: Application) {
     }
 
     /** Where anonymous beta statistics go: the hosted drops. server, if this build has one. */
-    val statsServerUrl: String = BuildConfig.DEFAULT_SYNC_URL
+    val statsServerUrl: String = BuildConfig.DEFAULT_SYNC_URL.takeIf { it.removePrefix("https://").isNotBlank() }.orEmpty()
 }
 
 class DropsApp : Application() {

@@ -25,6 +25,7 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
@@ -203,4 +204,26 @@ class DomainTest {
         val e = runCatching(block).exceptionOrNull()
         assertTrue(e is de.birneklub.drop.core.backup.BackupException)
     }
+
+    @Test
+    fun roasterCardsTravelInsideTheLink() {
+        val card = de.birneklub.drop.core.roaster.RoasterCard(
+            roaster = "Nordbahnhof", coffee = "Guji Hambela", country = "Ethiopia", process = Process.NATURAL,
+            notes = listOf("Pfirsich", "Jasmin"), doseGrams = 18.0, yieldGrams = 40.0, timeMinSec = 26, timeMaxSec = 30,
+            temperatureC = 94, hint = "Eher fein starten", url = "https://example.com/guji",
+        ).validate()
+        val link = "https://sync.example.com" + de.birneklub.drop.core.roaster.RoasterCard.PATH + card.encode()
+        assertTrue(link.length < 600, "fits a QR code comfortably")
+        assertEquals(card, de.birneklub.drop.core.roaster.RoasterCard.fromLink(link))
+        assertNull(de.birneklub.drop.core.roaster.RoasterCard.fromLink("https://sync.example.com/r/kaputt"))
+
+        val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
+        val (bean, recipe) = card.toBeanAndRecipe("b", "r", now)
+        assertEquals("Äthiopien", bean.country)
+        assertEquals("https://example.com/guji", bean.purchase?.url)
+        assertEquals(Recipe.SOURCE_ROASTER, recipe.source)
+        assertFailsWithMessage2 { card.copy(temperatureC = 120).validate() }
+    }
+
+    private fun assertFailsWithMessage2(block: () -> Unit) = assertTrue(runCatching(block).isFailure)
 }
