@@ -1,10 +1,13 @@
 package de.birneklub.drop.android.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -105,6 +108,23 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
                     }
                     Text("›", style = DropsType.headline, color = c.muted)
                 }
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(vm::exportBackup) }
+            val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::importBackup) }
+            SectionHeader("Daten sichern")
+            DropsCard(Modifier.fillMaxWidth()) {
+                Text("Android sichert drops. automatisch mit deinem Geräte-Backup.", style = DropsType.bodyStrong, color = c.ink)
+                Text(
+                    "Zusätzlich kannst du alles als Datei exportieren und wieder einspielen, auch auf einem neuen Gerät. Beim Einspielen bleiben neuere Einträge erhalten.",
+                    style = DropsType.small, color = c.muted, modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                PillButton("Exportieren", { exporter.launch("drops-backup-${vm.now().toString().take(10)}.json") }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
+                PillButton("Einspielen", { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
             }
         }
 

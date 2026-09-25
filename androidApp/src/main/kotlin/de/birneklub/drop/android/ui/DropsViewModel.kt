@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import android.net.Uri
 import de.birneklub.drop.android.AppContainer
+import de.birneklub.drop.core.backup.BackupException
+import de.birneklub.drop.core.backup.DropsBackup
 import de.birneklub.drop.core.domain.Maintenance
 import de.birneklub.drop.core.domain.TaskStatus
 import de.birneklub.drop.core.model.Bean
@@ -15,6 +18,7 @@ import de.birneklub.drop.core.model.Recipe
 import de.birneklub.drop.core.model.Shot
 import de.birneklub.drop.data.AccountSession
 import de.birneklub.drop.data.SyncException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class LibraryState(
     val beans: List<Bean> = emptyList(),
@@ -113,6 +118,37 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     fun completeTask(status: TaskStatus) = write("${status.task.name}: erledigt") { repo.completeTask(status.task.id) }
     fun saveEquipment(e: Equipment) = write { repo.saveEquipment(e) }
     fun removeSampleData() = write("Beispieldaten entfernt") { repo.removeSampleData() }
+
+    // --- backup ------------------------------------------------------------------
+    /** Writes a complete backup to a file the user picked (Downloads, Drive, …). */
+    fun exportBackup(target: Uri) = viewModelScope.launch {
+        try {
+            val backup = repo.exportBackup()
+            withContext(Dispatchers.IO) {
+                container.app.contentResolver.openOutputStream(target, "wt")?.use { it.write(backup.encode().encodeToByteArray()) }
+                    ?: error("no stream")
+            }
+            say("Backup gespeichert: ${backup.beans.size} Bohnen, ${backup.shots.size} Shots")
+        } catch (e: Exception) {
+            say("Backup konnte nicht gespeichert werden.")
+        }
+    }
+
+    /** Merges a backup file; newer records on the device are kept. */
+    fun importBackup(source: Uri) = viewModelScope.launch {
+        try {
+            val text = withContext(Dispatchers.IO) {
+                container.app.contentResolver.openInputStream(source)?.use { it.readBytes().decodeToString() } ?: error("no stream")
+            }
+            val result = repo.importBackup(DropsBackup.decode(text))
+            say(if (result.changed == 0) "Backup geprüft: nichts Neues" else "Backup eingespielt: ${result.added} neu, ${result.updated} aktualisiert")
+            scheduleSync()
+        } catch (e: BackupException) {
+            say(e.message ?: "Backup ungültig")
+        } catch (e: Exception) {
+            say("Backup konnte nicht gelesen werden.")
+        }
+    }
 
     // --- account (optional) ------------------------------------------------------
     fun login(serverUrl: String, email: String, password: String, register: Boolean) {

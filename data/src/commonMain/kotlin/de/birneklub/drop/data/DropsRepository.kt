@@ -2,6 +2,8 @@ package de.birneklub.drop.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import de.birneklub.drop.core.backup.DropsBackup
+import de.birneklub.drop.core.backup.ImportResult
 import de.birneklub.drop.core.domain.Maintenance
 import de.birneklub.drop.core.model.Bean
 import de.birneklub.drop.core.model.BeanStatus
@@ -31,7 +33,7 @@ import kotlin.uuid.Uuid
  * dirty so [SyncClient] can push them once the user opts into an account.
  */
 class DropsRepository(
-    private val db: DropsDatabase,
+    internal val db: DropsDatabase,
     private val clock: Clock = Clock.System,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
@@ -151,6 +153,51 @@ class DropsRepository(
         val task = read(SyncCollections.TASKS, taskId, MaintenanceTask.serializer()) ?: return@withContext
         val equipment = read(SyncCollections.EQUIPMENT, task.equipmentId, Equipment.serializer())
         write(SyncCollections.TASKS, MaintenanceTask.serializer(), Maintenance.markDone(task, equipment, now()))
+    }
+
+    // --- backup ----------------------------------------------------------------
+
+    /** Snapshot of all live records, for a file the user keeps outside the app. */
+    suspend fun exportBackup(): DropsBackup = withContext(io) {
+        DropsBackup(
+            exportedAt = now(),
+            beans = allLive(SyncCollections.BEANS, Bean.serializer()),
+            recipes = allLive(SyncCollections.RECIPES, Recipe.serializer()),
+            shots = allLive(SyncCollections.SHOTS, Shot.serializer()),
+            equipment = allLive(SyncCollections.EQUIPMENT, Equipment.serializer()),
+            tasks = allLive(SyncCollections.TASKS, MaintenanceTask.serializer()),
+        )
+    }
+
+    /**
+     * Merges a backup into the local store. Each record wins only if it is newer
+     * than what the device has (including deletions), so importing an old file
+     * never overwrites newer work. Imported records sync like local edits.
+     */
+    suspend fun importBackup(backup: DropsBackup): ImportResult = withContext(io) {
+        var added = 0
+        var updated = 0
+        var skipped = 0
+        fun <T : Entity> merge(collection: String, serializer: KSerializer<T>, items: List<T>) {
+            items.forEach { item ->
+                val existing = q.byId(collection, item.id).executeAsOneOrNull()
+                when {
+                    existing == null -> { write(collection, serializer, item); added++ }
+                    item.updatedAt.toEpochMilliseconds() > existing.updated_at -> { write(collection, serializer, item); updated++ }
+                    else -> skipped++
+                }
+            }
+        }
+        db.transaction {
+            merge(SyncCollections.BEANS, Bean.serializer(), backup.beans)
+            merge(SyncCollections.RECIPES, Recipe.serializer(), backup.recipes)
+            merge(SyncCollections.SHOTS, Shot.serializer(), backup.shots)
+            merge(SyncCollections.EQUIPMENT, Equipment.serializer(), backup.equipment)
+            merge(SyncCollections.TASKS, MaintenanceTask.serializer(), backup.tasks)
+            // A restored install must not be filled with sample data afterwards.
+            q.setValue(KEY_SEEDED, now().toString())
+        }
+        ImportResult(added, updated, skipped)
     }
 
     // --- sample data ---------------------------------------------------------

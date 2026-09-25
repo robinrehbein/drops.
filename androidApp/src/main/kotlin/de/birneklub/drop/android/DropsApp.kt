@@ -8,7 +8,7 @@ import de.birneklub.drop.data.createDatabase
 import de.birneklub.drop.data.defaultHttpEngine
 
 /** Manual dependency container; small enough that a DI framework would only add weight. */
-class AppContainer(app: Application) {
+class AppContainer(val app: Application) {
     private val database = createDatabase(app)
     val repository = DropsRepository(database)
     val sync = SyncClient(

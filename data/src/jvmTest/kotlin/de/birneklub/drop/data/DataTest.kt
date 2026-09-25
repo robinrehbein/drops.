@@ -148,4 +148,38 @@ class DataTest {
         assertFailsWith<SyncException> { SyncClient.normalizeServerUrl("http://sync.example.com") }
         assertNotNull(SyncClient.normalizeServerUrl("http://10.0.2.2:8080"))
     }
+
+    @Test
+    fun backupRoundTripsIntoAFreshInstall() = runTest {
+        val source = repo()
+        source.seedIfEmpty()
+        val file = source.exportBackup().encode()
+
+        val target = repo()
+        val result = target.importBackup(de.birneklub.drop.core.backup.DropsBackup.decode(file))
+        assertEquals(source.exportBackup().size, result.added)
+        assertEquals(source.beans.first().map { it.id }.sorted(), target.beans.first().map { it.id }.sorted())
+        target.seedIfEmpty()
+        assertEquals(7, target.beans.first().size, "a restored install is not seeded again")
+    }
+
+    @Test
+    fun importKeepsNewerLocalRecords() = runTest {
+        val repo = repo()
+        repo.seedIfEmpty()
+        val old = repo.exportBackup()
+        val bean = repo.beans.first().first()
+        val later = object : Clock { override fun now() = fixedNow.plus(kotlin.time.Duration.parse("1h")) }
+        DropsRepository(repo.db, later, Dispatchers.Unconfined).saveBean(bean.copy(name = "Neu"))
+
+        val result = repo.importBackup(old)
+        assertEquals(0, result.changed)
+        assertEquals("Neu", repo.beans.first().single { it.id == bean.id }.name)
+    }
+
+    @Test
+    fun rejectsForeignFiles() {
+        assertFailsWith<de.birneklub.drop.core.backup.BackupException> { de.birneklub.drop.core.backup.DropsBackup.decode("{\"beans\":[]}") }
+        assertFailsWith<de.birneklub.drop.core.backup.BackupException> { de.birneklub.drop.core.backup.DropsBackup.decode("hello") }
+    }
 }
