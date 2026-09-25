@@ -71,3 +71,11 @@ expo-env.d.ts
 /ios
 /android
 coverage/
+
+# Kotlin / Gradle (native apps + server)
+.gradle/
+build/
+local.properties
+*.iml
+.kotlin/
+captures/
