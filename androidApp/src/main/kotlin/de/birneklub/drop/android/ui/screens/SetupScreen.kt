@@ -2,6 +2,7 @@ package de.birneklub.drop.android.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,7 +52,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             machine?.let {
-                HeroCard(Modifier.weight(1f)) {
+                HeroCard(Modifier.weight(1f).clickable(role = Role.Button) { nav.navigate(Routes.equipment(EquipmentKind.MACHINE)) }) {
                     Icon(DropsIcons.Machine, null, tint = c.heroAccent, size = 28.dp)
                     Column {
                         Text(it.name, style = DropsType.bodyStrong, color = c.heroInk)
@@ -63,7 +65,7 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
                 }
             }
             grinder?.let {
-                HeroCard(Modifier.weight(1f)) {
+                HeroCard(Modifier.weight(1f).clickable(role = Role.Button) { nav.navigate(Routes.equipment(EquipmentKind.GRINDER)) }) {
                     Icon(DropsIcons.Grinder, null, tint = c.heroAccent, size = 28.dp)
                     Column {
                         Text(it.name, style = DropsType.bodyStrong, color = c.heroInk)
@@ -75,6 +77,15 @@ fun SetupScreen(vm: DropsViewModel, nav: NavController) {
                     }
                 }
             }
+        }
+
+        if (machine == null || grinder == null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (machine == null) PillButton("Maschine einrichten", { nav.navigate(Routes.equipment(EquipmentKind.MACHINE)) }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
+                if (grinder == null) PillButton("Mühle einrichten", { nav.navigate(Routes.equipment(EquipmentKind.GRINDER)) }, Modifier.weight(1f), kind = ButtonKind.Ghost, height = 44.dp)
+            }
+        } else {
+            Text("Tippe auf ein Gerät, um es zu ändern.", style = DropsType.caption, color = c.muted)
         }
 
         if (machine?.waterHardness != null) {

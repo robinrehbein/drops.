@@ -102,17 +102,23 @@ data class DialInAdvice(
 )
 
 object DialIn {
-    fun advise(taste: Taste, timeSec: Double, recipe: Recipe?): DialInAdvice {
+    /**
+     * [step] is the grinder's smallest sensible adjustment, so the advice always
+     * lands on a setting the dial actually has.
+     */
+    fun advise(taste: Taste, timeSec: Double, recipe: Recipe?, step: Double = 0.5): DialInAdvice {
         val min = recipe?.targetTimeMinSec ?: 25
         val max = recipe?.targetTimeMaxSec ?: 30
         val fast = timeSec > 0 && timeSec < min
         val slow = timeSec > max
+        // Balanced but slow: a small nudge coarser (half a step on fine-grained dials).
+        val nudge = if (step < 1.0) step / 2 else step
         return when (taste) {
-            Taste.SOUR -> DialInAdvice(-1.0, if (fast) 0 else 1, 0.0, false, fast, slow)
-            Taste.SLIGHTLY_SOUR -> DialInAdvice(-0.5, 0, 0.0, false, fast, slow)
-            Taste.BALANCED -> DialInAdvice(if (slow) 0.25 else 0.0, 0, 0.0, !slow, fast, slow)
-            Taste.SLIGHTLY_BITTER -> DialInAdvice(0.5, 0, -1.5, false, fast, slow)
-            Taste.BITTER -> DialInAdvice(1.0, -1, 0.0, false, fast, slow)
+            Taste.SOUR -> DialInAdvice(-2 * step, if (fast) 0 else 1, 0.0, false, fast, slow)
+            Taste.SLIGHTLY_SOUR -> DialInAdvice(-step, 0, 0.0, false, fast, slow)
+            Taste.BALANCED -> DialInAdvice(if (slow) nudge else 0.0, 0, 0.0, !slow, fast, slow)
+            Taste.SLIGHTLY_BITTER -> DialInAdvice(step, 0, -1.5, false, fast, slow)
+            Taste.BITTER -> DialInAdvice(2 * step, -1, 0.0, false, fast, slow)
         }
     }
 }

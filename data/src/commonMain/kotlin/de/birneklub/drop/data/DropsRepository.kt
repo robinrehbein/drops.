@@ -155,6 +155,33 @@ class DropsRepository(
         write(SyncCollections.TASKS, MaintenanceTask.serializer(), Maintenance.markDone(task, equipment, now()))
     }
 
+    // --- setup -----------------------------------------------------------------
+
+    /** False only on a fresh install that has not been through onboarding yet. */
+    suspend fun isSetupDone(): Boolean = withContext(io) {
+        q.getValue(KEY_SETUP_DONE).executeAsOneOrNull() != null ||
+            q.getValue(KEY_SEEDED).executeAsOneOrNull() != null ||
+            q.countAll().executeAsOne() > 0
+    }
+
+    suspend fun markSetupDone() = withContext(io) { q.setValue(KEY_SETUP_DONE, now().toString()) }
+
+    /**
+     * Replaces the machine or grinder (and its care plan) with [equipment] and
+     * [tasks]. The old device's history stays in the shots; its tasks go.
+     */
+    suspend fun replaceEquipment(equipment: Equipment, tasks: List<MaintenanceTask>) = withContext(io) {
+        db.transaction {
+            val old = allLive(SyncCollections.EQUIPMENT, Equipment.serializer()).filter { it.kind == equipment.kind && it.id != equipment.id }
+            val oldIds = old.map { it.id }.toSet()
+            old.forEach { tombstone(SyncCollections.EQUIPMENT, it.id) }
+            allLive(SyncCollections.TASKS, MaintenanceTask.serializer()).filter { it.equipmentId in oldIds || it.equipmentId == equipment.id }
+                .forEach { tombstone(SyncCollections.TASKS, it.id) }
+            write(SyncCollections.EQUIPMENT, Equipment.serializer(), equipment.copy(updatedAt = now()))
+            tasks.forEach { write(SyncCollections.TASKS, MaintenanceTask.serializer(), it.copy(updatedAt = now())) }
+        }
+    }
+
     // --- backup ----------------------------------------------------------------
 
     /** Snapshot of all live records, for a file the user keeps outside the app. */
@@ -229,5 +256,6 @@ class DropsRepository(
 
     companion object {
         private const val KEY_SEEDED = "seeded_at"
+        private const val KEY_SETUP_DONE = "setup_done_at"
     }
 }

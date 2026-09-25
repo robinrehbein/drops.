@@ -100,6 +100,25 @@ data class Shot(
 @Serializable
 enum class EquipmentKind { MACHINE, GRINDER }
 
+/**
+ * The numbers printed on a grinder's dial. [step] is the smallest adjustment
+ * worth making; [espressoFrom]..[espressoTo] is a typical starting range, not a rule.
+ * Stepless grinders without a printed scale use the user's own marks.
+ */
+@Serializable
+data class GrindScale(
+    val min: Double,
+    val max: Double,
+    val step: Double,
+    val espressoFrom: Double,
+    val espressoTo: Double,
+    val label: String = "",
+) {
+    fun clamp(value: Double): Double = value.coerceIn(min, max)
+    val espressoStart: Double get() = snap((espressoFrom + espressoTo) / 2)
+    fun snap(value: Double): Double = clamp(kotlin.math.round((value - min) / step) * step + min)
+}
+
 @Serializable
 data class Equipment(
     override val id: String,
@@ -111,6 +130,10 @@ data class Equipment(
     /** Tap water hardness in °dH, and after the filter (machines only). */
     val waterHardness: Double? = null,
     val filteredHardness: Double? = null,
+    /** Catalog entry this was set up from, see EquipmentCatalog. */
+    val modelId: String? = null,
+    /** Grinders only. */
+    val grindScale: GrindScale? = null,
     override val updatedAt: Instant,
 ) : Entity
 
@@ -129,5 +152,7 @@ data class MaintenanceTask(
     val lastDoneAt: Instant? = null,
     /** Equipment counter (kg or shots) at the time the task was last done. */
     val lastDoneCounter: Double = 0.0,
+    /** Consumable the task uses up (filter, detergent, gasket), for reorder links. */
+    val supply: String? = null,
     override val updatedAt: Instant,
 ) : Entity

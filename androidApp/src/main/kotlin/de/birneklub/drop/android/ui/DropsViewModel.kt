@@ -9,6 +9,9 @@ import android.net.Uri
 import de.birneklub.drop.android.AppContainer
 import de.birneklub.drop.core.backup.BackupException
 import de.birneklub.drop.core.backup.DropsBackup
+import de.birneklub.drop.core.catalog.EquipmentCatalog
+import de.birneklub.drop.core.catalog.GrinderModel
+import de.birneklub.drop.core.catalog.MachineModel
 import de.birneklub.drop.core.domain.Maintenance
 import de.birneklub.drop.core.domain.TaskStatus
 import de.birneklub.drop.core.model.Bean
@@ -66,11 +69,15 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     private val _messages = MutableStateFlow<String?>(null)
     val messages: StateFlow<String?> = _messages.asStateFlow()
 
+    /** null while loading; false shows onboarding on a fresh install. */
+    private val _setupDone = MutableStateFlow<Boolean?>(null)
+    val setupDone: StateFlow<Boolean?> = _setupDone.asStateFlow()
+
     private var pendingSync: Job? = null
 
     init {
         viewModelScope.launch {
-            repo.seedIfEmpty()
+            _setupDone.value = repo.isSetupDone()
             if (sync.session.value != null) syncNow(silent = true)
         }
         viewModelScope.launch { sync.session.collect { s -> _account.value = _account.value.copy(session = s) } }
@@ -118,6 +125,39 @@ class DropsViewModel(private val container: AppContainer) : ViewModel() {
     fun completeTask(status: TaskStatus) = write("${status.task.name}: erledigt") { repo.completeTask(status.task.id) }
     fun saveEquipment(e: Equipment) = write { repo.saveEquipment(e) }
     fun removeSampleData() = write("Beispieldaten entfernt") { repo.removeSampleData() }
+
+    // --- setup -------------------------------------------------------------------
+    /** Sets up the machine from the catalog, or a named machine that is not in it. */
+    fun chooseMachine(model: MachineModel?, customName: String = "") = write {
+        val t = repo.now()
+        val id = repo.newId()
+        val equipment = model?.let { EquipmentCatalog.equipmentFor(it, id, t) }
+            ?: de.birneklub.drop.core.model.Equipment(id, de.birneklub.drop.core.model.EquipmentKind.MACHINE, customName.ifBlank { "Siebträger" }, updatedAt = t)
+        repo.replaceEquipment(equipment, EquipmentCatalog.tasksFor(model, id, t, repo::newId))
+    }
+
+    fun chooseGrinder(model: GrinderModel?, customName: String = "") = write {
+        val t = repo.now()
+        val id = repo.newId()
+        val equipment = model?.let { EquipmentCatalog.equipmentFor(it, id, t) }
+            ?: de.birneklub.drop.core.model.Equipment(
+                id, de.birneklub.drop.core.model.EquipmentKind.GRINDER, customName.ifBlank { "Mühle" },
+                grindScale = EquipmentCatalog.customGrindScale, updatedAt = t,
+            )
+        repo.replaceEquipment(equipment, EquipmentCatalog.tasksFor(model, id, t, repo::newId))
+    }
+
+    fun finishSetup() = viewModelScope.launch {
+        repo.markSetupDone()
+        _setupDone.value = true
+    }
+
+    /** Skips onboarding and opens the app with example data to look around. */
+    fun exploreWithSamples() = viewModelScope.launch {
+        repo.seedIfEmpty()
+        repo.markSetupDone()
+        _setupDone.value = true
+    }
 
     // --- backup ------------------------------------------------------------------
     /** Writes a complete backup to a file the user picked (Downloads, Drive, …). */

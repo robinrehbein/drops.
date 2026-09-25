@@ -182,4 +182,24 @@ class DataTest {
         assertFailsWith<de.birneklub.drop.core.backup.BackupException> { de.birneklub.drop.core.backup.DropsBackup.decode("{\"beans\":[]}") }
         assertFailsWith<de.birneklub.drop.core.backup.BackupException> { de.birneklub.drop.core.backup.DropsBackup.decode("hello") }
     }
+
+    @Test
+    fun freshInstallNeedsSetupAndReplacingEquipmentSwapsTheCarePlan() = runTest {
+        val repo = repo()
+        assertEquals(false, repo.isSetupDone())
+        repo.seedIfEmpty()
+        assertEquals(true, repo.isSetupDone())
+
+        val catalog = de.birneklub.drop.core.catalog.EquipmentCatalog
+        val model = catalog.machine("rancilio-silvia")!!
+        val machine = catalog.equipmentFor(model, "m-new", fixedNow)
+        repo.replaceEquipment(machine, catalog.tasksFor(model, machine.id, fixedNow, repo::newId))
+
+        val machines = repo.equipment.first().filter { it.kind == de.birneklub.drop.core.model.EquipmentKind.MACHINE }
+        assertEquals(listOf("m-new"), machines.map { it.id })
+        val tasks = repo.tasks.first()
+        val grinderId = repo.equipment.first().single { it.kind == de.birneklub.drop.core.model.EquipmentKind.GRINDER }.id
+        assertTrue(tasks.all { it.equipmentId == "m-new" || it.equipmentId == grinderId }, "old machine tasks are gone")
+        assertTrue(tasks.any { it.equipmentId == grinderId }, "grinder tasks stay")
+    }
 }

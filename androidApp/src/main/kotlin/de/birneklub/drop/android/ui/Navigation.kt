@@ -42,7 +42,10 @@ import de.birneklub.drop.android.ui.screens.AccountScreen
 import de.birneklub.drop.android.ui.screens.AddBeanScreen
 import de.birneklub.drop.android.ui.screens.BeanDetailScreen
 import de.birneklub.drop.android.ui.screens.BeansScreen
+import de.birneklub.drop.android.ui.screens.EquipmentScreen
 import de.birneklub.drop.android.ui.screens.MapScreen
+import de.birneklub.drop.android.ui.screens.OnboardingScreen
+import de.birneklub.drop.core.model.EquipmentKind
 import de.birneklub.drop.android.ui.screens.SetupScreen
 import de.birneklub.drop.android.ui.screens.ShotScreen
 import de.birneklub.drop.android.ui.screens.TodayScreen
@@ -56,9 +59,12 @@ object Routes {
     const val SHOT = "shot/{beanId}"
     const val ADD_BEAN = "add-bean"
     const val ACCOUNT = "account"
+    const val ONBOARDING = "onboarding"
+    const val EQUIPMENT = "equipment/{kind}"
 
     fun bean(id: String) = "bean/$id"
     fun shot(beanId: String) = "shot/$beanId"
+    fun equipment(kind: EquipmentKind) = "equipment/${kind.name}"
 }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
@@ -82,13 +88,17 @@ fun DropsRoot(container: AppContainer) {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val showTabs = route in tabs.map { it.route }
+    val setupDone by vm.setupDone.collectAsStateWithLifecycle()
+    // Decide the start screen once; later changes navigate explicitly.
+    val start = remember(setupDone == null) { if (setupDone == false) Routes.ONBOARDING else Routes.TODAY }
 
     Scaffold(
         containerColor = Drops.colors.paper,
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { if (showTabs) TabBar(route, nav) },
     ) { padding ->
-        NavHost(nav, startDestination = Routes.TODAY, modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
+        if (setupDone == null) return@Scaffold
+        NavHost(nav, startDestination = start, modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
             composable(Routes.TODAY) { TodayScreen(vm, nav) }
             composable(Routes.BEANS) { BeansScreen(vm, nav) }
             composable(Routes.MAP) { MapScreen(vm) }
@@ -97,6 +107,11 @@ fun DropsRoot(container: AppContainer) {
             composable(Routes.SHOT) { ShotScreen(vm, nav, it.arguments?.getString("beanId").orEmpty()) }
             composable(Routes.ADD_BEAN) { AddBeanScreen(vm, nav) }
             composable(Routes.ACCOUNT) { AccountScreen(vm, nav) }
+            composable(Routes.ONBOARDING) { OnboardingScreen(vm, nav) }
+            composable(Routes.EQUIPMENT) {
+                val kind = EquipmentKind.entries.firstOrNull { k -> k.name == it.arguments?.getString("kind") } ?: EquipmentKind.MACHINE
+                EquipmentScreen(vm, nav, kind)
+            }
         }
     }
 }

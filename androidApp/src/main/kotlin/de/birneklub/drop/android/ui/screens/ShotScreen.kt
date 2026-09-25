@@ -56,6 +56,8 @@ import de.birneklub.drop.android.ui.TextAction
 import de.birneklub.drop.android.ui.a11y
 import de.birneklub.drop.android.ui.fmt
 import de.birneklub.drop.core.domain.DialIn
+import de.birneklub.drop.core.model.EquipmentKind
+import de.birneklub.drop.core.model.GrindScale
 import de.birneklub.drop.core.model.Recipe
 import de.birneklub.drop.core.model.Shot
 import de.birneklub.drop.core.model.Taste
@@ -71,10 +73,15 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
 
     var elapsed by rememberSaveable { mutableDoubleStateOf(0.0) }
     var running by remember { mutableStateOf(false) }
-    var dose by rememberSaveable { mutableDoubleStateOf(recipe?.doseGrams ?: 18.0) }
-    var yieldG by rememberSaveable { mutableDoubleStateOf(recipe?.yieldGrams ?: 36.0) }
-    var grind by rememberSaveable { mutableDoubleStateOf(recipe?.grindSetting ?: 15.0) }
-    var temp by rememberSaveable { mutableIntStateOf(recipe?.temperatureC ?: 93) }
+    // Pre-fill so a routine shot needs no typing: dial-in continues from the last
+    // shot of this bean, the rest comes from the recipe.
+    val last: Shot? = lib.shotsFor(bean.id).lastOrNull()
+    val scale = lib.equipment.firstOrNull { it.kind == EquipmentKind.GRINDER }?.grindScale
+    val step = scale?.step ?: 0.25
+    var dose by rememberSaveable { mutableDoubleStateOf(recipe?.doseGrams ?: last?.doseGrams ?: 18.0) }
+    var yieldG by rememberSaveable { mutableDoubleStateOf(recipe?.yieldGrams ?: last?.yieldGrams ?: 36.0) }
+    var grind by rememberSaveable { mutableDoubleStateOf(last?.grindSetting ?: recipe?.grindSetting ?: scale?.espressoStart ?: 15.0) }
+    var temp by rememberSaveable { mutableIntStateOf(recipe?.temperatureC ?: last?.temperatureC ?: 93) }
     var taste by rememberSaveable { mutableIntStateOf(Taste.BALANCED.ordinal) }
     var saved by remember { mutableStateOf<Shot?>(null) }
 
@@ -89,7 +96,7 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
     val tmin = recipe?.targetTimeMinSec ?: 25
     val tmax = recipe?.targetTimeMaxSec ?: 30
     val inZone = elapsed >= tmin && elapsed <= tmax
-    val advice = DialIn.advise(Taste.entries[taste], elapsed, recipe)
+    val advice = DialIn.advise(Taste.entries[taste], elapsed, recipe, scale?.step ?: 0.5)
 
     Column(Modifier.fillMaxSize().background(c.paper).statusBarsPadding().navigationBarsPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -145,7 +152,7 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
                     Stepper("Ertrag", "${yieldG.fmt()} g", Modifier.weight(1f), { yieldG = round1(yieldG + 0.5) }, { yieldG = round1(yieldG - 0.5) })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Stepper("Mahlgrad", grind.fmt(2).trimEnd('0').trimEnd('.'), Modifier.weight(1f), { grind += 0.25 }, { grind -= 0.25 })
+                    Stepper(scale?.label?.takeIf { it == "Klicks" } ?: "Mahlgrad", grind.fmt(2).trimEnd('0').trimEnd('.'), Modifier.weight(1f), { grind = nudge(grind, step, scale) }, { grind = nudge(grind, -step, scale) })
                     Stepper("Temperatur", "$temp °C", Modifier.weight(1f), { temp++ }, { temp-- })
                 }
                 Text(
@@ -156,7 +163,7 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Wie schmeckt er?", style = DropsType.section, color = c.ink)
-                Segmented(listOf("Sauer", "Leicht sauer", "Balance", "Leicht bitter", "Bitter"), taste, { taste = it; saved = null }, Modifier.fillMaxWidth(), DropsType.caption.copy(fontSize = 11.sp))
+                Segmented(listOf("Sauer", "Leicht sauer", "Balance", "Leicht bitter", "Bitter"), taste, { taste = it; running = false; saved = null }, Modifier.fillMaxWidth(), DropsType.caption.copy(fontSize = 11.sp))
             }
 
             Row(
@@ -196,10 +203,16 @@ fun ShotScreen(vm: DropsViewModel, nav: NavController, beanId: String) {
 
 private fun round1(v: Double) = round(v * 10) / 10
 
+/** One step on the grinder's dial, kept inside its printed range. */
+private fun nudge(grind: Double, delta: Double, scale: GrindScale?): Double {
+    val next = round((grind + delta) * 100) / 100
+    return scale?.clamp(next) ?: next
+}
+
 private fun adviceText(a: de.birneklub.drop.core.domain.DialInAdvice, grind: Double): String {
     val parts = mutableListOf<String>()
-    if (a.grindDelta < 0) parts += "${-a.grindDelta} feiner mahlen (${(grind + a.grindDelta).fmt(2).trimEnd('0').trimEnd('.')})"
-    if (a.grindDelta > 0) parts += "${a.grindDelta} gröber mahlen (${(grind + a.grindDelta).fmt(2).trimEnd('0').trimEnd('.')})"
+    if (a.grindDelta < 0) parts += "${(-a.grindDelta).fmt(2).trimEnd('0').trimEnd('.')} feiner mahlen (${(grind + a.grindDelta).fmt(2).trimEnd('0').trimEnd('.')})"
+    if (a.grindDelta > 0) parts += "${a.grindDelta.fmt(2).trimEnd('0').trimEnd('.')} gröber mahlen (${(grind + a.grindDelta).fmt(2).trimEnd('0').trimEnd('.')})"
     if (a.temperatureDelta != 0) parts += "Temperatur ${if (a.temperatureDelta > 0) "+" else ""}${a.temperatureDelta} °C"
     if (a.yieldDeltaGrams != 0.0) parts += "oder ${-a.yieldDeltaGrams} g weniger Ertrag"
     val speed = when { a.ranFast -> " Lief zu schnell."; a.ranSlow -> " Lief zu lang."; else -> "" }

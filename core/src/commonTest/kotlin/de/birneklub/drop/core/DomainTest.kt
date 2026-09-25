@@ -24,6 +24,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
@@ -98,5 +99,44 @@ class DomainTest {
         val record = SyncRecord("beans", bean.id, now.toEpochMilliseconds(), data = DropsJson.encodeToJsonElement(bean))
         val decoded = DropsJson.decodeFromString(SyncRecord.serializer(), DropsJson.encodeToString(SyncRecord.serializer(), record))
         assertEquals(bean, DropsJson.decodeFromJsonElement(Bean.serializer(), decoded.data!!))
+    }
+
+    @Test
+    fun dialInAdviceFollowsTheGrinderStep() {
+        assertEquals(-2.0, DialIn.advise(Taste.SOUR, 28.0, null, step = 1.0).grindDelta)
+        assertEquals(1.0, DialIn.advise(Taste.BALANCED, 40.0, null, step = 1.0).grindDelta, "a stepped dial never gets half a click")
+        assertEquals(0.25, DialIn.advise(Taste.BALANCED, 40.0, null, step = 0.5).grindDelta)
+    }
+
+    @Test
+    fun catalogCarePlansMatchTheMachine() {
+        val now = kotlinx.datetime.Instant.parse("2026-09-25T08:00:00Z")
+        var n = 0
+        val id = { "t${n++}" }
+        val sage = de.birneklub.drop.core.catalog.EquipmentCatalog.machine("sage-barista-pro")!!
+        val sageTasks = de.birneklub.drop.core.catalog.EquipmentCatalog.tasksFor(sage, "m", now, id)
+        assertTrue(sageTasks.any { it.intervalUnit == de.birneklub.drop.core.model.IntervalUnit.SHOTS && it.intervalValue == 200.0 })
+        assertTrue(sageTasks.any { it.name == "Wasserfilter wechseln" })
+
+        val bambino = de.birneklub.drop.core.catalog.EquipmentCatalog.machine("sage-bambino-plus")!!
+        assertFalse(de.birneklub.drop.core.catalog.EquipmentCatalog.tasksFor(bambino, "m", now, id).any { it.name.startsWith("Rückspülen") }, "no three-way valve, no backflush")
+
+        val e61 = de.birneklub.drop.core.catalog.EquipmentCatalog.machine("rocket-appartamento")!!
+        val e61Tasks = de.birneklub.drop.core.catalog.EquipmentCatalog.tasksFor(e61, "m", now, id)
+        assertFalse(e61Tasks.any { it.name == "Entkalken" })
+        // A new plan starts fresh instead of overdue.
+        assertTrue(Maintenance.plan(e61Tasks, emptyList(), now).all { it.state == TaskState.OK })
+        assertEquals(e61Tasks.size, e61Tasks.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun catalogIdsAreUniqueAndSearchable() {
+        val c = de.birneklub.drop.core.catalog.EquipmentCatalog
+        assertEquals(c.machines.size, c.machines.map { it.id }.toSet().size)
+        assertEquals(c.grinders.size, c.grinders.map { it.id }.toSet().size)
+        assertEquals(listOf("rancilio-silvia"), c.search(c.machines, "silvia") { it.displayName }.map { it.id })
+        assertEquals(listOf("niche-zero"), c.search(c.grinders, "niche ZERO") { it.displayName }.map { it.id })
+        c.grinders.forEach { g -> assertTrue(g.scale.espressoStart in g.scale.min..g.scale.max, g.id) }
+        c.grinders.mapNotNull { it.builtInto }.forEach { assertNotNull(c.machine(it)) }
     }
 }
